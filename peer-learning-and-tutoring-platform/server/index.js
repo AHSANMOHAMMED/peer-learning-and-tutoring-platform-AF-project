@@ -22,8 +22,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// API Routes
+app.use('/api/auth', require('./routes/auth'));
+
 // Routes will be added here as we build them
-// app.use('/api/auth', require('./routes/auth'));
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/tutors', require('./routes/tutors'));
 // app.use('/api/bookings', require('./routes/bookings'));
@@ -31,6 +33,21 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  
+  // Handle validation errors
+  if (err.name === 'ValidationError') {
+    const errors = err.errors?.map(error => ({
+      field: error.path,
+      message: error.msg
+    })) || [];
+    
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Validation failed',
+      errors
+    });
+  }
+  
   res.status(500).json({ 
     success: false, 
     message: 'Something went wrong!' 
@@ -50,4 +67,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📚 PeerLearn API is ready`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
 });

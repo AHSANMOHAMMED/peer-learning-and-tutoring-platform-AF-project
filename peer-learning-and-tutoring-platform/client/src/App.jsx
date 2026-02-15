@@ -6,6 +6,9 @@ import Footer from './components/common/Footer'
 import Home from './pages/Home'
 import LoginView from './views/LoginView'
 import RegisterView from './views/RegisterView'
+import StudentDashboard from './views/StudentDashboard'
+import TutorDashboard from './views/TutorDashboard'
+import BrowseTutors from './views/BrowseTutors'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -70,7 +73,15 @@ function App() {
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <div>Dashboard (Coming Soon)</div>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tutor-dashboard" 
+              element={
+                <ProtectedRoute>
+                  <TutorDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -78,7 +89,7 @@ function App() {
               path="/browse-tutors" 
               element={
                 <ProtectedRoute>
-                  <div>Browse Tutors (Coming Soon)</div>
+                  <BrowseTutors />
                 </ProtectedRoute>
               } 
             />

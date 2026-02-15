@@ -24,11 +24,12 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
-
-// Routes will be added here as we build them
-// app.use('/api/users', require('./routes/users'));
-// app.use('/api/tutors', require('./routes/tutors'));
-// app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/tutors', require('./routes/tutors'));
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

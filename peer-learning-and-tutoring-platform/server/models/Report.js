@@ -355,7 +355,7 @@ reportSchema.statics.autoEscalate = async function() {
 };
 
 // Static method to get statistics
-reportSchema.statics.getStatistics = async function(timeframe = '30d') => {
+reportSchema.statics.getStatistics = async function(timeframe = '30d') {
   const now = new Date();
   let startDate;
   

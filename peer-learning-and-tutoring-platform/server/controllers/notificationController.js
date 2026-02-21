@@ -1,13 +1,21 @@
 const Notification = require('../models/Notification');
+const {
+  emitNotification,
+  getUserNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+  getUnreadNotificationCount
+} = require('../services/notificationService');
 
 // Get user's notifications
 const getNotifications = async (req, res) => {
   try {
     const { page = 1, limit = 20, type, isRead } = req.query;
     
-    const result = await Notification.getUserNotifications(req.userId, {
-      page,
-      limit,
+    const result = await getUserNotifications(req.user.id, {
+      page: parseInt(page),
+      limit: parseInt(limit),
       type,
       isRead: isRead === 'true' ? true : isRead === 'false' ? false : undefined
     });
@@ -31,24 +39,12 @@ const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const notification = await Notification.findOne({
-      _id: id,
-      userId: req.userId
-    });
-    
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Notification not found'
-      });
-    }
-    
-    notification.markAsRead();
-    await notification.save();
+    const notification = await markNotificationAsRead(id, req.user.id);
     
     res.json({
       success: true,
-      message: 'Notification marked as read'
+      message: 'Notification marked as read',
+      data: notification
     });
   } catch (error) {
     console.error('Mark as read error:', error);
@@ -63,11 +59,12 @@ const markAsRead = async (req, res) => {
 // Mark all notifications as read
 const markAllAsRead = async (req, res) => {
   try {
-    await Notification.markAllAsRead(req.userId);
+    const count = await markAllNotificationsAsRead(req.user.id);
     
     res.json({
       success: true,
-      message: 'All notifications marked as read'
+      message: `${count} notifications marked as read`,
+      data: { count }
     });
   } catch (error) {
     console.error('Mark all as read error:', error);
@@ -80,27 +77,16 @@ const markAllAsRead = async (req, res) => {
 };
 
 // Delete notification
-const deleteNotification = async (req, res) => {
+const deleteNotificationController = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const notification = await Notification.findOne({
-      _id: id,
-      userId: req.userId
-    });
-    
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Notification not found'
-      });
-    }
-    
-    await Notification.findByIdAndDelete(id);
+    const notification = await deleteNotification(id, req.user.id);
     
     res.json({
       success: true,
-      message: 'Notification deleted successfully'
+      message: 'Notification deleted successfully',
+      data: notification
     });
   } catch (error) {
     console.error('Delete notification error:', error);
@@ -115,7 +101,7 @@ const deleteNotification = async (req, res) => {
 // Get unread count
 const getUnreadCount = async (req, res) => {
   try {
-    const count = await Notification.getUnreadCount(req.userId);
+    const count = await getUnreadNotificationCount(req.user.id);
     
     res.json({
       success: true,
@@ -136,19 +122,14 @@ const createNotification = async (req, res) => {
   try {
     const { userId, type, title, message, data, actionUrl, priority } = req.body;
     
-    const notification = await Notification.createNotification({
-      userId,
+    const notification = await emitNotification(userId, {
       type,
-      title,
-      message,
-      data,
-      actionUrl,
-      priority,
-      channels: {
-        inApp: true,
-        email: false,
-        sms: false,
-        push: false
+      data: {
+        title,
+        message,
+        data,
+        actionUrl,
+        priority
       }
     });
     
@@ -171,7 +152,7 @@ module.exports = {
   getNotifications,
   markAsRead,
   markAllAsRead,
-  deleteNotification,
+  deleteNotification: deleteNotificationController,
   getUnreadCount,
   createNotification
 };

@@ -103,6 +103,101 @@ const bookingSchema = new mongoose.Schema({
     },
     endedAt: {
       type: Date
+    },
+    videoProvider: {
+      type: String,
+      enum: ['jitsi', 'agora', 'zoom'],
+      default: 'jitsi'
+    },
+    roomConfig: {
+      isRecordingEnabled: {
+        type: Boolean,
+        default: false
+      },
+      isChatEnabled: {
+        type: Boolean,
+        default: true
+      },
+      isScreenShareEnabled: {
+        type: Boolean,
+        default: true
+      },
+      isWhiteboardEnabled: {
+        type: Boolean,
+        default: true
+      },
+      maxParticipants: {
+        type: Number,
+        default: 2
+      },
+      password: {
+        type: String
+      },
+      waitingRoom: {
+        type: Boolean,
+        default: false
+      }
+    },
+    participants: [{
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      joinedAt: Date,
+      leftAt: Date,
+      duration: Number, // in minutes
+      connectionQuality: {
+        type: String,
+        enum: ['excellent', 'good', 'fair', 'poor']
+      },
+      technicalIssues: [{
+        type: String,
+        enum: ['audio', 'video', 'connection', 'screen_share', 'whiteboard', 'other']
+      }]
+    }],
+    recording: {
+      isRecording: {
+        type: Boolean,
+        default: false
+      },
+      recordingId: String,
+      recordingUrl: String,
+      recordingDuration: Number, // in seconds
+      recordingSize: Number, // in bytes
+      recordingFormat: {
+        type: String,
+        enum: ['mp4', 'webm', 'mkv']
+      },
+      recordingStartedAt: Date,
+      recordingEndedAt: Date,
+      downloadUrl: String,
+      isProcessing: {
+        type: Boolean,
+        default: false
+      }
+    },
+    analytics: {
+      totalDuration: Number, // actual session duration in minutes
+      participantCount: {
+        type: Number,
+        default: 0
+      },
+      chatMessagesCount: {
+        type: Number,
+        default: 0
+      },
+      screenShareDuration: {
+        type: Number,
+        default: 0
+      },
+      whiteboardUsage: {
+        type: Number,
+        default: 0
+      },
+      connectionIssues: {
+        type: Number,
+        default: 0
+      }
     }
   },
   notes: {
@@ -247,14 +342,121 @@ bookingSchema.methods.complete = function() {
   return false;
 };
 
-// Method to start session
-bookingSchema.methods.startSession = function() {
+// Method to start video session
+bookingSchema.methods.startVideoSession = function(roomId, joinUrl, config = {}) {
   if (this.status === 'confirmed') {
     this.status = 'in_progress';
     this.session.startedAt = new Date();
+    this.session.roomId = roomId;
+    this.session.joinUrl = joinUrl;
+    this.session.roomConfig = {
+      ...this.session.roomConfig,
+      ...config
+    };
     return true;
   }
   return false;
+};
+
+// Method to join video session
+bookingSchema.methods.joinVideoSession = function(userId) {
+  const participant = this.session.participants.find(p => p.userId.toString() === userId.toString());
+  
+  if (participant) {
+    participant.joinedAt = new Date();
+  } else {
+    this.session.participants.push({
+      userId,
+      joinedAt: new Date()
+    });
+  }
+  
+  this.session.analytics.participantCount = this.session.participants.length;
+  return this.save();
+};
+
+// Method to leave video session
+bookingSchema.methods.leaveVideoSession = function(userId, connectionQuality) {
+  const participant = this.session.participants.find(p => p.userId.toString() === userId.toString());
+  
+  if (participant && participant.joinedAt) {
+    participant.leftAt = new Date();
+    participant.duration = Math.round((participant.leftAt - participant.joinedAt) / (1000 * 60)); // minutes
+    if (connectionQuality) {
+      participant.connectionQuality = connectionQuality;
+    }
+  }
+  
+  return this.save();
+};
+
+// Method to start recording
+bookingSchema.methods.startRecording = function(recordingId) {
+  this.session.recording.isRecording = true;
+  this.session.recording.recordingId = recordingId;
+  this.session.recording.recordingStartedAt = new Date();
+  this.session.recording.isProcessing = true;
+  return this.save();
+};
+
+// Method to stop recording
+bookingSchema.methods.stopRecording = function(recordingUrl, recordingDuration, recordingSize) {
+  this.session.recording.isRecording = false;
+  this.session.recording.recordingUrl = recordingUrl;
+  this.session.recording.recordingDuration = recordingDuration;
+  this.session.recording.recordingSize = recordingSize;
+  this.session.recording.recordingEndedAt = new Date();
+  this.session.recording.isProcessing = false;
+  return this.save();
+};
+
+// Method to add technical issue
+bookingSchema.methods.addTechnicalIssue = function(userId, issueType) {
+  const participant = this.session.participants.find(p => p.userId.toString() === userId.toString());
+  
+  if (participant) {
+    if (!participant.technicalIssues.includes(issueType)) {
+      participant.technicalIssues.push(issueType);
+      this.session.analytics.connectionIssues += 1;
+    }
+  }
+  
+  return this.save();
+};
+
+// Method to update session analytics
+bookingSchema.methods.updateSessionAnalytics = function(updates) {
+  this.session.analytics = {
+    ...this.session.analytics,
+    ...updates
+  };
+  return this.save();
+};
+
+// Method to get session duration
+bookingSchema.methods.getSessionDuration = function() {
+  if (this.session.startedAt && this.session.endedAt) {
+    return Math.round((this.session.endedAt - this.session.startedAt) / (1000 * 60)); // minutes
+  }
+  return 0;
+};
+
+// Method to check if session can be started
+bookingSchema.methods.canStartSession = function() {
+  const now = new Date();
+  const sessionStart = new Date(`${this.date.toISOString().split('T')[0]}T${this.startTime}`);
+  const timeDiff = sessionStart - now;
+  
+  // Can start session if within 15 minutes of scheduled time
+  return this.status === 'confirmed' && timeDiff <= 15 * 60 * 1000 && timeDiff >= -60 * 60 * 1000;
+};
+
+// Method to check if user can join session
+bookingSchema.methods.canJoinSession = function(userId) {
+  const isParticipant = this.studentId.toString() === userId.toString() || this.tutorId.toString() === userId.toString();
+  const isActive = ['confirmed', 'in_progress'].includes(this.status);
+  
+  return isParticipant && isActive;
 };
 
 // Method to mark as paid

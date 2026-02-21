@@ -539,3 +539,140 @@ exports.getPopularMaterials = async (req, res) => {
 
 // Export upload middleware for use in routes
 exports.upload = upload;
+
+// Get pending materials for admin approval
+exports.getPendingMaterials = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const materials = await Material.find({ status: 'pending' })
+      .populate('uploadedBy', 'username email profile.firstName profile.lastName')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Material.countDocuments({ status: 'pending' });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        materials,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get pending materials error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get pending materials'
+    });
+  }
+};
+
+// Approve material (admin only)
+exports.approveMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    const material = await Material.findByIdAndUpdate(
+      id,
+      {
+        status: 'approved',
+        approvedBy: req.user._id,
+        approvedAt: new Date(),
+        adminNotes: notes || ''
+      },
+      { new: true }
+    ).populate('uploadedBy', 'username email');
+
+    if (!material) {
+      return res.status(404).json({
+        success: false,
+        message: 'Material not found'
+      });
+    }
+
+    // Notify uploader
+    await Notification.create({
+      recipient: material.uploadedBy._id,
+      type: 'material_approved',
+      title: 'Material Approved',
+      message: `Your material "${material.title}" has been approved and is now visible to all users.`,
+      data: { materialId: material._id }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Material approved successfully',
+      data: material
+    });
+  } catch (error) {
+    console.error('Approve material error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to approve material'
+    });
+  }
+};
+
+// Reject material (admin only)
+exports.rejectMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required'
+      });
+    }
+
+    const material = await Material.findByIdAndUpdate(
+      id,
+      {
+        status: 'rejected',
+        rejectedBy: req.user._id,
+        rejectedAt: new Date(),
+        rejectionReason: reason
+      },
+      { new: true }
+    ).populate('uploadedBy', 'username email');
+
+    if (!material) {
+      return res.status(404).json({
+        success: false,
+        message: 'Material not found'
+      });
+    }
+
+    // Notify uploader
+    await Notification.create({
+      recipient: material.uploadedBy._id,
+      type: 'material_rejected',
+      title: 'Material Rejected',
+      message: `Your material "${material.title}" was not approved. Reason: ${reason}`,
+      data: { materialId: material._id, reason }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Material rejected',
+      data: material
+    });
+  } catch (error) {
+    console.error('Reject material error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reject material'
+    });
+  }
+};

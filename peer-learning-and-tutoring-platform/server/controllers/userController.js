@@ -1,7 +1,4 @@
 const User = require('../models/User');
-const Booking = require('../models/Booking');
-const Material = require('../models/Material');
-const Report = require('../models/Report');
 const { validationResult } = require('express-validator');
 
 // Get user profile
@@ -323,106 +320,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// Get admin statistics (admin only)
-const getAdminStatistics = async (req, res) => {
-  try {
-    const [
-      totalUsers,
-      totalTutors,
-      totalStudents,
-      totalSessions,
-      pendingReports,
-      pendingMaterials
-    ] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ role: 'tutor' }),
-      User.countDocuments({ role: 'student' }),
-      Booking.countDocuments(),
-      Report.countDocuments({ status: 'pending' }),
-      Material.countDocuments({ status: 'pending' })
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        totalUsers,
-        totalTutors,
-        totalStudents,
-        totalSessions,
-        pendingReports,
-        pendingMaterials
-      }
-    });
-  } catch (error) {
-    console.error('Get admin statistics error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch statistics',
-      error: error.message
-    });
-  }
-};
-
-// Get parent children (parent only)
-const getParentChildren = async (req, res) => {
-  try {
-    const parentId = req.userId;
-    
-    // For now, return empty array - this would need a parent-child relationship model
-    // Or we can search for students with the same email domain or phone
-    res.json({
-      success: true,
-      data: {
-        children: []
-      }
-    });
-  } catch (error) {
-    console.error('Get parent children error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch children',
-      error: error.message
-    });
-  }
-};
-
-// Get student progress by ID (parent or admin)
-const getStudentProgress = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Get student's completed bookings with ratings
-    const bookings = await Booking.find({
-      studentId: id,
-      status: 'completed'
-    }).populate('tutorId', 'userId subjects')
-     .sort({ completedAt: -1 })
-     .limit(10);
-
-    // Calculate progress metrics
-    const totalSessions = bookings.length;
-    const averageRating = bookings.reduce((acc, b) => acc + (b.rating || 0), 0) / (totalSessions || 1);
-    const subjects = [...new Set(bookings.map(b => b.subject))];
-
-    res.json({
-      success: true,
-      data: {
-        totalSessions,
-        averageRating,
-        subjects,
-        recentBookings: bookings
-      }
-    });
-  } catch (error) {
-    console.error('Get student progress error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch student progress',
-      error: error.message
-    });
-  }
-};
-
 module.exports = {
   getProfile,
   updateProfile,
@@ -432,8 +329,5 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser,
-  getAdminStatistics,
-  getParentChildren,
-  getStudentProgress
+  deleteUser
 };

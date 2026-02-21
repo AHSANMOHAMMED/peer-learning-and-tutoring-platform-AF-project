@@ -9,6 +9,9 @@ import RegisterView from './views/RegisterView'
 import StudentDashboard from './views/StudentDashboard'
 import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
+import SessionRoom from './components/SessionRoom'
+import ResourceLibrary from './components/ResourceLibrary'
+import ModeratorDashboard from './components/ModeratorDashboard'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -90,6 +93,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <BrowseTutors />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/session/:id" 
+              element={
+                <ProtectedRoute>
+                  <SessionRoom />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/resources" 
+              element={
+                <ProtectedRoute>
+                  <ResourceLibrary />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/moderation" 
+              element={
+                <ProtectedRoute>
+                  <ModeratorDashboard />
                 </ProtectedRoute>
               } 
             />

@@ -10,10 +10,7 @@ const {
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser,
-  getAdminStatistics,
-  getParentChildren,
-  getStudentProgress
+  deleteUser
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -37,15 +34,8 @@ router.put('/settings', authenticate, updateSettings);
 
 // Admin only routes
 router.get('/', authenticate, authorize('admin'), getAllUsers);
-router.get('/admin/statistics', authenticate, authorize('admin'), getAdminStatistics);
 router.get('/:id', authenticate, authorize('admin'), getUserById);
 router.put('/:id', authenticate, authorize('admin'), updateUser);
 router.delete('/:id', authenticate, authorize('admin'), deleteUser);
-
-// Parent only routes
-router.get('/parent/children', authenticate, authorize('parent'), getParentChildren);
-
-// Parent or admin - get student progress
-router.get('/student/:id/progress', authenticate, authorize('parent', 'admin'), getStudentProgress);
 
 module.exports = router;

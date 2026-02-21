@@ -11,6 +11,7 @@ import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
 import SessionRoom from './components/SessionRoom'
 import ResourceLibrary from './components/ResourceLibrary'
+import ModeratorDashboard from './components/ModeratorDashboard'
 import AdminDashboard from './views/AdminDashboard'
 import ParentDashboard from './views/ParentDashboard'
 

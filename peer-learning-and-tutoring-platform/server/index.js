@@ -62,6 +62,7 @@ app.use('/api/messages', require('./routes/messages'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/materials', require('./routes/materials'));
+app.use('/api/payments', require('./routes/payments'));
 app.use('/api/moderation', require('./routes/moderation'));
 
 // Error handling middleware

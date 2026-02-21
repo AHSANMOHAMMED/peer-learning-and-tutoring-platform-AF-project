@@ -393,7 +393,7 @@ moderatorActionSchema.statics.getNeedingReview = async function(options = {}) {
 };
 
 // Static method to get statistics
-moderatorActionSchema.statics.getStatistics = async function(timeframe = '30d') => {
+moderatorActionSchema.statics.getStatistics = async function(timeframe = '30d') {
   const now = new Date();
   let startDate;
   
@@ -447,7 +447,7 @@ moderatorActionSchema.statics.getStatistics = async function(timeframe = '30d') 
 };
 
 // Static method to get moderator performance
-moderatorActionSchema.statics.getModeratorPerformance = async function(moderatorId, timeframe = '30d') => {
+moderatorActionSchema.statics.getModeratorPerformance = async function(moderatorId, timeframe = '30d') {
   const now = new Date();
   let startDate;
   

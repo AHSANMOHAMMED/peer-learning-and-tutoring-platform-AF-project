@@ -169,10 +169,10 @@ export function useAuthViewModel() {
   }, []);
 
   // Subscribe to auth view model changes
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = authViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, []);
 
   return {
     ...state,

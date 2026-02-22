@@ -10,6 +10,19 @@ import StudentDashboard from './views/StudentDashboard'
 import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
 
+// Forum Components
+import QuestionList from './components/forum/QuestionList'
+import QuestionDetail from './components/forum/QuestionDetail'
+import AskQuestion from './components/forum/AskQuestion'
+// import CommentSection from './components/forum/CommentSection'
+// import RichTextEditor from './components/forum/RichTextEditor'
+// import VoteButtons from './components/forum/VoteButtons'
+// import AnswerList from './components/forum/AnswerList'
+// import { useQuestionSocket, useSocketEvent } from '../../hooks/useSocket'
+
+// Gamification Components
+// import Leaderboard from './components/gamification/Leaderboard'
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -93,6 +106,21 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+
+            {/* Forum Routes */}
+            <Route path="/forum" element={<QuestionList />} />
+            <Route 
+              path="/forum/ask" 
+              element={
+                <ProtectedRoute>
+                  <AskQuestion />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/forum/question/:id" element={<QuestionDetail />} />
+
+            {/* Gamification Routes */}
+            <Route path="/leaderboard" element={<Leaderboard />} />
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" />} />

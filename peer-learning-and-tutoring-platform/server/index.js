@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
+const BadgeService = require('./services/badgeService');
 
 // Initialize database connection
 connectDB();
@@ -30,6 +31,40 @@ io.on('connection', (socket) => {
   socket.on('join', (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined their room`);
+  });
+
+  // Join question room for real-time updates
+  socket.on('joinQuestion', (questionId) => {
+    socket.join(`question_${questionId}`);
+    console.log(`User ${socket.id} joined question room: ${questionId}`);
+  });
+
+  // Leave question room
+  socket.on('leaveQuestion', (questionId) => {
+    socket.leave(`question_${questionId}`);
+    console.log(`User ${socket.id} left question room: ${questionId}`);
+  });
+
+  // Join leaderboard room for real-time updates
+  socket.on('joinLeaderboard', (type) => {
+    socket.join(`leaderboard_${type}`);
+    console.log(`User ${socket.id} joined leaderboard room: ${type}`);
+  });
+
+  // Handle typing indicators for answers
+  socket.on('typingAnswer', (data) => {
+    const { questionId, userId, isTyping } = data;
+    socket.to(`question_${questionId}`).emit('userTyping', {
+      userId,
+      isTyping,
+      questionId
+    });
+  });
+
+  // Handle real-time notifications
+  socket.on('markNotificationRead', (notificationId) => {
+    // This would typically update the database
+    socket.emit('notificationRead', { notificationId });
   });
 
   // Handle disconnection
@@ -60,9 +95,18 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/sessions', require('./routes/sessions'));
-app.use('/api/materials', require('./routes/materials'));
-app.use('/api/moderation', require('./routes/moderation'));
+// app.use('/api/sessions', require('./routes/sessions')); // Temporarily commented
+// app.use('/api/materials', require('./routes/materials')); // Temporarily commented
+// app.use('/api/moderation', require('./routes/moderation')); // Temporarily commented
+
+// Forum and Gamification Routes
+app.use('/api/questions', require('./routes/questions'));
+app.use('/api/answers', require('./routes/answers'));
+app.use('/api/votes', require('./routes/votes'));
+app.use('/api/comments', require('./routes/comments'));
+app.use('/api/points', require('./routes/points'));
+app.use('/api/badges', require('./routes/badges'));
+app.use('/api/leaderboard', require('./routes/leaderboard'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -98,9 +142,17 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📚 PeerLearn API is ready`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔌 Socket.io server is running`);
+  
+  // Initialize default badges
+  try {
+    await BadgeService.initializeDefaultBadges();
+    console.log('🏆 Default badges initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing default badges:', error);
+  }
 });

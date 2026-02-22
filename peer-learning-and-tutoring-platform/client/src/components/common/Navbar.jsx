@@ -27,6 +27,18 @@ const Navbar = () => {
             ) : isAuthenticated ? (
               <>
                 <Link 
+                  to="/forum" 
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Forum
+                </Link>
+                <Link 
+                  to="/leaderboard" 
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Leaderboard
+                </Link>
+                <Link 
                   to="/browse-tutors" 
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
                 >
@@ -52,6 +64,18 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                <Link 
+                  to="/forum" 
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Forum
+                </Link>
+                <Link 
+                  to="/leaderboard" 
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Leaderboard
+                </Link>
                 <Link 
                   to="/browse-tutors" 
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"

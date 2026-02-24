@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Q&A API Test - Browser Version</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 2px solid #007bff; border-radius: 8px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; font-family: monospace; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Q&A Forum API Test - Browser Version</h1>
+    
+    <div class="test-section">
+        <h2>🎯 Test 1: Create Question</h2>
+        <button onclick="testCreateQuestion()">Create Question</button>
+        <div id="createResult" class="result">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Test 2: Get All Questions</h2>
+        <button onclick="testGetQuestions()">Get Questions</button>
+        <div id="getQuestionsResult" class="result">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Test 3: Vote on Question</h2>
+        <input type="text" id="voteQuestionId" placeholder="Question ID" value="" style="width: 300px; margin: 5px;">
+        <button onclick="testVote()">Vote</button>
+        <div id="voteResult" class="result">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Test 4: Get Leaderboard</h2>
+        <button onclick="testLeaderboard()">Get Leaderboard</button>
+        <div id="leaderboardResult" class="result">Click button to test...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Console Log</h2>
+        <button onclick="clearLog()">Clear Log</button>
+        <div id="consoleLog" class="log">Console output will appear here...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api/qa';
+        let lastQuestionId = '';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = 'result';
+            element.innerHTML = message;
+        }
+
+        async function testCreateQuestion() {
+            try {
+                log('Testing create question...');
+                
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Browser Test Question',
+                        body: 'This is a test question created via browser to verify the backend API is working properly. It has more than 30 characters to pass validation.',
+                        category: 'general'
+                    })
+                });
+                
+                const data = await response.json();
+                log(`Create Question Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    lastQuestionId = data.data._id;
+                    document.getElementById('voteQuestionId').value = lastQuestionId;
+                    showResult('createResult', `✅ SUCCESS! Question ID: ${lastQuestionId}`, 'success');
+                } else {
+                    showResult('createResult', `❌ FAILED: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`Create Question Error: ${error.message}`, 'error');
+                showResult('createResult', `❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetQuestions() {
+            try {
+                log('Testing get questions...');
+                
+                const response = await fetch(`${API_BASE}/questions`);
+                const data = await response.json();
+                
+                log(`Get Questions Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    showResult('getQuestionsResult', `✅ SUCCESS! Found ${data.data.length} questions`, 'success');
+                } else {
+                    showResult('getQuestionsResult', `❌ FAILED: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`Get Questions Error: ${error.message}`, 'error');
+                showResult('getQuestionsResult', `❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testVote() {
+            try {
+                const questionId = document.getElementById('voteQuestionId').value;
+                
+                if (!questionId) {
+                    showResult('voteResult', '❌ Please enter a Question ID', 'error');
+                    return;
+                }
+                
+                log(`Testing vote on question: ${questionId}`);
+                
+                const response = await fetch(`${API_BASE}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        targetType: 'question',
+                        targetId: questionId,
+                        value: 1
+                    })
+                });
+                
+                const data = await response.json();
+                log(`Vote Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    showResult('voteResult', `✅ SUCCESS! Vote recorded`, 'success');
+                } else {
+                    showResult('voteResult', `❌ FAILED: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`Vote Error: ${error.message}`, 'error');
+                showResult('voteResult', `❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLeaderboard() {
+            try {
+                log('Testing leaderboard...');
+                
+                const response = await fetch(`${API_BASE}/leaderboard/overall`);
+                const data = await response.json();
+                
+                log(`Leaderboard Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    showResult('leaderboardResult', `✅ SUCCESS! Leaderboard working`, 'success');
+                } else {
+                    showResult('leaderboardResult', `❌ FAILED: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`Leaderboard Error: ${error.message}`, 'error');
+                showResult('leaderboardResult', `❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('consoleLog').innerHTML = 'Console output will appear here...';
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            log('Browser API Test Page Loaded');
+            log('Ready to test Q&A Forum API');
+            log('Backend: http://localhost:5000/api/qa');
+        };
+    </script>
+</body>
+</html>

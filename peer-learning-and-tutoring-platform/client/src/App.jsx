@@ -109,18 +109,11 @@ function App() {
 
             {/* Forum Routes */}
             <Route path="/forum" element={<QuestionList />} />
-            <Route 
-              path="/forum/ask" 
-              element={
-                <ProtectedRoute>
-                  <AskQuestion />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/forum/ask" element={<AskQuestion />} />
             <Route path="/forum/question/:id" element={<QuestionDetail />} />
 
             {/* Gamification Routes */}
-            <Route path="/leaderboard" element={<Leaderboard />} />
+            {/* <Route path="/leaderboard" element={<Leaderboard />} /> */}
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" />} />

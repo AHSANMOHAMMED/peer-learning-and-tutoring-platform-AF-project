@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, TrendingUp, Clock, MessageSquare, Eye, ThumbsUp, Tag } from 'lucide-react';
-import axios from 'axios';
+import { qaApi } from '../../services/api';
 
 const QuestionList = () => {
   const [questions, setQuestions] = useState([]);
@@ -18,16 +18,11 @@ const QuestionList = () => {
 
   const categories = [
     { value: 'all', label: 'All Categories' },
-    { value: 'Mathematics', label: 'Mathematics' },
-    { value: 'Science', label: 'Science' },
-    { value: 'English', label: 'English' },
-    { value: 'History', label: 'History' },
-    { value: 'Geography', label: 'Geography' },
-    { value: 'Computer Science', label: 'Computer Science' },
-    { value: 'Physics', label: 'Physics' },
-    { value: 'Chemistry', label: 'Chemistry' },
-    { value: 'Biology', label: 'Biology' },
-    { value: 'Other', label: 'Other' }
+    { value: 'general', label: 'General' },
+    { value: 'academic', label: 'Academic' },
+    { value: 'technical', label: 'Technical' },
+    { value: 'career', label: 'Career' },
+    { value: 'other', label: 'Other' }
   ];
 
   const sortOptions = [
@@ -46,18 +41,31 @@ const QuestionList = () => {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
+      const params = {};
       
-      if (filters.search) params.append('search', filters.search);
-      if (filters.category !== 'all') params.append('category', filters.category);
-      if (filters.tags) params.append('tags', filters.tags);
-      if (filters.sortBy) params.append('sortBy', filters.sortBy);
-      params.append('page', filters.page);
-      params.append('limit', 20);
+      if (filters.search) params.search = filters.search;
+      if (filters.category !== 'all') params.category = filters.category;
+      if (filters.tags) params.tags = filters.tags.split(',').map(tag => tag.trim());
+      if (filters.sortBy) {
+        // Map frontend sort values to backend values
+        const sortMapping = {
+          'newest': 'createdAt',
+          'oldest': 'createdAt',
+          'votes': 'votesCount',
+          'views': 'views',
+          'popular': 'votesCount'
+        };
+        params.sortBy = sortMapping[filters.sortBy] || 'createdAt';
+        params.sortOrder = filters.sortBy === 'oldest' ? 1 : -1;
+      }
+      params.page = filters.page;
+      params.limit = 20;
 
-      const response = await axios.get(`/api/questions?${params}`);
-      setQuestions(response.data.questions);
-      setPagination(response.data.pagination);
+      const response = await qaApi.getQuestions(params);
+      if (response.success) {
+        setQuestions(response.data.questions);
+        setPagination(response.data.pagination);
+      }
     } catch (error) {
       console.error('Error fetching questions:', error);
     } finally {
@@ -76,6 +84,16 @@ const QuestionList = () => {
 
   const handlePageChange = (newPage) => {
     setFilters(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleVote = async (questionId, value) => {
+    try {
+      await qaApi.vote('question', questionId, value);
+      // Refresh questions to update vote counts
+      fetchQuestions();
+    } catch (error) {
+      console.error('Error voting:', error);
+    }
   };
 
   const getTimeAgo = (dateString) => {
@@ -112,8 +130,18 @@ const QuestionList = () => {
     <div className="max-w-6xl mx-auto p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Q&A Forum</h1>
-        <p className="text-gray-600">Ask questions, share knowledge, and help others learn</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Q&A Forum</h1>
+            <p className="text-gray-600">Ask questions, share knowledge, and help others learn</p>
+          </div>
+          <Link
+            to="/forum/ask"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            Ask Question
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -140,7 +168,7 @@ const QuestionList = () => {
             </button>
             <Link
               to="/forum/ask"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               Ask Question
             </Link>
@@ -228,11 +256,20 @@ const QuestionList = () => {
               <div className="flex gap-4">
                 {/* Vote Stats */}
                 <div className="flex flex-col items-center min-w-16 text-center">
-                  <div className="flex items-center gap-1 text-gray-600">
+                  <button
+                    onClick={() => handleVote(question._id, 1)}
+                    className="flex items-center gap-1 text-gray-600 hover:text-green-600 transition-colors"
+                  >
                     <ThumbsUp className="h-4 w-4" />
-                    <span className="font-medium">{question.upvotes}</span>
-                  </div>
+                    <span className="font-medium">{question.upvotes || 0}</span>
+                  </button>
                   <div className="text-xs text-gray-500">votes</div>
+                  <button
+                    onClick={() => handleVote(question._id, -1)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    ▼
+                  </button>
                 </div>
 
                 {/* Question Content */}
@@ -311,29 +348,39 @@ const QuestionList = () => {
       </div>
 
       {/* Pagination */}
-      {pagination && pagination.total > 1 && (
+      {pagination && pagination.pages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-8">
           <button
-            onClick={() => handlePageChange(pagination.current - 1)}
-            disabled={!pagination.hasPrev}
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page <= 1}
             className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Previous
           </button>
           
           <span className="text-sm text-gray-600">
-            Page {pagination.current} of {pagination.total}
+            Page {pagination.page} of {pagination.pages}
           </span>
           
           <button
-            onClick={() => handlePageChange(pagination.current + 1)}
-            disabled={!pagination.hasNext}
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page >= pagination.pages}
             className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
           >
             Next
           </button>
         </div>
       )}
+
+      {/* Floating Ask Question Button */}
+      <div className="fixed bottom-8 right-8">
+        <Link
+          to="/forum/ask"
+          className="px-6 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-105 font-semibold"
+        >
+          Ask Question
+        </Link>
+      </div>
     </div>
   );
 };

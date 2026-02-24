@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X } from 'lucide-react';
-import axios from 'axios';
-import RichTextEditor from './RichTextEditor';
+import { qaApi } from '../../services/api';
 
 const AskQuestion = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     body: '',
-    category: 'Other',
+    category: 'other',
     tags: []
   });
   const [tagInput, setTagInput] = useState('');
@@ -17,16 +16,11 @@ const AskQuestion = () => {
   const [errors, setErrors] = useState({});
 
   const categories = [
-    { value: 'Mathematics', label: 'Mathematics' },
-    { value: 'Science', label: 'Science' },
-    { value: 'English', label: 'English' },
-    { value: 'History', label: 'History' },
-    { value: 'Geography', label: 'Geography' },
-    { value: 'Computer Science', label: 'Computer Science' },
-    { value: 'Physics', label: 'Physics' },
-    { value: 'Chemistry', label: 'Chemistry' },
-    { value: 'Biology', label: 'Biology' },
-    { value: 'Other', label: 'Other' }
+    { value: 'general', label: 'General' },
+    { value: 'academic', label: 'Academic' },
+    { value: 'technical', label: 'Technical' },
+    { value: 'career', label: 'Career' },
+    { value: 'other', label: 'Other' }
   ];
 
   const commonTags = [
@@ -65,25 +59,59 @@ const AskQuestion = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    console.log('Form submitted with current formData:', formData);
+    console.log('Title:', formData.title);
+    console.log('Body:', formData.body);
+    console.log('Category:', formData.category);
+    console.log('Tags:', formData.tags);
+    
+    if (!validateForm()) {
+      console.log('Form validation failed');
+      return;
+    }
 
     try {
       setSubmitting(true);
-      const response = await axios.post('/api/questions', {
+      
+      const questionData = {
         title: formData.title.trim(),
         body: formData.body.trim(),
         category: formData.category,
         tags: formData.tags
-      });
-
-      navigate(`/forum/question/${response.data._id}`);
+      };
+      
+      console.log('Submitting question data:', questionData);
+      console.log('Title length:', questionData.title.length);
+      console.log('Body length:', questionData.body.length);
+      console.log('Category value:', questionData.category);
+      
+      const response = await qaApi.createQuestion(questionData);
+      
+      console.log('API response:', response);
+      
+      if (response.success) {
+        navigate(`/forum/question/${response.data._id}`);
+      } else {
+        console.log('API returned error:', response.message);
+        setErrors({ submit: response.message || 'Failed to create question' });
+      }
     } catch (error) {
       console.error('Error posting question:', error);
+      console.error('Error response:', error.response);
+      console.error('Error data:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors.reduce((acc, err) => {
           acc[err.field] = err.message;
           return acc;
         }, {}));
+      } else if (error.response?.data?.message) {
+        setErrors({ submit: error.response.data.message });
+      } else if (error.message) {
+        setErrors({ submit: error.message });
+      } else {
+        setErrors({ submit: 'Something went wrong. Please try again.' });
       }
     } finally {
       setSubmitting(false);
@@ -136,6 +164,12 @@ const AskQuestion = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* General Error Display */}
+        {errors.submit && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+            {errors.submit}
+          </div>
+        )}
         {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -181,11 +215,12 @@ const AskQuestion = () => {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Details <span className="text-red-500">*</span>
           </label>
-          <RichTextEditor
+          <textarea
             value={formData.body}
-            onChange={(value) => setFormData(prev => ({ ...prev, body: value }))}
+            onChange={(e) => setFormData(prev => ({ ...prev, body: e.target.value }))}
             placeholder="Include all the information someone would need to answer your question"
-            height="300px"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            rows="6"
           />
           {errors.body && (
             <p className="mt-1 text-sm text-red-600">{errors.body}</p>

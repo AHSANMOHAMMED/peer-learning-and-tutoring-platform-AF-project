@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, MessageSquare, Eye, Clock, User, CheckCircle, Edit, Trash2, Flag } from 'lucide-react';
-import axios from 'axios';
+import { qaApi } from '../../services/api';
 import VoteButtons from './VoteButtons';
 import AnswerList from './AnswerList';
 import CommentSection from './CommentSection';
@@ -18,6 +18,14 @@ const QuestionDetail = () => {
   const [answerContent, setAnswerContent] = useState('');
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    body: '',
+    category: '',
+    tags: []
+  });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Socket integration
   // const { socket, emitTyping } = useQuestionSocket(id);
@@ -115,18 +123,56 @@ const QuestionDetail = () => {
 
     try {
       setSubmittingAnswer(true);
-      await axios.post(`/api/answers/question/${id}`, {
+      const response = await qaApi.createAnswer({
+        questionId: id,
         body: answerContent
       });
       
-      setAnswerContent('');
-      setShowAnswerForm(false);
-      fetchAnswers();
-      fetchQuestion(); // Update answer count
+      if (response.success) {
+        setAnswers(prev => [response.data, ...prev]);
+        setAnswerContent('');
+        setShowAnswerForm(false);
+      }
     } catch (error) {
-      console.error('Error submitting answer:', error);
+      console.error('Error posting answer:', error);
     } finally {
       setSubmittingAnswer(false);
+    }
+  };
+
+  const handleEditQuestion = () => {
+    if (question) {
+      setEditForm({
+        title: question.title,
+        body: question.body,
+        category: question.category,
+        tags: question.tags || []
+      });
+      setIsEditing(true);
+    }
+  };
+
+  const handleUpdateQuestion = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await qaApi.updateQuestion(id, editForm);
+      if (response.success) {
+        setQuestion(response.data);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Error updating question:', error);
+    }
+  };
+
+  const handleDeleteQuestion = async () => {
+    try {
+      await qaApi.deleteQuestion(id);
+      // Redirect to forum after deletion
+      window.location.href = '/forum';
+    } catch (error) {
+      console.error('Error deleting question:', error);
     }
   };
 
@@ -262,18 +308,21 @@ const QuestionDetail = () => {
               <button className="text-gray-500 hover:text-gray-700">
                 <Flag className="h-4 w-4" />
               </button>
-              {question.author?._id === localStorage.getItem('userId') && (
-                <>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button className="text-gray-500 hover:text-red-600">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </>
-              )}
+              <button 
+                onClick={handleEditQuestion}
+                className="text-gray-500 hover:text-blue-600"
+                title="Edit Question"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-gray-500 hover:text-red-600"
+                title="Delete Question"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
-          </div>
         </div>
 
         {/* Comments Section */}
@@ -359,7 +408,133 @@ const QuestionDetail = () => {
           onAnswerUpdate={fetchAnswers}
           onQuestionUpdate={fetchQuestion}
         />
+        
+        {/* Answer Form */}
+        {showAnswerForm && (
+          <div className="mt-6 p-4 border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Your Answer</h3>
+            <form onSubmit={handleAnswerSubmit}>
+              <textarea
+                value={answerContent}
+                onChange={(e) => setAnswerContent(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                rows="4"
+                placeholder="Write your answer here..."
+                required
+              />
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAnswerForm(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAnswer}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {submittingAnswer ? 'Submitting...' : 'Post Answer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
+
+      {/* Edit Question Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Edit Question</h2>
+              <form onSubmit={handleUpdateQuestion}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="general">General</option>
+                    <option value="academic">Academic</option>
+                    <option value="technical">Technical</option>
+                    <option value="career">Career</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Body</label>
+                  <textarea
+                    value={editForm.body}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, body: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows="6"
+                    required
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Update Question
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Delete Question</h2>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this question? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteQuestion}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

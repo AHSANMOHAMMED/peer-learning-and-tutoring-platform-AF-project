@@ -108,6 +108,9 @@ app.use('/api/points', require('./routes/points'));
 app.use('/api/badges', require('./routes/badges'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 
+// Q&A Module Routes (Isolated Feature)
+app.use('/api/qa', require('./modules/qa/routes/qa.routes'));
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

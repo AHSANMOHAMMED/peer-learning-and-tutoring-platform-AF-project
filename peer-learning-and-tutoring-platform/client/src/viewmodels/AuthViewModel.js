@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { User } from '../models/User';
 import { authService } from '../services/authService';
 
@@ -169,10 +169,10 @@ export function useAuthViewModel() {
   }, []);
 
   // Subscribe to auth view model changes
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = authViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, [updateState]);
 
   return {
     ...state,

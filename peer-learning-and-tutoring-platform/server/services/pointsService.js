@@ -4,6 +4,14 @@ const Badge = require('../models/Badge');
 const UserBadge = require('../models/UserBadge');
 
 class PointsService {
+  // Point constants as per requirements
+  static POINTS = {
+    QUESTION_POSTED: 2,
+    ANSWER_UPVOTE_RECEIVED: 10,
+    ANSWER_DOWNVOTE_RECEIVED: -2,
+    QUESTION_UPVOTE_RECEIVED: 5
+  };
+
   // Award points to user and check for badge eligibility
   static async awardPoints(userId, points, type, referenceId = null, referenceType = null, description = '', metadata = {}) {
     try {
@@ -245,6 +253,70 @@ class PointsService {
       console.error('Error getting points stats:', error);
       throw error;
     }
+  }
+
+  // Process question posting
+  static async awardQuestionPosted(userId, questionId, subject) {
+    return await this.awardPoints(
+      userId,
+      this.POINTS.QUESTION_POSTED,
+      'question_posted',
+      questionId,
+      'question',
+      'Question posted',
+      { subject }
+    );
+  }
+
+  // Process answer upvote received
+  static async awardAnswerUpvoteReceived(userId, answerId, subject) {
+    return await this.awardPoints(
+      userId,
+      this.POINTS.ANSWER_UPVOTE_RECEIVED,
+      'answer_upvote_received',
+      answerId,
+      'answer',
+      'Answer received upvote',
+      { subject }
+    );
+  }
+
+  // Process answer downvote received
+  static async awardAnswerDownvoteReceived(userId, answerId, subject) {
+    return await this.awardPoints(
+      userId,
+      this.POINTS.ANSWER_DOWNVOTE_RECEIVED,
+      'answer_downvote_received',
+      answerId,
+      'answer',
+      'Answer received downvote',
+      { subject }
+    );
+  }
+
+  // Process question upvote received
+  static async awardQuestionUpvoteReceived(userId, questionId, subject) {
+    return await this.awardPoints(
+      userId,
+      this.POINTS.QUESTION_UPVOTE_RECEIVED,
+      'question_upvote_received',
+      questionId,
+      'question',
+      'Question received upvote',
+      { subject }
+    );
+  }
+
+  // Reverse points (when vote is removed or changed)
+  static async reversePoints(userId, points, type, referenceId = null, referenceType = null, description = '') {
+    return await this.awardPoints(
+      userId,
+      -points, // Reverse the points
+      type,
+      referenceId,
+      referenceType,
+      description
+    );
   }
 
   // Process daily login bonus

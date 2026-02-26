@@ -5,11 +5,16 @@ import { useBookingViewModel } from '../viewmodels/BookingViewModel';
 
 const StudentDashboard = () => {
   const { user } = useAuthViewModel();
-  const { bookings, upcomingBookings, fetchUpcomingBookings, isLoading } = useBookingViewModel();
+  const { bookings, getStudentBookings, isLoading } = useBookingViewModel();
+
+  // Derive upcoming bookings from all bookings
+  const upcomingBookings = bookings?.filter((booking) => booking.isUpcoming) || [];
 
   useEffect(() => {
-    fetchUpcomingBookings();
-  }, []);
+    if (user?.id) {
+      getStudentBookings(user.id);
+    }
+  }, [user?.id, getStudentBookings]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

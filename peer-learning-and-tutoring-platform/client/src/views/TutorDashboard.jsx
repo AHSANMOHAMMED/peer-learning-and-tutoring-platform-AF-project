@@ -5,13 +5,15 @@ import { useBookingViewModel } from '../viewmodels/BookingViewModel';
 
 const TutorDashboard = () => {
   const { user } = useAuthViewModel();
-  const { bookings, upcomingBookings, fetchTutorBookings, isLoading } = useBookingViewModel();
+  const { bookings, getTutorBookings, isLoading } = useBookingViewModel();
 
   useEffect(() => {
     if (user?.isTutor) {
-      fetchTutorBookings(user.id);
+      getTutorBookings(user.id);
     }
   }, [user]);
+
+  const upcomingBookings = bookings?.filter((booking) => booking.isUpcoming) || [];
 
   // Mock stats - in real app, these would come from API
   const stats = {

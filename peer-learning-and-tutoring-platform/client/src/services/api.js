@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_SERVER_URL || 'http://localhost:5000',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -130,6 +130,95 @@ export const apiService = {
     } catch (error) {
       return handleError(error);
     }
+  }
+};
+
+// Q&A Forum API Services
+export const qaApi = {
+  // Questions
+  async getQuestions(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/api/qa/questions?${queryString}`);
+  },
+
+  async getQuestionById(id) {
+    return apiService.get(`/api/qa/questions/${id}`);
+  },
+
+  async createQuestion(questionData) {
+    return apiService.post('/api/qa/questions', questionData);
+  },
+
+  async updateQuestion(id, questionData) {
+    return apiService.put(`/api/qa/questions/${id}`, questionData);
+  },
+
+  async deleteQuestion(id) {
+    return apiService.delete(`/api/qa/questions/${id}`);
+  },
+
+  // Answers
+  async getAnswersByQuestionId(questionId) {
+    return apiService.get(`/api/qa/answers/${questionId}`);
+  },
+
+  async createAnswer(answerData) {
+    return apiService.post('/api/qa/answers', answerData);
+  },
+
+  async updateAnswer(id, answerData) {
+    return apiService.put(`/api/qa/answers/${id}`, answerData);
+  },
+
+  async deleteAnswer(id) {
+    return apiService.delete(`/api/qa/answers/${id}`);
+  },
+
+  async acceptAnswer(id, questionId) {
+    return apiService.post(`/api/qa/answers/${id}/accept`, { questionId });
+  },
+
+  // Voting
+  async vote(targetType, targetId, value) {
+    return apiService.post('/api/qa/vote', { targetType, targetId, value });
+  },
+
+  // Leaderboard
+  async getLeaderboard(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/api/qa/leaderboard/overall?${queryString}`);
+  },
+
+  async getCategoryLeaderboard(category, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return apiService.get(`/api/qa/leaderboard/${category}?${queryString}`);
+  },
+
+  async getUserRank(userId) {
+    return apiService.get(`/api/qa/leaderboard/user/${userId}`);
+  },
+
+  // Notifications
+  async getNotifications(unreadOnly = false) {
+    const params = unreadOnly ? { unreadOnly: true } : {};
+    return apiService.get('/api/qa/notifications', { params });
+  },
+
+  async markNotificationAsRead(id) {
+    return apiService.put(`/api/qa/notifications/${id}/read`);
+  },
+
+  async markAllNotificationsAsRead() {
+    return apiService.put('/api/qa/notifications/read-all');
+  },
+
+  // User Points
+  async getUserPoints(userId) {
+    return apiService.get(`/api/qa/users/${userId}/points`);
+  },
+
+  async getUserPointHistory(userId, limit = 10) {
+    return apiService.get(`/api/qa/users/${userId}/points/history?limit=${limit}`);
   }
 };
 

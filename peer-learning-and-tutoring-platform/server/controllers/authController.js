@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const emailService = require('../services/emailService');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -225,8 +226,13 @@ const forgotPassword = async (req, res) => {
     user.passwordResetExpires = resetTokenExpiry;
     await user.save();
 
-    // TODO: Send email with reset token
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    // In development without email credentials, just log the token
+    if (process.env.NODE_ENV === 'development' && !process.env.EMAIL_USER) {
+      console.log(`Password reset token for ${email}: ${resetToken}`);
+    } else {
+      // Send reset code email
+      await emailService.sendPasswordResetCode(email, resetToken);
+    }
 
     res.json({
       success: true,

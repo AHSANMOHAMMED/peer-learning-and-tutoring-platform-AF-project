@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
-import axios from 'axios';
+import { apiService } from '../services/api';
 import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
@@ -26,21 +26,28 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       // Fetch statistics
-      const statsResponse = await axios.get('/api/admin/statistics');
-      if (statsResponse.data.success) {
-        setStats(statsResponse.data.data);
+      const statsResponse = await apiService.get('/api/admin/statistics');
+      if (statsResponse.success) {
+        const payload = statsResponse.data?.data || statsResponse.data;
+        setStats((prev) => ({ ...prev, ...payload }));
       }
 
       // Fetch recent users
-      const usersResponse = await axios.get('/api/users?limit=5&sort=-createdAt');
-      if (usersResponse.data.success) {
-        setRecentUsers(usersResponse.data.data.users || []);
+      const usersResponse = await apiService.get('/api/users', {
+        params: { limit: 5, page: 1 }
+      });
+      if (usersResponse.success) {
+        const usersPayload = usersResponse.data?.data || usersResponse.data;
+        setRecentUsers(usersPayload.users || []);
       }
 
       // Fetch recent reports
-      const reportsResponse = await axios.get('/api/moderation/reports?status=pending&limit=5');
-      if (reportsResponse.data.success) {
-        setRecentReports(reportsResponse.data.data.reports || []);
+      const reportsResponse = await apiService.get('/api/moderation/reports', {
+        params: { status: 'pending', limit: 5, page: 1 }
+      });
+      if (reportsResponse.success) {
+        const reportsPayload = reportsResponse.data?.data || reportsResponse.data;
+        setRecentReports(reportsPayload.reports || []);
       }
     } catch (error) {
       console.error('Dashboard data fetch error:', error);
@@ -52,8 +59,8 @@ const AdminDashboard = () => {
 
   const handleUserAction = async (userId, action) => {
     try {
-      const response = await axios.put(`/api/users/${userId}/${action}`);
-      if (response.data.success) {
+      const response = await apiService.put(`/api/users/${userId}`, { action });
+      if (response.success) {
         toast.success(`User ${action}d successfully`);
         fetchDashboardData();
       }
@@ -189,6 +196,25 @@ const AdminDashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Link
+            to="/admin/users"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900">Users</h3>
+                <p className="text-sm text-gray-500">View and manage users</p>
+              </div>
+            </div>
+          </Link>
+
           <Link
             to="/moderation"
             className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"

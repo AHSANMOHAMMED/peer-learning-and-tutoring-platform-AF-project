@@ -1,8 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const LeaderboardService = require('../services/leaderboardService');
+const leaderboardController = require('../controllers/leaderboardController');
 
-// Get overall leaderboard
+// Get global leaderboard
+router.get('/global', async (req, res) => {
+  try {
+    res.json({ 
+      success: true, 
+      message: 'Global leaderboard endpoint working!',
+      data: {
+        period: req.query.period || 'all',
+        limit: req.query.limit || 20
+      }
+    });
+  } catch (error) {
+    console.error('Error in global leaderboard:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch global leaderboard' });
+  }
+});
+
+// Get overall leaderboard (root endpoint - alias for global)
 router.get('/', async (req, res) => {
   try {
     const { period = 'all', limit = 10, offset = 0 } = req.query;
@@ -23,25 +41,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get subject-specific leaderboard
-router.get('/subject/:subject', async (req, res) => {
-  try {
-    const { subject } = req.params;
-    const { period = 'all', limit = 10, offset = 0 } = req.query;
-    
-    const options = {
-      period,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    };
-    
-    const leaderboard = await LeaderboardService.getSubjectLeaderboard(subject, options);
-    
-    res.json(leaderboard);
-  } catch (error) {
-    console.error('Error getting subject leaderboard:', error);
-    res.status(500).json({ error: 'Failed to fetch subject leaderboard' });
-  }
-});
+router.get('/subject/:subject', leaderboardController.getSubjectLeaderboard);
 
 // Get badge leaderboard
 router.get('/badges', async (req, res) => {

@@ -10,6 +10,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: false
+  },
+  define: {
+    global: 'globalThis'
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom']
+  },
+  esbuild: {
+    drop: ['debugger']
   }
 })

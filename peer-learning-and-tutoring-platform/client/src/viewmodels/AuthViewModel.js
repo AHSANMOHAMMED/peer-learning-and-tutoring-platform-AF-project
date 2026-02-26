@@ -61,8 +61,15 @@ export class AuthViewModel {
     try {
       const response = await authService.login(credentials);
       if (response.success) {
-        localStorage.setItem('token', response.data.token);
-        this.setUser(response.data.user);
+        // Support both { token, user } and { data: { token, user } } shapes
+        const payload = response.data?.data || response.data;
+        const token = payload?.token;
+        const user = payload?.user;
+
+        if (token) {
+          localStorage.setItem('token', token);
+        }
+        this.setUser(user);
         return { success: true, data: response.data };
       } else {
         this.setError(response.message || 'Login failed');
@@ -80,8 +87,14 @@ export class AuthViewModel {
     try {
       const response = await authService.register(userData);
       if (response.success) {
-        localStorage.setItem('token', response.data.token);
-        this.setUser(response.data.user);
+        const payload = response.data?.data || response.data;
+        const token = payload?.token;
+        const user = payload?.user;
+
+        if (token) {
+          localStorage.setItem('token', token);
+        }
+        this.setUser(user);
         return { success: true, data: response.data };
       } else {
         this.setError(response.message || 'Registration failed');

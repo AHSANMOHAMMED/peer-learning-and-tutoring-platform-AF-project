@@ -9,8 +9,28 @@ import RegisterView from './views/RegisterView'
 import StudentDashboard from './views/StudentDashboard'
 import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
+import SessionRoom from './components/SessionRoom'
+import ResourceLibrary from './components/ResourceLibrary'
+import AdminDashboard from './views/AdminDashboard'
+import ParentDashboard from './views/ParentDashboard'
 
-// Protected Route Component
+// Unauthorized Page
+const UnauthorizedPage = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="max-w-md w-full text-center">
+      <div className="text-6xl mb-4">🚫</div>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Access Denied</h1>
+      <p className="text-gray-600 mb-6">
+        You don't have permission to access this page. Please contact an administrator if you believe this is an error.
+      </p>
+      <a href="/" className="btn-primary inline-block">
+        Go Home
+      </a>
+    </div>
+  </div>
+);
+
+// Protected Route Component - checks authentication only
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
@@ -25,9 +45,9 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-// Public Route Component (redirect if authenticated)
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+// Role Protected Route Component - checks authentication AND role
+const RoleProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
     return (
@@ -37,7 +57,63 @@ const PublicRoute = ({ children }) => {
     );
   }
   
-  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  if (!allowedRoles.includes(user?.role)) {
+    return <Navigate to="/unauthorized" />;
+  }
+  
+  return children;
+};
+
+// Public Route Component (redirect if authenticated)
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+  
+  if (isAuthenticated) {
+    // Redirect to role-appropriate dashboard
+    const roleRoutes = {
+      admin: '/admin/dashboard',
+      tutor: '/tutor/dashboard',
+      parent: '/parent/dashboard',
+      student: '/student/dashboard'
+    };
+    return <Navigate to={roleRoutes[user?.role] || '/student/dashboard'} />;
+  }
+  
+  return children;
+};
+
+// Dynamic Dashboard Router - renders correct dashboard based on user role
+const DashboardRouter = () => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+  
+  const roleDashboards = {
+    admin: <AdminDashboard />,
+    tutor: <TutorDashboard />,
+    parent: <ParentDashboard />,
+    student: <StudentDashboard />
+  };
+  
+  return roleDashboards[user?.role] || <StudentDashboard />;
 };
 
 function App() {
@@ -68,29 +144,85 @@ function App() {
               } 
             />
             
-            {/* Protected Routes */}
+            {/* Unauthorized Page */}
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            
+            {/* Dynamic Dashboard Route */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <StudentDashboard />
+                  <DashboardRouter />
                 </ProtectedRoute>
+              } 
+            />
+            
+            {/* Role-Specific Dashboard Routes */}
+            <Route 
+              path="/student/dashboard" 
+              element={
+                <RoleProtectedRoute allowedRoles={['student']}>
+                  <StudentDashboard />
+                </RoleProtectedRoute>
               } 
             />
             <Route 
-              path="/tutor-dashboard" 
+              path="/tutor/dashboard" 
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={['tutor']}>
                   <TutorDashboard />
-                </ProtectedRoute>
+                </RoleProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <RoleProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </RoleProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/parent/dashboard" 
+              element={
+                <RoleProtectedRoute allowedRoles={['parent']}>
+                  <ParentDashboard />
+                </RoleProtectedRoute>
+              } 
+            />
+            
+            {/* Shared Protected Routes - Multiple Roles */}
             <Route 
               path="/browse-tutors" 
               element={
-                <ProtectedRoute>
+                <RoleProtectedRoute allowedRoles={['student', 'parent']}>
                   <BrowseTutors />
+                </RoleProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/session/:id" 
+              element={
+                <ProtectedRoute>
+                  <SessionRoom />
                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/resources" 
+              element={
+                <ProtectedRoute>
+                  <ResourceLibrary />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Admin/Moderator Only Routes */}
+            <Route 
+              path="/moderation" 
+              element={
+                <RoleProtectedRoute allowedRoles={['admin']}>
+                  <ModeratorDashboard />
+                </RoleProtectedRoute>
               } 
             />
             

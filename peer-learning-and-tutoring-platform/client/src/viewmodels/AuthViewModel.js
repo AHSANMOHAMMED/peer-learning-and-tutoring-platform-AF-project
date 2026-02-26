@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { User } from '../models/User';
 import { authService } from '../services/authService';
 
@@ -155,6 +155,50 @@ export class AuthViewModel {
     this.error = null;
     this.notify();
   }
+
+  // Get dashboard route for current user role
+  getDashboardRoute() {
+    if (!this.user) return '/login';
+    
+    const roleRoutes = {
+      admin: '/admin/dashboard',
+      tutor: '/tutor/dashboard',
+      parent: '/parent/dashboard',
+      student: '/student/dashboard'
+    };
+    
+    return roleRoutes[this.user.role] || '/dashboard';
+  }
+
+  // Check if user has specific role
+  hasRole(role) {
+    return this.user?.role === role;
+  }
+
+  // Check if user has any of the specified roles
+  hasAnyRole(roles) {
+    return roles.includes(this.user?.role);
+  }
+
+  // Check if user is admin
+  isAdmin() {
+    return this.user?.role === 'admin';
+  }
+
+  // Check if user is tutor
+  isTutor() {
+    return this.user?.role === 'tutor';
+  }
+
+  // Check if user is student
+  isStudent() {
+    return this.user?.role === 'student';
+  }
+
+  // Check if user is parent
+  isParent() {
+    return this.user?.role === 'parent';
+  }
 }
 
 // Create singleton instance
@@ -181,6 +225,13 @@ export function useAuthViewModel() {
     logout: authViewModel.logout.bind(authViewModel),
     checkAuth: authViewModel.checkAuth.bind(authViewModel),
     updateProfile: authViewModel.updateProfile.bind(authViewModel),
-    clearError: authViewModel.clearError.bind(authViewModel)
+    clearError: authViewModel.clearError.bind(authViewModel),
+    getDashboardRoute: authViewModel.getDashboardRoute.bind(authViewModel),
+    hasRole: authViewModel.hasRole.bind(authViewModel),
+    hasAnyRole: authViewModel.hasAnyRole.bind(authViewModel),
+    isAdmin: authViewModel.isAdmin.bind(authViewModel),
+    isTutor: authViewModel.isTutor.bind(authViewModel),
+    isStudent: authViewModel.isStudent.bind(authViewModel),
+    isParent: authViewModel.isParent.bind(authViewModel)
   };
 }

@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const materialController = require('../controllers/materialController');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
@@ -86,5 +86,23 @@ router.post('/:id/reviews', authenticate, [
 router.get('/popular/list', [
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
 ], validate, materialController.getPopularMaterials);
+
+// Admin only - Get pending materials for approval
+router.get('/admin/pending', authenticate, authorize('admin'), [
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+], validate, materialController.getPendingMaterials);
+
+// Admin only - Approve material
+router.put('/:id/approve', authenticate, authorize('admin'), [
+  param('id').isMongoId().withMessage('Invalid material ID'),
+  body('notes').optional().trim().isLength({ max: 500 }).withMessage('Notes must be less than 500 characters')
+], validate, materialController.approveMaterial);
+
+// Admin only - Reject material
+router.put('/:id/reject', authenticate, authorize('admin'), [
+  param('id').isMongoId().withMessage('Invalid material ID'),
+  body('reason').trim().isLength({ min: 1, max: 500 }).withMessage('Rejection reason is required (1-500 characters)')
+], validate, materialController.rejectMaterial);
 
 module.exports = router;

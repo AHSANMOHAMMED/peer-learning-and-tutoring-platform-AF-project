@@ -3,6 +3,7 @@ const Answer = require('../models/Answer');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
 const PointTransaction = require('../models/PointTransaction');
+const PointsService = require('../services/pointsService');
 const { validationResult } = require('express-validator');
 
 // Get all questions with pagination and filtering
@@ -126,20 +127,13 @@ const getQuestionById = async (req, res) => {
 // Create new question
 const createQuestion = async (req, res) => {
   try {
-    console.log('Creating question with data:', req.body);
-    
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     
     const { title, body, tags, category } = req.body;
     
-    // Temporarily add mock user for testing
-    req.user = { _id: '507f1f77bcf86cd799439012' };
-    
-    console.log('Creating question object...');
     const question = new Question({
       title,
       body,
@@ -148,31 +142,21 @@ const createQuestion = async (req, res) => {
       author: req.user._id
     });
     
-    console.log('Saving question...');
     await question.save();
     
-    console.log('Question saved successfully:', question._id);
-    
-    // Temporarily disable points and user stats for testing
-    // Award points for posting question
-    // await PointTransaction.createTransaction({
-    //   user: req.user._id,
-    //   points: 2,
-    //   type: 'question_posted',
-    //   referenceId: question._id,
-    //   referenceType: 'question',
-    //   description: 'Posted a question'
-    // });
+    // Award points for posting question (+2 points)
+    await PointsService.awardQuestionPosted(req.user._id, question._id, category);
     
     // Update user's forum stats
-    // const User = require('../models/User');
-    // const user = await User.findById(req.user._id);
-    // await user.updateForumStats('questionsAsked');
-    // await user.addSubjectPoints(category, 2);
+    const User = require('../models/User');
+    const user = await User.findById(req.user._id);
+    if (user) {
+      await user.updateForumStats('questionsAsked');
+      await user.addSubjectPoints(category, 2);
+    }
     
-    // Temporarily disable populate for testing
     // Populate author details for response
-    // await question.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
+    await question.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     
     // Emit real-time event
     if (global.io) {
@@ -182,7 +166,6 @@ const createQuestion = async (req, res) => {
       });
     }
     
-    console.log('Sending response...');
     res.status(201).json(question);
   } catch (error) {
     console.error('Error in createQuestion:', error);

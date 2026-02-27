@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Form Submission</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 20px; border: 2px solid #dc3545; border-radius: 8px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+        input, textarea, select { width: 300px; margin: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Form Submission Error</h1>
+    
+    <div class="debug-section">
+        <h2>❌ Error Analysis</h2>
+        <p><strong>Error:</strong> "Title, body, and category are required"</p>
+        <p><strong>Cause:</strong> One or more required fields are empty or undefined</p>
+        <p><strong>Solution:</strong> Check what data is being sent to the backend</p>
+    </div>
+
+    <div class="debug-section">
+        <h2>🎯 Test Form Data</h2>
+        <input type="text" id="debugTitle" placeholder="Question title" value="Debug Test Question Title">
+        <br>
+        <select id="debugCategory">
+            <option value="general">General</option>
+            <option value="academic">Academic</option>
+            <option value="technical">Technical</option>
+            <option value="career">Career</option>
+            <option value="other">Other</option>
+        </select>
+        <br>
+        <textarea id="debugBody" placeholder="Question body (30+ chars)" rows="3">This is a debug test question body with more than 30 characters to verify the form submission is working correctly</textarea>
+        <br>
+        <button onclick="debugFormData()">Debug Form Data</button>
+        <div id="debugResult" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🎯 Test Empty Fields</h2>
+        <button onclick="testEmptyTitle()">Test Empty Title</button>
+        <button onclick="testEmptyBody()">Test Empty Body</button>
+        <button onclick="testEmptyCategory()">Test Empty Category</button>
+        <button onclick="testAllEmpty()">Test All Empty</button>
+        <div id="emptyResult" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🎯 Test Valid Submission</h2>
+        <button onclick="testValidSubmission()">Test Valid Submission</button>
+        <div id="validResult" class="result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>📋 Console Log</h2>
+        <button onclick="clearLog()">Clear Log</button>
+        <div id="consoleLog" class="log">Console output will appear here...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api/qa';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="${type}">${message}</span>`;
+        }
+
+        function debugFormData() {
+            const title = document.getElementById('debugTitle').value;
+            const category = document.getElementById('debugCategory').value;
+            const body = document.getElementById('debugBody').value;
+            
+            log('=== DEBUG FORM DATA ===');
+            log(`Title: "${title}" (length: ${title.length})`);
+            log(`Body: "${body}" (length: ${body.length})`);
+            log(`Category: "${category}"`);
+            log(`Title trimmed: "${title.trim()}" (length: ${title.trim().length})`);
+            log(`Body trimmed: "${body.trim()}" (length: ${body.trim().length})`);
+            
+            const isValid = title.trim().length > 0 && body.trim().length > 0 && category;
+            log(`Valid submission: ${isValid}`);
+            
+            if (isValid) {
+                showResult('debugResult', '✅ Form data looks valid!', 'success');
+            } else {
+                showResult('debugResult', '❌ Form data has issues!', 'error');
+            }
+        }
+
+        async function testEmptyTitle() {
+            log('=== TESTING EMPTY TITLE ===');
+            try {
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: '',
+                        body: 'Test body with more than 30 characters',
+                        category: 'general',
+                        tags: ['test']
+                    })
+                });
+                
+                const data = await response.json();
+                log(`Empty Title Response: ${JSON.stringify(data, null, 2)}`);
+                showResult('emptyResult', `Empty Title: ${data.success ? 'SUCCESS' : 'FAILED - ' + data.message}`, data.success ? 'success' : 'error');
+            } catch (error) {
+                log(`Empty Title Error: ${error.message}`, 'error');
+                showResult('emptyResult', `Empty Title: ERROR - ${error.message}`, 'error');
+            }
+        }
+
+        async function testEmptyBody() {
+            log('=== TESTING EMPTY BODY ===');
+            try {
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Test question title',
+                        body: '',
+                        category: 'general',
+                        tags: ['test']
+                    })
+                });
+                
+                const data = await response.json();
+                log(`Empty Body Response: ${JSON.stringify(data, null, 2)}`);
+                showResult('emptyResult', `Empty Body: ${data.success ? 'SUCCESS' : 'FAILED - ' + data.message}`, data.success ? 'success' : 'error');
+            } catch (error) {
+                log(`Empty Body Error: ${error.message}`, 'error');
+                showResult('emptyResult', `Empty Body: ERROR - ${error.message}`, 'error');
+            }
+        }
+
+        async function testEmptyCategory() {
+            log('=== TESTING EMPTY CATEGORY ===');
+            try {
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Test question title',
+                        body: 'Test body with more than 30 characters',
+                        category: '',
+                        tags: ['test']
+                    })
+                });
+                
+                const data = await response.json();
+                log(`Empty Category Response: ${JSON.stringify(data, null, 2)}`);
+                showResult('emptyResult', `Empty Category: ${data.success ? 'SUCCESS' : 'FAILED - ' + data.message}`, data.success ? 'success' : 'error');
+            } catch (error) {
+                log(`Empty Category Error: ${error.message}`, 'error');
+                showResult('emptyResult', `Empty Category: ERROR - ${error.message}`, 'error');
+            }
+        }
+
+        async function testAllEmpty() {
+            log('=== TESTING ALL EMPTY ===');
+            try {
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: '',
+                        body: '',
+                        category: '',
+                        tags: []
+                    })
+                });
+                
+                const data = await response.json();
+                log(`All Empty Response: ${JSON.stringify(data, null, 2)}`);
+                showResult('emptyResult', `All Empty: ${data.success ? 'SUCCESS' : 'FAILED - ' + data.message}`, data.success ? 'success' : 'error');
+            } catch (error) {
+                log(`All Empty Error: ${error.message}`, 'error');
+                showResult('emptyResult', `All Empty: ERROR - ${error.message}`, 'error');
+            }
+        }
+
+        async function testValidSubmission() {
+            log('=== TESTING VALID SUBMISSION ===');
+            try {
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Valid Test Question Title',
+                        body: 'This is a valid test question body with more than 30 characters to ensure it passes validation',
+                        category: 'general',
+                        tags: ['valid', 'test']
+                    })
+                });
+                
+                const data = await response.json();
+                log(`Valid Submission Response: ${JSON.stringify(data, null, 2)}`);
+                showResult('validResult', `Valid Submission: ${data.success ? 'SUCCESS' : 'FAILED - ' + data.message}`, data.success ? 'success' : 'error');
+            } catch (error) {
+                log(`Valid Submission Error: ${error.message}`, 'error');
+                showResult('validResult', `Valid Submission: ERROR - ${error.message}`, 'error');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('consoleLog').innerHTML = 'Console output will appear here...';
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            log('Debug page loaded');
+            log('Ready to debug form submission issues');
+            log('Error: "Title, body, and category are required"');
+        };
+    </script>
+</body>
+</html>

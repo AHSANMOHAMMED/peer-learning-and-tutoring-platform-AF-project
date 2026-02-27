@@ -46,6 +46,20 @@ const RegisterView = () => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match. Please try again.');
+      return;
+    }
+    
+    // Validate required fields
+    const missingFields = [];
+    if (!formData.username.trim()) missingFields.push('Username');
+    if (!formData.email.trim()) missingFields.push('Email');
+    if (!formData.password.trim()) missingFields.push('Password');
+    if (!formData.profile.firstName.trim()) missingFields.push('First Name');
+    if (!formData.profile.lastName.trim()) missingFields.push('Last Name');
+    
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
     
@@ -98,7 +112,7 @@ const RegisterView = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                  First Name
+                  First Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="firstName"
@@ -113,7 +127,7 @@ const RegisterView = () => {
               
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                  Last Name
+                  Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="lastName"
@@ -129,7 +143,7 @@ const RegisterView = () => {
 
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+                Username <span className="text-red-500">*</span>
               </label>
               <input
                 id="username"
@@ -144,7 +158,7 @@ const RegisterView = () => {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Email address <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -227,7 +241,7 @@ const RegisterView = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="password"
@@ -242,7 +256,7 @@ const RegisterView = () => {
               
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
+                  Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="confirmPassword"

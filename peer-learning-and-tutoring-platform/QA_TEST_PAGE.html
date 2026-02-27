@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QA Forum - Test Without Auth</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        input, textarea, select { width: 300px; padding: 5px; margin: 5px 0; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Q&A Forum + Gamification - Test Without Authentication</h1>
+    
+    <div class="section">
+        <h2>1. Create Question</h2>
+        <input type="text" id="title" placeholder="Question title (10+ chars)">
+        <select id="category">
+            <option value="general">General</option>
+            <option value="academic">Academic</option>
+            <option value="technical">Technical</option>
+            <option value="career">Career</option>
+            <option value="other">Other</option>
+        </select>
+        <br>
+        <textarea id="body" placeholder="Question body (30+ chars)" rows="4"></textarea>
+        <input type="text" id="tags" placeholder="Tags (comma separated)">
+        <br>
+        <button onclick="createQuestion()">Create Question</button>
+        <div id="createResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Get All Questions</h2>
+        <button onclick="getQuestions()">Get Questions</button>
+        <div id="questionsResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Create Answer</h2>
+        <input type="text" id="questionId" placeholder="Question ID">
+        <textarea id="answerBody" placeholder="Answer body" rows="3"></textarea>
+        <br>
+        <button onclick="createAnswer()">Create Answer</button>
+        <div id="answerResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Vote</h2>
+        <select id="targetType">
+            <option value="question">Question</option>
+            <option value="answer">Answer</option>
+        </select>
+        <input type="text" id="targetId" placeholder="Target ID">
+        <select id="voteValue">
+            <option value="1">Upvote (+1)</option>
+            <option value="-1">Downvote (-1)</option>
+        </select>
+        <br>
+        <button onclick="vote()">Vote</button>
+        <div id="voteResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. Leaderboard</h2>
+        <button onclick="getLeaderboard()">Get Leaderboard</button>
+        <div id="leaderboardResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api/qa';
+
+        async function createQuestion() {
+            const title = document.getElementById('title').value;
+            const category = document.getElementById('category').value;
+            const body = document.getElementById('body').value;
+            const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t);
+            
+            if (!title || !body || !category) {
+                showResult('createResult', 'Please fill in title, body, and category', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body, category, tags })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showResult('createResult', `✅ Question created! ID: ${data.data._id}`, 'success');
+                    document.getElementById('questionId').value = data.data._id;
+                } else {
+                    showResult('createResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('createResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getQuestions() {
+            try {
+                const response = await fetch(`${API_BASE}/questions`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const questions = data.data.map(q => 
+                        `📝 ${q.title} (${q.category}) - ID: ${q._id}`
+                    ).join('\n');
+                    showResult('questionsResult', `✅ Found ${data.data.length} questions:\n${questions}`, 'success');
+                } else {
+                    showResult('questionsResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('questionsResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function createAnswer() {
+            const questionId = document.getElementById('questionId').value;
+            const body = document.getElementById('answerBody').value;
+            
+            if (!questionId || !body) {
+                showResult('answerResult', 'Please fill in question ID and answer body', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/answers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ questionId, body })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showResult('answerResult', `✅ Answer created! ID: ${data.data._id}`, 'success');
+                } else {
+                    showResult('answerResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('answerResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function vote() {
+            const targetType = document.getElementById('targetType').value;
+            const targetId = document.getElementById('targetId').value;
+            const value = parseInt(document.getElementById('voteValue').value);
+            
+            if (!targetId) {
+                showResult('voteResult', 'Please fill in target ID', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetType, targetId, value })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showResult('voteResult', `✅ Vote recorded!`, 'success');
+                } else {
+                    showResult('voteResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('voteResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getLeaderboard() {
+            try {
+                const response = await fetch(`${API_BASE}/leaderboard/overall`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const leaderboard = data.data.map((user, index) => 
+                    `${index + 1}. User: ${user.totalPoints} points`
+                    ).join('\n');
+                    showResult('leaderboardResult', `✅ Leaderboard:\n${leaderboard}`, 'success');
+                } else {
+                    showResult('leaderboardResult', `❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('leaderboardResult', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+        }
+
+        // Auto-load questions on page load
+        window.onload = function() {
+            getQuestions();
+        };
+    </script>
+</body>
+</html>

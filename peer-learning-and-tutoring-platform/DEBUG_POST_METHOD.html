@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug POST Method</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        input, textarea, select { width: 300px; padding: 5px; margin: 5px 0; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .success { color: green; }
+        .error { color: red; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Q&A POST Method</h1>
+    
+    <div class="section">
+        <h2>1. Test Direct API Call</h2>
+        <button onclick="testDirectAPI()">Test Direct API Call</button>
+        <div id="directResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Test Frontend API Call</h2>
+        <input type="text" id="title" placeholder="Question title" value="Debug Test Question">
+        <select id="category">
+            <option value="general">General</option>
+            <option value="academic">Academic</option>
+            <option value="technical">Technical</option>
+            <option value="career">Career</option>
+            <option value="other">Other</option>
+        </select>
+        <br>
+        <textarea id="body" placeholder="Question body (30+ chars)" rows="3">This is a debug test question body to check if the POST method is working properly in the frontend</textarea>
+        <br>
+        <input type="text" id="tags" placeholder="Tags (comma separated)" value="debug,test">
+        <br>
+        <button onclick="testFrontendAPI()">Test Frontend API Call</button>
+        <div id="frontendResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Console Log</h2>
+        <div id="consoleLog" class="log">Console output will appear here...</div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api/qa';
+        
+        // Override console.log to display in the page
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToLog(message, type = 'log') {
+            const logDiv = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : 'black';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // Also log to console
+            if (type === 'error') {
+                originalError(message);
+            } else {
+                originalLog(message);
+            }
+        }
+        
+        console.log = function(...args) {
+            addToLog(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            addToLog(args.join(' '), 'error');
+        };
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+        }
+
+        async function testDirectAPI() {
+            try {
+                addToLog('Testing direct API call...');
+                
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Direct API Test Question',
+                        body: 'This is a test question to verify the direct API call is working',
+                        category: 'general',
+                        tags: ['direct', 'test']
+                    })
+                });
+                
+                const data = await response.json();
+                addToLog(`Direct API Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    showResult('directResult', `✅ Direct API SUCCESS! Question ID: ${data.data._id}`, 'success');
+                } else {
+                    showResult('directResult', `❌ Direct API FAILED: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addToLog(`Direct API Error: ${error.message}`, 'error');
+                showResult('directResult', `❌ Direct API ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFrontendAPI() {
+            try {
+                const title = document.getElementById('title').value;
+                const category = document.getElementById('category').value;
+                const body = document.getElementById('body').value;
+                const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t);
+                
+                addToLog('Testing frontend API call...');
+                addToLog(`Form data: title="${title}", category="${category}", body="${body.substring(0, 50)}...", tags=[${tags.join(', ')}]`);
+                
+                // Simulate the qaApi.createQuestion call
+                const response = await fetch(`${API_BASE}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body, category, tags })
+                });
+                
+                const data = await response.json();
+                addToLog(`Frontend API Response: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    showResult('frontendResult', `✅ Frontend API SUCCESS! Question ID: ${data.data._id}`, 'success');
+                } else {
+                    showResult('frontendResult', `❌ Frontend API FAILED: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addToLog(`Frontend API Error: ${error.message}`, 'error');
+                addToLog(`Error response: ${error.response}`, 'error');
+                addToLog(`Error data: ${JSON.stringify(error.response?.data)}`, 'error');
+                showResult('frontendResult', `❌ Frontend API ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('consoleLog').innerHTML = 'Console output will appear here...';
+        }
+
+        // Auto-test direct API on page load
+        window.onload = function() {
+            addToLog('Page loaded. Ready to test POST method...');
+        };
+    </script>
+</body>
+</html>

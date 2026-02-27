@@ -1,13 +1,13 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const sessionController = require('../controllers/sessionController');
-const { authenticate } = require('../middleware/auth');
+const auth = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
 
 // Start a video session
-router.post('/:id/start', authenticate, [
+router.post('/:id/start', auth, [
   param('id').isMongoId().withMessage('Invalid session ID'),
   body('config').optional().isObject().withMessage('Config must be an object'),
   body('config.isRecordingEnabled').optional().isBoolean(),
@@ -20,18 +20,18 @@ router.post('/:id/start', authenticate, [
 ], validate, sessionController.startSession);
 
 // Join a video session
-router.post('/:id/join', authenticate, [
+router.post('/:id/join', auth, [
   param('id').isMongoId().withMessage('Invalid session ID')
 ], validate, sessionController.joinSession);
 
 // Leave a video session
-router.post('/:id/leave', authenticate, [
+router.post('/:id/leave', auth, [
   param('id').isMongoId().withMessage('Invalid session ID'),
   body('connectionQuality').optional().isIn(['excellent', 'good', 'fair', 'poor'])
 ], validate, sessionController.leaveSession);
 
 // End a video session
-router.post('/:id/end', authenticate, [
+router.post('/:id/end', auth, [
   param('id').isMongoId().withMessage('Invalid session ID'),
   body('analytics').optional().isObject(),
   body('analytics.totalDuration').optional().isInt({ min: 0 }),
@@ -42,29 +42,29 @@ router.post('/:id/end', authenticate, [
 ], validate, sessionController.endSession);
 
 // Start recording
-router.post('/:id/recording/start', authenticate, [
+router.post('/:id/recording/start', auth, [
   param('id').isMongoId().withMessage('Invalid session ID')
 ], validate, sessionController.startRecording);
 
 // Stop recording
-router.post('/:id/recording/stop', authenticate, [
+router.post('/:id/recording/stop', auth, [
   param('id').isMongoId().withMessage('Invalid session ID')
 ], validate, sessionController.stopRecording);
 
 // Report technical issue
-router.post('/:id/issues', authenticate, [
+router.post('/:id/issues', auth, [
   param('id').isMongoId().withMessage('Invalid session ID'),
   body('issueType').isIn(['audio', 'video', 'connection', 'screen_share', 'whiteboard', 'other'])
     .withMessage('Invalid issue type')
 ], validate, sessionController.reportTechnicalIssue);
 
 // Get session details
-router.get('/:id', authenticate, [
+router.get('/:id', auth, [
   param('id').isMongoId().withMessage('Invalid session ID')
 ], validate, sessionController.getSessionDetails);
 
 // Get session history
-router.get('/', authenticate, [
+router.get('/', auth, [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
   query('status').optional().isIn(['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled'])

@@ -31,22 +31,26 @@ const Navbar = () => {
         { label: 'Dashboard', path: '/admin/dashboard' },
         { label: 'Moderation', path: '/moderation' },
         { label: 'Resources', path: '/resources' },
+        { label: 'Forum', path: '/forum' },
         { label: 'Browse Tutors', path: '/browse-tutors' }
       ],
       tutor: [
         { label: 'Dashboard', path: '/tutor/dashboard' },
         { label: 'Calendar', path: '/calendar' },
-        { label: 'Resources', path: '/resources' }
+        { label: 'Resources', path: '/resources' },
+        { label: 'Forum', path: '/forum' }
       ],
       parent: [
         { label: 'Dashboard', path: '/parent/dashboard' },
         { label: 'Browse Tutors', path: '/browse-tutors' },
-        { label: 'Resources', path: '/resources' }
+        { label: 'Resources', path: '/resources' },
+        { label: 'Forum', path: '/forum' }
       ],
       student: [
         { label: 'Dashboard', path: '/student/dashboard' },
         { label: 'Browse Tutors', path: '/browse-tutors' },
-        { label: 'Resources', path: '/resources' }
+        { label: 'Resources', path: '/resources' },
+        { label: 'Forum', path: '/forum' }
       ]
     };
 

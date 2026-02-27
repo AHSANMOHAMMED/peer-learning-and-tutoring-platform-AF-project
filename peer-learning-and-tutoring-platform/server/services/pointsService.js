@@ -1,4 +1,3 @@
-const PointTransaction = require('../models/PointTransaction');
 const User = require('../models/User');
 const Badge = require('../models/Badge');
 const UserBadge = require('../models/UserBadge');

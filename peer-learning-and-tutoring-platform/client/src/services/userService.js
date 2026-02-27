@@ -45,5 +45,40 @@ export const userService = {
   // Delete user (admin only)
   async deleteUser(userId) {
     return await apiService.delete(`/api/users/${userId}`);
+  },
+
+  // Get list of tutors for session booking
+  async getTutors(filters = {}) {
+    const queryString = new URLSearchParams(filters).toString();
+    return await apiService.get(`/api/users/tutors?${queryString}`);
+  },
+
+  // Ban a user (permanent) - Moderator action
+  async banUser(userId, reason) {
+    return await apiService.put(`/api/users/${userId}/ban`, { reason, actionType: 'ban' });
+  },
+
+  // Suspend a user temporarily - Moderator action
+  async suspendUser(userId, reason, days) {
+    return await apiService.put(`/api/users/${userId}/suspend`, {
+      reason,
+      days,
+      actionType: 'suspend'
+    });
+  },
+
+  // Warn a user - Moderator action
+  async warnUser(userId, reason) {
+    return await apiService.put(`/api/users/${userId}/warn`, { reason, actionType: 'warn' });
+  },
+
+  // Unban a user - Admin action
+  async unbanUser(userId) {
+    return await apiService.put(`/api/users/${userId}/unban`);
+  },
+
+  // Get user moderation history
+  async getModerationHistory(userId) {
+    return await apiService.get(`/api/users/${userId}/moderation-history`);
   }
 };

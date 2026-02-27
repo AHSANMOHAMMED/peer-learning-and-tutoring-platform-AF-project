@@ -13,6 +13,7 @@ import SessionRoom from './components/SessionRoom'
 import ResourceLibrary from './components/ResourceLibrary'
 import AdminDashboard from './views/AdminDashboard'
 import ParentDashboard from './views/ParentDashboard'
+import ModeratorDashboard from './components/ModeratorDashboard'
 
 // Unauthorized Page
 const UnauthorizedPage = () => (

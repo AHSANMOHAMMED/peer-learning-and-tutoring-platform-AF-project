@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Tutor = require('../models/Tutor');
 const User = require('../models/User');
+const BookingService = require('../services/bookingService');
 const { validationResult } = require('express-validator');
 
 // Get all bookings with filters
@@ -120,112 +121,23 @@ const createBooking = async (req, res) => {
       });
     }
     
-    const {
-      tutorId,
-      subject,
-      grade,
-      date,
-      startTime,
-      duration,
-      timezone,
-      notes
-    } = req.body;
+    const bookingData = req.body;
     
-    // Verify tutor exists
-    const tutor = await Tutor.findById(tutorId);
-    if (!tutor) {
-      return res.status(404).json({
-        success: false,
-        message: 'Tutor not found'
-      });
-    }
-    
-    // Check if tutor teaches this subject
-    const teachesSubject = tutor.subjects.some(s => 
-      s.name.toLowerCase() === subject.toLowerCase() ||
-      s.gradeLevels.includes(parseInt(grade))
-    );
-    
-    if (!teachesSubject) {
-      return res.status(400).json({
-        success: false,
-        message: 'Tutor does not teach this subject or grade level'
-      });
-    }
-    
-    // Calculate end time
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const startDateTime = new Date(2000, 0, 1, hours, minutes);
-    const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
-    const endTime = `${endDateTime.getHours().toString().padStart(2, '0')}:${endDateTime.getMinutes().toString().padStart(2, '0')}`;
-    
-    // Calculate payment amount
-    const subjectRate = tutor.subjects.find(s => 
-      s.name.toLowerCase() === subject.toLowerCase()
-    )?.hourlyRate || tutor.hourlyRate || 0;
-    const amount = (subjectRate * duration) / 60;
-    
-    // Check availability
-    const isAvailable = await Booking.checkAvailability(
-      tutorId,
-      new Date(date),
-      startTime,
-      duration
-    );
-    
-    if (!isAvailable) {
-      return res.status(400).json({
-        success: false,
-        message: 'This time slot is no longer available. Please select another time.'
-      });
-    }
-    
-    // Create booking
-    const booking = new Booking({
-      studentId: req.userId,
-      tutorId,
-      subject,
-      grade,
-      date: new Date(date),
-      startTime,
-      endTime,
-      duration,
-      timezone: timezone || 'UTC',
-      payment: {
-        amount,
-        currency: tutor.currency || 'USD',
-        status: 'pending'
-      },
-      notes: {
-        student: notes
-      },
-      status: 'pending'
-    });
-    
-    await booking.save();
-    
-    // Populate and return
-    const populatedBooking = await Booking.findById(booking._id)
-      .populate('studentId', 'profile.firstName profile.lastName profile.avatar username')
-      .populate({
-        path: 'tutorId',
-        populate: {
-          path: 'userId',
-          select: 'profile.firstName profile.lastName profile.avatar username'
-        }
-      })
-      .exec();
+    // Use BookingService to create booking
+    const booking = await BookingService.createBooking(req.userId, bookingData);
     
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
-      data: populatedBooking
+      data: booking
     });
   } catch (error) {
     console.error('Create booking error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('not found') ? 404 : 
+                       error.message.includes('does not teach') || error.message.includes('no longer available') ? 400 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Failed to create booking',
+      message: error.message || 'Failed to create booking',
       error: error.message
     });
   }
@@ -298,34 +210,8 @@ const confirmBooking = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const booking = await Booking.findById(id);
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found'
-      });
-    }
-    
-    // Check if user is the tutor or admin
-    const isTutor = booking.tutorId.toString() === req.userId.toString();
-    const isAdmin = req.user && req.user.role === 'admin';
-    
-    if (!isTutor && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: 'Only the tutor can confirm this booking'
-      });
-    }
-    
-    if (booking.status !== 'pending') {
-      return res.status(400).json({
-        success: false,
-        message: 'Booking cannot be confirmed'
-      });
-    }
-    
-    booking.confirm();
-    await booking.save();
+    // Use BookingService to confirm booking
+    const booking = await BookingService.confirmBooking(id, req.userId);
     
     res.json({
       success: true,
@@ -334,9 +220,11 @@ const confirmBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('Confirm booking error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('not found') ? 404 : 
+                       error.message.includes('Only the') || error.message.includes('Cannot confirm') ? 403 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Failed to confirm booking',
+      message: error.message || 'Failed to confirm booking',
       error: error.message
     });
   }
@@ -348,7 +236,7 @@ const cancelBooking = async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
     
-    const booking = await Booking.findById(id);
+    const booking = await Booking.findById(id).populate('tutorId');
     if (!booking) {
       return res.status(404).json({
         success: false,
@@ -356,44 +244,30 @@ const cancelBooking = async (req, res) => {
       });
     }
     
-    // Check ownership
+    // Determine who is cancelling
     const isStudent = booking.studentId.toString() === req.userId.toString();
-    const isTutor = booking.tutorId.toString() === req.userId.toString();
-    const isAdmin = req.user && req.user.role === 'admin';
-    
-    if (!isStudent && !isTutor && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
-    }
-    
-    if (!['pending', 'confirmed'].includes(booking.status)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Booking cannot be cancelled'
-      });
-    }
-    
+    const isTutor = booking.tutorId.userId.toString() === req.userId.toString();
     const cancelledBy = isStudent ? 'student' : isTutor ? 'tutor' : 'system';
-    booking.cancel(reason, cancelledBy);
-    await booking.save();
     
-    // TODO: Process refund if payment was made
-    if (booking.payment.status === 'paid') {
-      // Initiate refund process
-    }
+    // Use BookingService to cancel booking
+    const updatedBooking = await BookingService.cancelBooking(id, {
+      reason,
+      cancelledBy,
+      userId: req.userId
+    });
     
     res.json({
       success: true,
       message: 'Booking cancelled successfully',
-      data: booking
+      data: updatedBooking
     });
   } catch (error) {
     console.error('Cancel booking error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('not found') ? 404 : 
+                       error.message.includes('permission') || error.message.includes('Cannot cancel') ? 403 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Failed to cancel booking',
+      message: error.message || 'Failed to cancel booking',
       error: error.message
     });
   }
@@ -404,44 +278,8 @@ const completeBooking = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const booking = await Booking.findById(id);
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found'
-      });
-    }
-    
-    // Check if user is the tutor or admin
-    const isTutor = booking.tutorId.toString() === req.userId.toString();
-    const isAdmin = req.user && req.user.role === 'admin';
-    
-    if (!isTutor && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: 'Only the tutor can complete this booking'
-      });
-    }
-    
-    if (booking.status !== 'in_progress') {
-      return res.status(400).json({
-        success: false,
-        message: 'Booking must be in progress to complete'
-      });
-    }
-    
-    booking.complete();
-    await booking.save();
-    
-    // Update tutor stats
-    const tutor = await Tutor.findById(booking.tutorId);
-    if (tutor) {
-      tutor.updateStats({
-        duration: booking.duration,
-        studentId: booking.studentId
-      });
-      await tutor.save();
-    }
+    // Use BookingService to complete booking
+    const booking = await BookingService.completeBooking(id, req.userId);
     
     res.json({
       success: true,
@@ -450,9 +288,11 @@ const completeBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('Complete booking error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('not found') ? 404 : 
+                       error.message.includes('permission') || error.message.includes('Cannot complete') ? 403 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Failed to complete booking',
+      message: error.message || 'Failed to complete booking',
       error: error.message
     });
   }
@@ -567,7 +407,8 @@ const checkAvailability = async (req, res) => {
   try {
     const { tutorId, date, startTime, duration } = req.body;
     
-    const isAvailable = await Booking.checkAvailability(
+    // Use BookingService to check availability
+    const isAvailable = await BookingService.checkAvailability(
       tutorId,
       new Date(date),
       startTime,

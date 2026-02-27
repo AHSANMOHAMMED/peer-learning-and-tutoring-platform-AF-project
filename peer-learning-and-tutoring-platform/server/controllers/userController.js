@@ -265,8 +265,18 @@ const updateUser = async (req, res) => {
         message: 'User not found'
       });
     }
-    
-    // Update fields (excluding sensitive ones)
+
+    // Safely update nested profile fields if provided
+    if (updateData.profile && typeof updateData.profile === 'object') {
+      Object.keys(updateData.profile).forEach((key) => {
+        if (key !== '_id') {
+          user.profile[key] = updateData.profile[key];
+        }
+      });
+      delete updateData.profile;
+    }
+
+    // Update top-level fields (excluding sensitive ones)
     Object.keys(updateData).forEach(key => {
       if (!['_id', 'password', 'emailVerificationToken', 'passwordResetToken'].includes(key)) {
         user[key] = updateData[key];

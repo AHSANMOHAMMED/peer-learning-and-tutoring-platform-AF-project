@@ -103,10 +103,12 @@ export class TutorViewModel {
 
       const response = await tutorService.getTutors(params);
       if (response.success) {
-        this.setTutors(response.data.tutors);
+        const payload = response.data?.data || response.data || {};
+        const tutors = Array.isArray(payload.tutors) ? payload.tutors : [];
+        this.setTutors(tutors);
         this.setPagination({
-          total: response.data.total,
-          totalPages: response.data.totalPages
+          total: payload.pagination?.total || tutors.length,
+          totalPages: payload.pagination?.totalPages || 1
         });
         return { success: true };
       } else {

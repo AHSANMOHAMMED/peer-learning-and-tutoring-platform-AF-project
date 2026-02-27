@@ -57,5 +57,16 @@ export const authService = {
   // Upload avatar
   async uploadAvatar(formData) {
     return await apiService.upload('/api/users/upload-avatar', formData);
+  },
+
+  // Aliases used by ForgotPasswordView (for compatibility)
+  async requestPasswordReset(email) {
+    // Reuse forgotPassword implementation
+    return await this.forgotPassword(email);
+  },
+
+  async resetPasswordWithCode(email, code, newPassword) {
+    // Backend doesn't need email, only token + new password
+    return await this.resetPassword(code, newPassword);
   }
 };

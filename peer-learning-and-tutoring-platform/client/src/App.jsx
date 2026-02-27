@@ -6,6 +6,7 @@ import Footer from './components/common/Footer'
 import Home from './pages/Home'
 import LoginView from './views/LoginView'
 import RegisterView from './views/RegisterView'
+import ForgotPasswordView from './views/ForgotPasswordView'
 import StudentDashboard from './views/StudentDashboard'
 import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
@@ -14,7 +15,7 @@ import ResourceLibrary from './components/ResourceLibrary'
 import ModeratorDashboard from './components/ModeratorDashboard'
 import AdminDashboard from './views/AdminDashboard'
 import ParentDashboard from './views/ParentDashboard'
-import ModeratorDashboard from './components/ModeratorDashboard'
+import UserManagementView from './views/UserManagementView'
 
 // Forum Components
 import QuestionList from './components/forum/QuestionList'
@@ -41,7 +42,10 @@ const UnauthorizedPage = () => (
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
+  console.log('ProtectedRoute: isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+  
   if (isLoading) {
+    console.log('ProtectedRoute: Still loading, showing spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
@@ -49,7 +53,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    console.log('ProtectedRoute: Not authenticated, redirecting to login');
+    return <Navigate to="/login" />;
+  }
+  
+  console.log('ProtectedRoute: Authenticated, rendering children');
+  return children;
 };
 
 // Role Protected Route Component - checks authentication AND role
@@ -150,6 +160,14 @@ function App() {
                 </PublicRoute>
               } 
             />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPasswordView />
+                </PublicRoute>
+              }
+            />
             
             {/* Unauthorized Page */}
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -188,6 +206,14 @@ function App() {
                   <AdminDashboard />
                 </RoleProtectedRoute>
               } 
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <RoleProtectedRoute allowedRoles={['admin']}>
+                  <UserManagementView />
+                </RoleProtectedRoute>
+              }
             />
             <Route 
               path="/parent/dashboard" 

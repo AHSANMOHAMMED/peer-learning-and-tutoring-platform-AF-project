@@ -63,8 +63,12 @@ const QuestionList = () => {
 
       const response = await qaApi.getQuestions(params);
       if (response.success) {
-        setQuestions(response.data.questions);
-        setPagination(response.data.pagination);
+        const payload = response.data?.data || response.data || {};
+        setQuestions(Array.isArray(payload.questions) ? payload.questions : []);
+        setPagination(payload.pagination || null);
+      } else {
+        setQuestions([]);
+        setPagination(null);
       }
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -229,7 +233,7 @@ const QuestionList = () => {
 
       {/* Questions List */}
       <div className="space-y-4">
-        {questions.length === 0 ? (
+        {!Array.isArray(questions) || questions.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No questions found</h3>

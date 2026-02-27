@@ -74,7 +74,15 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+// Enable CORS preflight for all routes
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -97,7 +105,8 @@ app.use('/api/messages', require('./routes/messages'));
 app.use('/api/notifications', require('./routes/notifications'));
 // app.use('/api/sessions', require('./routes/sessions')); // Temporarily commented
 // app.use('/api/materials', require('./routes/materials')); // Temporarily commented
-// app.use('/api/moderation', require('./routes/moderation')); // Temporarily commented
+app.use('/api/moderation', require('./routes/moderation'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Forum and Gamification Routes
 app.use('/api/questions', require('./routes/questions'));

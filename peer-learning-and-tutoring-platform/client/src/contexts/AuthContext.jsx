@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
 
   // Check authentication status on app load
   useEffect(() => {
+    console.log('AuthProvider: Initializing, checking auth status');
     authViewModel.checkAuth();
   }, []);
 

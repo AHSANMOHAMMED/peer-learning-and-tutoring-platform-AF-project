@@ -57,25 +57,34 @@ export class AuthViewModel {
 
   // Login method
   async login(credentials) {
+    console.log('AuthViewModel: Attempting login with email:', credentials.email);
     this.setLoading(true);
     try {
       const response = await authService.login(credentials);
+      console.log('AuthViewModel: Login response:', response);
+      
       if (response.success) {
         // Support both { token, user } and { data: { token, user } } shapes
         const payload = response.data?.data || response.data;
         const token = payload?.token;
         const user = payload?.user;
 
+        console.log('AuthViewModel: Login successful - Token length:', token?.length, 'User ID:', user?._id, 'User role:', user?.role);
+
         if (token) {
           localStorage.setItem('token', token);
+          console.log('AuthViewModel: Token saved to localStorage');
         }
         this.setUser(user);
+        console.log('AuthViewModel: User set in state - isAuthenticated:', !!this.user);
         return { success: true, data: response.data };
       } else {
+        console.error('AuthViewModel: Login failed -', response.message);
         this.setError(response.message || 'Login failed');
         return { success: false, message: response.message };
       }
     } catch (error) {
+      console.error('AuthViewModel: Login error -', error);
       this.setError(error.message || 'Login failed');
       return { success: false, message: error.message };
     }
@@ -122,7 +131,10 @@ export class AuthViewModel {
   // Check authentication status
   async checkAuth() {
     const token = localStorage.getItem('token');
+    console.log('AuthViewModel: Checking auth - Token exists:', !!token);
+    
     if (!token) {
+      console.log('AuthViewModel: No token found, user not authenticated');
       this.setUser(null);
       return { success: false };
     }
@@ -130,15 +142,20 @@ export class AuthViewModel {
     this.setLoading(true);
     try {
       const response = await authService.getCurrentUser();
+      console.log('AuthViewModel: getCurrentUser response:', response);
+      
       if (response.success) {
+        console.log('AuthViewModel: Auth check successful, user:', response.data);
         this.setUser(response.data);
         return { success: true, data: response.data };
       } else {
+        console.log('AuthViewModel: Auth check failed, removing token');
         localStorage.removeItem('token');
         this.setUser(null);
         return { success: false };
       }
     } catch (error) {
+      console.error('AuthViewModel: Auth check error:', error);
       localStorage.removeItem('token');
       this.setUser(null);
       return { success: false };

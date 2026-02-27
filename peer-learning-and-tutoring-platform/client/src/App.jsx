@@ -42,7 +42,10 @@ const UnauthorizedPage = () => (
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
+  console.log('ProtectedRoute: isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+  
   if (isLoading) {
+    console.log('ProtectedRoute: Still loading, showing spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
@@ -50,7 +53,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    console.log('ProtectedRoute: Not authenticated, redirecting to login');
+    return <Navigate to="/login" />;
+  }
+  
+  console.log('ProtectedRoute: Authenticated, rendering children');
+  return children;
 };
 
 // Role Protected Route Component - checks authentication AND role

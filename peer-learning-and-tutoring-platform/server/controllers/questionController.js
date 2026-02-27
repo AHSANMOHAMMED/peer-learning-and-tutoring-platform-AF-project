@@ -6,13 +6,22 @@ const PointTransaction = require('../models/PointTransaction');
 const PointsService = require('../services/pointsService');
 const { validationResult } = require('express-validator');
 
-// Get all questions with pagination and filtering
+// Sri Lankan subjects for Grades 6-13
+const SRI_LANKAN_SUBJECTS = {
+  core: ['Mathematics', 'English', 'Science', 'History', 'Geography', 'Civic Education', 'Health & Physical Education'],
+  religion: ['Buddhism', 'Islam', 'Saivaneri', 'Roman Catholicism', 'Christianity'],
+  language: ['Sinhala', 'Tamil'],
+  elective: ['ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies']
+};
+
+// Get all questions with pagination and filtering by grade and subject
 const getQuestions = async (req, res) => {
   try {
     const {
       page = 1,
       limit = 20,
-      category = 'all',
+      subject = 'all',
+      grade = 'all',
       tags = '',
       sortBy = 'newest',
       search = ''
@@ -30,17 +39,25 @@ const getQuestions = async (req, res) => {
       const tagArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
       questions = await Question.search(search, {
         ...options,
-        category: category === 'all' ? null : category,
+        subject: subject === 'all' ? null : subject,
+        grade: grade === 'all' ? null : parseInt(grade),
         tags: tagArray
       });
-    } else if (category === 'popular') {
-      questions = await Question.getPopular(parseInt(limit));
-    } else if (category === 'unanswered') {
-      questions = await Question.getUnanswered(parseInt(limit));
+    } else if (subject === 'all' && grade === 'all') {
+      // Get all questions
+      questions = await Question.find({ isClosed: false })
+        .sort({ createdAt: -1 })
+        .skip((parseInt(page) - 1) * parseInt(limit))
+        .limit(parseInt(limit))
+        .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     } else {
+      // Filter by grade and/or subject
       const query = { isClosed: false };
-      if (category !== 'all') {
-        query.category = category;
+      if (subject !== 'all') {
+        query.subject = subject;
+      }
+      if (grade !== 'all') {
+        query.grade = parseInt(grade);
       }
       if (tags) {
         const tagArray = tags.split(',').map(tag => tag.trim());
@@ -132,20 +149,32 @@ const createQuestion = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, body, tags, category } = req.body;
+    const { title, body, tags, subject, grade } = req.body;
+    
+    // Validate subject exists in Sri Lankan curriculum
+    const allSubjects = [...SRI_LANKAN_SUBJECTS.core, ...SRI_LANKAN_SUBJECTS.religion, ...SRI_LANKAN_SUBJECTS.language, ...SRI_LANKAN_SUBJECTS.elective];
+    if (!allSubjects.includes(subject)) {
+      return res.status(400).json({ error: 'Invalid subject. Must be from Sri Lankan curriculum.' });
+    }
+    
+    // Validate grade
+    if (grade < 6 || grade > 13) {
+      return res.status(400).json({ error: 'Grade must be between 6 and 13.' });
+    }
     
     const question = new Question({
       title,
       body,
       tags: tags || [],
-      category,
+      subject,
+      grade,
       author: req.user._id
     });
     
     await question.save();
     
     // Award points for posting question (+2 points)
-    await PointsService.awardQuestionPosted(req.user._id, question._id, category);
+    await PointsService.awardQuestionPosted(req.user._id, question._id, subject);
     
     // Update user's forum stats
     const User = require('../models/User');
@@ -277,6 +306,30 @@ const closeQuestion = async (req, res) => {
   }
 };
 
+// Get Sri Lankan subjects by grade
+const getSubjectsByGrade = async (req, res) => {
+  try {
+    const { grade } = req.query;
+    
+    // All subjects are available for all grades in Sri Lankan system
+    // But we can provide grade-specific recommendations
+    const subjects = {
+      all: SRI_LANKAN_SUBJECTS,
+      grade: grade ? parseInt(grade) : null
+    };
+    
+    res.json({
+      success: true,
+      subjects: SRI_LANKAN_SUBJECTS,
+      grade: grade ? parseInt(grade) : 'all',
+      message: 'Sri Lankan curriculum subjects for Grades 6-13'
+    });
+  } catch (error) {
+    console.error('Error in getSubjectsByGrade:', error);
+    res.status(500).json({ error: 'Failed to fetch subjects' });
+  }
+};
+
 // Get question statistics
 const getQuestionStats = async (req, res) => {
   try {
@@ -304,8 +357,9 @@ module.exports = {
   getQuestions,
   getQuestionById,
   createQuestion,
+  getSubjectsByGrade,
+  getQuestionStats,
   updateQuestion,
   deleteQuestion,
-  closeQuestion,
-  getQuestionStats
+  closeQuestion
 };

@@ -23,5 +23,6 @@ router.post('/question/:questionId', answerController.createAnswer);
 router.put('/:id', answerController.updateAnswer);
 router.delete('/:id', answerController.deleteAnswer);
 router.post('/:id/accept', answerController.acceptAnswer);
+router.patch('/:id/status', answerController.updateAnswerStatus);
 
 module.exports = router;

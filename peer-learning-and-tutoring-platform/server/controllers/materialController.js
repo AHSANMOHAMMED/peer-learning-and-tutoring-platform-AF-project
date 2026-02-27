@@ -537,5 +537,121 @@ exports.getPopularMaterials = async (req, res) => {
   }
 };
 
+// Get pending materials for approval (admin only)
+exports.getPendingMaterials = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+
+    const query = { status: 'pending' };
+    const skip = (page - 1) * limit;
+
+    const [materials, total] = await Promise.all([
+      Material.find(query)
+        .populate('uploadedBy', 'profile.firstName profile.lastName username profile.avatar')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .exec(),
+      Material.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        materials,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get pending materials error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get pending materials'
+    });
+  }
+};
+
+// Approve material (admin only)
+exports.approveMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+    const adminId = req.user.id;
+
+    const material = await Material.findById(id);
+
+    if (!material) {
+      return res.status(404).json({
+        success: false,
+        message: 'Material not found'
+      });
+    }
+
+    material.status = 'approved';
+    material.approvedBy = adminId;
+    material.approvedAt = new Date();
+    material.adminNotes = notes;
+
+    await material.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Material approved successfully',
+      data: material
+    });
+
+  } catch (error) {
+    console.error('Approve material error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to approve material'
+    });
+  }
+};
+
+// Reject material (admin only)
+exports.rejectMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user.id;
+
+    const material = await Material.findById(id);
+
+    if (!material) {
+      return res.status(404).json({
+        success: false,
+        message: 'Material not found'
+      });
+    }
+
+    material.status = 'rejected';
+    material.approvedBy = adminId;
+    material.rejectedAt = new Date();
+    material.adminNotes = reason;
+
+    await material.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Material rejected successfully',
+      data: material
+    });
+
+  } catch (error) {
+    console.error('Reject material error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reject material'
+    });
+  }
+};
+
 // Export upload middleware for use in routes
 exports.upload = upload;

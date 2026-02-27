@@ -6,73 +6,78 @@ import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const { user } = useAuthViewModel();
-  const [stats, setStats] = useState({
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [recentReports, setRecentReports] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const stats = {
     totalUsers: 0,
     totalTutors: 0,
     totalStudents: 0,
     totalSessions: 0,
     pendingReports: 0,
     pendingMaterials: 0
-  });
-  const [recentUsers, setRecentUsers] = useState([]);
-  const [recentReports, setRecentReports] = useState([]);
-  const [loading, setLoading] = useState(true);
+  };
 
+  // Fetch dashboard data
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // Fetch recent users
+        const usersResponse = await axios.get('/api/users', {
+          params: { limit: 5, sort: 'createdAt', order: 'desc' }
+        });
+        if (usersResponse.data.success) {
+          setRecentUsers(usersResponse.data.data || []);
+        }
+
+        // Fetch recent reports (if moderation endpoint exists)
+        // Uncomment when ready:
+        // const reportsResponse = await axios.get('/api/moderation/reports', {
+        //   params: { limit: 5, status: 'pending' }
+        // });
+        // if (reportsResponse.data.success) {
+        //   setRecentReports(reportsResponse.data.data || []);
+        // }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      // Fetch statistics
-      const statsResponse = await axios.get('/api/admin/statistics');
-      if (statsResponse.data.success) {
-        setStats(statsResponse.data.data);
-      }
-
-      // Fetch recent users
-      const usersResponse = await axios.get('/api/users?limit=5&sort=-createdAt');
-      if (usersResponse.data.success) {
-        setRecentUsers(usersResponse.data.data.users || []);
-      }
-
-      // Fetch recent reports
-      const reportsResponse = await axios.get('/api/moderation/reports?status=pending&limit=5');
-      if (reportsResponse.data.success) {
-        setRecentReports(reportsResponse.data.data.reports || []);
-      }
-    } catch (error) {
-      console.error('Dashboard data fetch error:', error);
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Handle user actions (suspend/activate)
   const handleUserAction = async (userId, action) => {
     try {
-      const response = await axios.put(`/api/users/${userId}/${action}`);
+      const endpoint = action === 'activate' 
+        ? `/api/users/${userId}/activate`
+        : `/api/users/${userId}/suspend`;
+      
+      const response = await axios.put(endpoint);
+      
       if (response.data.success) {
         toast.success(`User ${action}d successfully`);
-        fetchDashboardData();
+        // Refresh user list
+        setRecentUsers(prevUsers => 
+          prevUsers.map(u => 
+            u._id === userId 
+              ? { ...u, isActive: action === 'activate' }
+              : u
+          )
+        );
+      } else {
+        toast.error(response.data.message || `Failed to ${action} user`);
       }
     } catch (error) {
-      toast.error(`Failed to ${action} user`);
+      console.error(`Failed to ${action} user:`, error);
+      toast.error(error.response?.data?.message || `Failed to ${action} user`);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -83,7 +88,7 @@ const AdminDashboard = () => {
             Admin Dashboard
           </h1>
           <p className="mt-2 text-gray-600">
-            Welcome back, {user?.displayName || 'Administrator'}
+            Welcome back, {user?.profile?.firstName || 'Administrator'}
           </p>
         </div>
 

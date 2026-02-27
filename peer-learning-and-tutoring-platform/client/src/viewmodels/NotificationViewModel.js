@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Notification } from '../models/Notification';
 import { notificationService } from '../services/notificationService';
 
@@ -219,10 +219,10 @@ export function useNotificationViewModel() {
     setState(notificationViewModel.getState());
   }, []);
 
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = notificationViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, [updateState]);
 
   return {
     ...state,

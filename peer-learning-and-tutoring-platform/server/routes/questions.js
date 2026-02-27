@@ -7,6 +7,7 @@ const auth = require('../middleware/auth');
 // Public routes
 router.get('/', questionController.getQuestions);
 router.get('/stats', questionController.getQuestionStats);
+router.get('/subjects', questionController.getSubjectsByGrade);
 router.get('/:id', questionController.getQuestionById);
 
 // Protected routes

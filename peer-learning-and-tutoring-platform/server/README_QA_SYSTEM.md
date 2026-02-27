@@ -1,258 +1,313 @@
-# Subject-Based Q&A Platform Backend
+# PeerGuru Q&A System Documentation
 
-A production-ready backend module for a subject-based Q&A platform similar to Stack Overflow/Reddit hybrid with points, badges and leaderboards.
+## 🎓 Overview
+PeerGuru is a Sri Lankan educational platform for Grades 6-13 with a comprehensive Questions and Answers system. The platform supports multiple user roles and follows the Sri Lankan curriculum.
 
-## 🏗️ Architecture
+## 📚 Sri Lankan Subjects Supported
 
-### Models (MongoDB Schemas)
+### Core Subjects
+- Mathematics
+- English
+- Science
+- History
+- Geography
+- Civic Education
+- Health & Physical Education
 
-#### User (assumed existing)
-- `_id`, `username`, `email`, `reputation`, `badges`, `subjectsContributed`
+### Religion Subjects
+- Buddhism
+- Islam
+- Saivaneri
+- Roman Catholicism
+- Christianity
 
-#### Question
+### Language Subjects
+- Sinhala
+- Tamil
+
+### Elective Subjects
+- ICT
+- Business & Accounting Studies
+- Agriculture
+- Aesthetic Studies
+
+## 🛠️ API Endpoints
+
+### Questions API
+
+#### Get Sri Lankan Subjects
+```http
+GET /api/questions/subjects?grade=8
+```
+**Response:**
+```json
+{
+  "success": true,
+  "subjects": {
+    "core": ["Mathematics", "English", "Science", ...],
+    "religion": ["Buddhism", "Islam", ...],
+    "language": ["Sinhala", "Tamil"],
+    "elective": ["ICT", "Business & Accounting Studies", ...]
+  },
+  "grade": 8,
+  "message": "Sri Lankan curriculum subjects for Grades 6-13"
+}
+```
+
+#### Get Questions (with filtering)
+```http
+GET /api/questions?subject=Mathematics&grade=8&page=1&limit=20
+```
+**Query Parameters:**
+- `subject` (optional): Filter by subject
+- `grade` (optional): Filter by grade (6-13)
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 20)
+- `search` (optional): Search in title and body
+- `tags` (optional): Filter by tags (comma-separated)
+
+#### Create Question (requires authentication)
+```http
+POST /api/questions
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "What is Pythagorean theorem?",
+  "body": "Can someone explain the Pythagorean theorem?",
+  "subject": "Mathematics",
+  "grade": 8,
+  "tags": ["mathematics", "geometry"]
+}
+```
+
+#### Get Question by ID
+```http
+GET /api/questions/:id
+```
+
+#### Update Question (requires authentication)
+```http
+PUT /api/questions/:id
+Authorization: Bearer <token>
+```
+
+#### Delete Question (requires authentication)
+```http
+DELETE /api/questions/:id
+Authorization: Bearer <token>
+```
+
+### Answers API
+
+#### Get Answers for Question
+```http
+GET /api/answers/question/:questionId?status=all&page=1&limit=20
+```
+**Query Parameters:**
+- `status` (optional): Filter by status (pending/correct/incorrect/needs_improvement)
+- `page` (optional): Page number
+- `limit` (optional): Items per page
+
+#### Create Answer (requires authentication)
+```http
+POST /api/answers/question/:questionId
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "body": "The Pythagorean theorem states that a² + b² = c²..."
+}
+```
+
+#### Update Answer (requires authentication)
+```http
+PUT /api/answers/:id
+Authorization: Bearer <token>
+```
+
+#### Delete Answer (requires authentication)
+```http
+DELETE /api/answers/:id
+Authorization: Bearer <token>
+```
+
+#### Update Answer Status (Tutor/Admin only)
+```http
+PATCH /api/answers/:id/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "status": "correct",
+  "tutorComment": "Good explanation! Keep it up."
+}
+```
+**Status Options:**
+- `pending`: Default status
+- `correct`: Answer is correct
+- `incorrect`: Answer is incorrect
+- `needs_improvement`: Answer needs improvement
+
+### Statistics API
+
+#### Get Question Statistics
+```http
+GET /api/questions/stats
+```
+
+#### Get Answer Statistics
+```http
+GET /api/answers/stats
+```
+
+## 🗄️ Database Schema
+
+### Question Model
 ```javascript
 {
-  title: String (required, min 10, max 300),
-  body: String (required, min 20),
+  title: String (required, max 300),
+  body: String (required, max 10000),
+  subject: String (required, enum of Sri Lankan subjects),
+  grade: Number (required, 6-13),
   tags: [String],
-  subject: String (required, enum),
-  createdBy: ObjectId (ref: User),
-  votes: Number (default 0),
-  answerCount: Number (default 0)
+  author: ObjectId (ref: User),
+  views: Number (default: 0),
+  upvotes: Number (default: 0),
+  downvotes: Number (default: 0),
+  answerCount: Number (default: 0),
+  isClosed: Boolean (default: false),
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
-#### Answer
+### Answer Model
 ```javascript
 {
-  body: String (required, min 20),
-  question: ObjectId (ref: Question),
-  createdBy: ObjectId (ref: User),
-  votes: Number (default 0),
-  isAccepted: Boolean (default false)
+  body: String (required, max 10000),
+  question: ObjectId (ref: Question, required),
+  author: ObjectId (ref: User, required),
+  status: String (enum: pending/correct/incorrect/needs_improvement),
+  tutorComment: String (max 1000),
+  isAccepted: Boolean (default: false),
+  acceptedBy: ObjectId (ref: User),
+  acceptedAt: Date,
+  upvotes: Number (default: 0),
+  downvotes: Number (default: 0),
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
-
-#### Vote
-```javascript
-{
-  user: ObjectId (ref: User),
-  targetType: String (enum: ['Question','Answer']),
-  targetId: ObjectId,
-  voteType: String (enum: ['up','down'])
-}
-// Compound unique index: user + targetType + targetId
-```
-
-#### PointTransaction
-```javascript
-{
-  user: ObjectId (ref: User),
-  points: Number,
-  reason: String,
-  targetType: String,
-  targetId: ObjectId,
-  subject: String
-}
-```
-
-#### Badge
-```javascript
-{
-  name: String (unique),
-  description: String,
-  iconUrl: String,
-  requiredPoints: Number,
-  subject: String,
-  oneTime: Boolean (default true)
-}
-```
-
-## 💰 Point System
-
-**Exact Point Rules:**
-- Post question → **+2 points**
-- Answer gets upvote → **+10 points**
-- Answer gets downvote → **-2 points**
-- Question gets upvote → **+5 points** (optional)
-
-Every point change:
-- Increases/decreases user.reputation
-- Creates PointTransaction document
-- Checks badge eligibility → awards badge(s) if conditions met
-
-## 🏆 Badge System
-
-**Implemented Badges:**
-1. **"First Question"** → 1 question posted (global)
-2. **"Curious Mind"** → 5 questions posted (global)
-3. **"{Subject} Contributor"** → 50 points in one subject
-4. **"Rising Star"** → total reputation ≥ 100 (global)
-5. **"Superstar"** → total reputation ≥ 500 (global)
-
-## 🛣️ API Endpoints
-
-### Questions
-```
-POST   /api/questions           → create question (+2 points)
-GET    /api/questions           → list (newest first, ?subject=xxx & ?tag=xxx optional)
-GET    /api/questions/:id       → single question + its answers
-DELETE /api/questions/:id       → only own question
-```
-
-### Answers
-```
-POST   /api/questions/:qid/answers     → create answer
-GET    /api/questions/:qid/answers     → get answers (sorted by votes desc, then newest)
-```
-
-### Voting (single endpoint – idempotent & prevents double voting)
-```
-POST   /api/vote
-Body: { targetType: "Question"|"Answer", targetId, voteType: "up"|"down" }
-→ toggle / change / remove vote if already exists
-→ update vote count on target
-→ award / remove points
-→ create PointTransaction
-→ check & award badges
-```
-
-### Leaderboard
-```
-GET /api/leaderboard/global?limit=20&period=week|month|all
-GET /api/leaderboard/subject/:subject?limit=10
-```
-
-## 🔧 Key Implementation Details
-
-### Point & Badge Logic
-- Uses mongoose middleware and service layer functions
-- Prevents self-voting
-- Handles vote changes (up→down or vice-versa) correctly
-- Removes points when vote is removed
-- Makes badge awarding idempotent
-
-### MongoDB Aggregation
-- Leaderboards use MongoDB aggregation pipeline
-- Efficient for large datasets
-- Supports time-based filtering (week/month/all)
-
-### Error Handling
-- Proper HTTP status codes (400, 403, 404, 500)
-- Meaningful error messages
-- Input validation with express-validator
-
-## 📁 File Structure
-
-```
-server/
-├── models/
-│   ├── Question.js
-│   ├── Answer.js
-│   ├── Vote.js
-│   ├── PointTransaction.js
-│   └── Badge.js
-├── controllers/
-│   ├── questionController.js
-│   ├── answerController.js
-│   ├── voteController.js
-│   └── leaderboardController.js
-├── services/
-│   ├── pointsService.js
-│   ├── badgeService.js
-│   └── badgeInitializationService.js
-├── routes/
-│   ├── questions.js
-│   ├── answers.js
-│   ├── votes.js
-│   └── leaderboard.js
-├── middleware/
-│   ├── auth.js
-│   └── validate.js
-└── scripts/
-    └── initializeSystem.js
-```
-
-## 🚀 Getting Started
-
-1. **Initialize the system:**
-```bash
-cd server
-node scripts/initializeSystem.js
-```
-
-2. **Start the server:**
-```bash
-npm start
-```
-
-3. **Test the API endpoints** using the provided routes
 
 ## 🧪 Testing
 
-The system includes comprehensive point tracking and badge awarding. Test scenarios:
+### Run API Tests
+```bash
+cd server
+npm install axios
+node test_apis.js
+```
 
-1. **Question Creation:**
-   - User posts question → +2 points
-   - Check for "First Question" badge
+### Test Endpoints Manually
 
-2. **Voting System:**
-   - Upvote answer → +10 points to author
-   - Downvote answer → -2 points to author
-   - Change vote → correct point adjustment
-   - Remove vote → reverse points
+1. **Get Subjects:**
+```bash
+curl http://localhost:5000/api/questions/subjects
+```
 
-3. **Badge Awarding:**
-   - Reach 100 points → "Rising Star" badge
-   - Earn 50 points in Mathematics → "Mathematics Contributor" badge
+2. **Get Questions:**
+```bash
+curl "http://localhost:5000/api/questions?subject=Mathematics&grade=8"
+```
 
-## 📊 Features
+3. **Get Question Stats:**
+```bash
+curl http://localhost:5000/api/questions/stats
+```
 
-### Real-time Updates
-- Socket.io integration for live vote updates
-- Badge awarding notifications
-- New question announcements
+4. **Get Answers for Question:**
+```bash
+curl http://localhost:5000/api/answers/question/[question-id]
+```
 
-### Performance
-- Optimized MongoDB indexes
-- Efficient aggregation pipelines
-- Pagination support
+## 🔐 Authentication
 
-### Security
-- Input validation and sanitization
-- Self-voting prevention
-- Authentication middleware
+All protected endpoints require a JWT token in the Authorization header:
+```
+Authorization: Bearer <your-jwt-token>
+```
 
-### Analytics
-- Point transaction history
-- User progress tracking
-- Leaderboard statistics
+## 📝 Best Practices
 
-## 🔍 Monitoring
+1. **Input Validation:** All inputs are validated using express-validator
+2. **Error Handling:** Comprehensive error handling with proper HTTP status codes
+3. **Security:** Authentication and authorization checks on all protected routes
+4. **Performance:** Pagination and indexing for efficient queries
+5. **Real-time:** Socket.io integration for live updates
+6. **Data Integrity:** MongoDB transactions for related operations
 
-The system provides comprehensive analytics:
-- Total points awarded
-- Points by type
-- Top earners
-- Recent transactions
-- Badge distribution
+## 🚀 Getting Started
 
-## 🎯 Business Logic
+1. **Install Dependencies:**
+```bash
+cd server
+npm install
+```
 
-### Vote Processing
-1. Check for existing vote
-2. Toggle/create/remove vote
-3. Calculate point changes
-4. Award/remove points
-5. Update target vote counts
-6. Check badge eligibility
-7. Emit real-time events
+2. **Environment Setup:**
+```bash
+cp .env.example .env
+# Edit .env with your database and JWT settings
+```
 
-### Badge Awarding
-1. Check user qualification for each badge
-2. Verify user doesn't already have badge
-3. Award badge if qualified
-4. Award bonus points if applicable
-5. Send notification
+3. **Start Server:**
+```bash
+npm start
+# or for development
+npm run dev
+```
 
-This system provides a complete, scalable foundation for a subject-based Q&A platform with gamification elements.
+4. **Test APIs:**
+```bash
+node test_apis.js
+```
+
+## 📊 Features Implemented
+
+✅ **4+ Working API Endpoints:**
+- GET /api/questions/subjects
+- GET /api/questions (with filtering)
+- POST /api/questions (create)
+- GET /api/answers/question/:id
+- PATCH /api/answers/:id/status (tutor review)
+
+✅ **MongoDB Integration:**
+- Mongoose models with proper schemas
+- Indexing for performance
+- Population for related data
+
+✅ **Well-Structured Code:**
+- MVC architecture
+- Separation of concerns
+- Consistent error handling
+- Comprehensive validation
+
+✅ **Sri Lankan Curriculum:**
+- All required subjects for Grades 6-13
+- Proper grade validation
+- Subject-based filtering
+
+✅ **Role-Based Access:**
+- Student permissions
+- Tutor permissions
+- Admin permissions
+- Parent permissions (read-only)
+
+## 🎯 Next Steps
+
+1. **Authentication System:** Complete user registration/login
+2. **Frontend Integration:** React components for Q&A
+3. **File Uploads:** Support for images in questions/answers
+4. **Notifications:** Email/SMS for answer reviews
+5. **Analytics:** Advanced reporting and insights

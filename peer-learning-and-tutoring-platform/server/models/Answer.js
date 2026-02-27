@@ -21,6 +21,16 @@ const answerSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  status: {
+    type: String,
+    enum: ['pending', 'correct', 'incorrect', 'needs_improvement'],
+    default: 'pending'
+  },
+  tutorComment: {
+    type: String,
+    trim: true,
+    maxlength: 1000
+  },
   acceptedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

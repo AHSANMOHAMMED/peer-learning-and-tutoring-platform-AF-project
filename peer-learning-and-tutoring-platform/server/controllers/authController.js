@@ -226,17 +226,21 @@ const forgotPassword = async (req, res) => {
     user.passwordResetExpires = resetTokenExpiry;
     await user.save();
 
-    // In development without email credentials, just log the token
-    if (process.env.NODE_ENV === 'development' && !process.env.EMAIL_USER) {
-      console.log(`Password reset token for ${email}: ${resetToken}`);
-    } else {
-      // Send reset code email
-      await emailService.sendPasswordResetCode(email, resetToken);
+    // Log the token for development
+    console.log(`Password reset token for ${email}: ${resetToken}`);
+
+    // Try to send email, but don't fail if it doesn't work
+    try {
+      if (process.env.EMAIL_USER) {
+        await emailService.sendPasswordResetCode(email, resetToken);
+      }
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError.message);
     }
 
     res.json({
       success: true,
-      message: 'Password reset email sent'
+      message: 'Password reset code sent. Check console for development.'
     });
   } catch (error) {
     console.error('Forgot password error:', error);

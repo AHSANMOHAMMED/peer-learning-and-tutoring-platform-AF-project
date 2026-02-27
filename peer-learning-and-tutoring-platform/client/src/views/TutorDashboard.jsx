@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
+import { useBookingViewModel } from '../viewmodels/BookingViewModel';
 
 const TutorDashboard = () => {
   const { user } = useAuthViewModel();
+  const { bookings, getTutorBookings, isLoading } = useBookingViewModel();
 
+  useEffect(() => {
+    if (user?.id) {
+      getTutorBookings(user.id);
+    }
+  }, [user?.id, getTutorBookings]);
+
+  const upcomingBookings = bookings?.filter((booking) => booking.isUpcoming) || [];
+
+  // Mock stats - in real app, these would come from API
   const stats = {
     totalSessions: 0,
     totalStudents: 0,

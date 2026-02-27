@@ -98,6 +98,26 @@ export const tutorService = {
     return await apiService.post(`/api/tutors/${tutorId}/verify`);
   },
 
+  // Get current tutor profile (for logged in tutor)
+  async getCurrentTutorProfile() {
+    return await apiService.get('/api/tutors/me');
+  },
+
+  // Update availability (bulk update)
+  async updateAvailability(availabilityData) {
+    return await apiService.put('/api/tutors/me/availability', { availability: availabilityData });
+  },
+
+  // Approve tutor application (admin)
+  async approveTutor(tutorId, data = {}) {
+    return await apiService.post(`/api/tutors/${tutorId}/approve`, data);
+  },
+
+  // Reject tutor application (admin)
+  async rejectTutor(tutorId, data = {}) {
+    return await apiService.post(`/api/tutors/${tutorId}/reject`, data);
+  },
+
   // Upload verification documents
   async uploadVerificationDocuments(tutorId, formData) {
     return await apiService.upload(`/api/tutors/${tutorId}/documents`, formData);

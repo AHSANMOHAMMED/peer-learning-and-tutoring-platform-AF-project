@@ -1,327 +1,542 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { moderationService } from '../services/moderationService';
+import { userService } from '../services/userService';
+import { Report } from '../models/Report';
 import toast from 'react-hot-toast';
-import * as reportService from '../services/reportService';
-import * as userService from '../services/userService';
 
 /**
- * Moderation Controller Hook
- * Handles: Submit reports, list reports, take actions (ban, delete, dismiss)
- * Returns: data state, loading, error, and moderation functions
+ * useModerationController - Controller hook for safety & moderation CRUD
+ * Handles reports, flagged content, and moderation actions
+ * 
+ * MVC Pattern: Controller (Business Logic Layer)
  */
 export const useModerationController = () => {
-  const [data, setData] = useState({
-    reports: [],        // List of all reports
-    report: null,       // Current report detail
-    pendingReports: [], // Count for quick stats
-    actions: [],        // Log of mod actions taken
+  // State
+  const [reports, setReports] = useState([]);
+  const [myReports, setMyReports] = useState([]);
+  const [flaggedContent, setFlaggedContent] = useState([]);
+  const [currentReport, setCurrentReport] = useState(null);
+  const [stats, setStats] = useState({
+    totalReports: 0,
+    pendingReports: 0,
+    resolvedToday: 0,
+    averageResolutionTime: 0,
+    flaggedContentCount: 0
   });
-  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'pending', // pending, investigating, resolved, dismissed, all
+    priority: '', // urgent, high, medium, low
+    type: '', // user, material, session, review
+    assignedToMe: false
+  });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Auto-refresh interval ref
+  const refreshIntervalRef = useRef(null);
 
-  /**
-   * ANY USER: Submit report for content/user
-   * @param {Object} reportData - { type, contentId, userId, description, contentType }
-   *   type: 'inappropriate', 'spam', 'harassment', 'abuse', 'copyright'
-   *   contentType: 'material', 'session', 'message', 'user'
-   */
-  const submitReport = async (reportData) => {
-    setLoading(true);
+  // Report reasons/options
+  const reportReasons = [
+    { value: 'inappropriate_content', label: 'Inappropriate Content', description: 'Content that violates community guidelines' },
+    { value: 'harassment', label: 'Harassment or Bullying', description: 'Targeting someone with harmful behavior' },
+    { value: 'spam', label: 'Spam or Misleading', description: 'Unwanted repetitive content or scams' },
+    { value: 'fake_credentials', label: 'Fake Credentials', description: 'False qualifications or identity' },
+    { value: 'copyright', label: 'Copyright Violation', description: 'Unauthorized use of copyrighted material' },
+    { value: 'hate_speech', label: 'Hate Speech', description: 'Content promoting hatred or discrimination' },
+    { value: 'violence', label: 'Violence or Threats', description: 'Content depicting or promoting violence' },
+    { value: 'other', label: 'Other', description: 'Something else not covered above' }
+  ];
+
+  // Fetch all reports (moderator view)
+  const fetchReports = useCallback(async (page = 1, customFilters = null) => {
+    const activeFilters = customFilters || filters;
+    setIsLoading(true);
     setError(null);
+    
     try {
-      const response = await reportService.createReport(reportData);
+      const params = {
+        page,
+        limit: pagination.limit,
+        status: activeFilters.status === 'all' ? '' : activeFilters.status,
+        priority: activeFilters.priority,
+        type: activeFilters.type,
+        assignedToMe: activeFilters.assignedToMe
+      };
+      
+      const response = await moderationService.getReports(params);
+      
       if (response.success) {
-        toast.success('Report submitted! Moderators will review it soon.');
-        return response.data?.report || true;
+        const reportsData = response.data?.reports || response.data || [];
+        const paginationData = response.data?.pagination || {};
+        
+        setReports(reportsData.map(r => new Report(r)));
+        setPagination({
+          page,
+          limit: pagination.limit,
+          total: paginationData.total || reportsData.length,
+          totalPages: paginationData.totalPages || Math.ceil(paginationData.total / pagination.limit)
+        });
       } else {
-        throw new Error(response.message || 'Failed to submit report');
+        setError(response.message || 'Failed to fetch reports');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error submitting report';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      setError(err.message || 'Failed to fetch reports');
+      toast.error('Failed to load reports');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, [filters, pagination.limit]);
 
-  /**
-   * MODERATOR: Fetch all reports (with filters)
-   * @param {Object} filters - { status, type, contentType, sortBy }
-   */
-  const listReports = async (filters = {}) => {
-    setLoading(true);
+  // Fetch my submitted reports
+  const fetchMyReports = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
+    
     try {
-      const response = await reportService.getReports(filters);
+      const response = await moderationService.getReports({ reporterId: 'me' });
+      
       if (response.success) {
-        setData(prev => ({
-          ...prev,
-          reports: response.data?.reports || [],
-          pendingReports: response.data?.reports?.filter(r => r.status === 'pending') || [],
-        }));
-        return response.data?.reports || [];
+        const reportsData = response.data?.reports || response.data || [];
+        setMyReports(reportsData.map(r => new Report(r)));
       } else {
-        throw new Error(response.message || 'Failed to fetch reports');
+        setError(response.message || 'Failed to fetch your reports');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error fetching reports';
-      setError(msg);
-      toast.error(msg);
-      return [];
+      setError(err.message || 'Failed to fetch your reports');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  /**
-   * MODERATOR: Get single report detail
-   * @param {string} id
-   */
-  const getReportById = async (id) => {
-    setLoading(true);
+  // Fetch single report by ID
+  const fetchReportById = useCallback(async (id) => {
+    setIsLoading(true);
     setError(null);
+    
     try {
-      const response = await reportService.getReportById(id);
+      const response = await moderationService.getReportById(id);
+      
       if (response.success) {
-        setData(prev => ({ ...prev, report: response.data?.report || null }));
-        return response.data?.report || null;
+        const report = new Report(response.data);
+        setCurrentReport(report);
+        return report;
       } else {
-        throw new Error(response.message || 'Failed to fetch report');
+        setError(response.message || 'Failed to fetch report');
+        return null;
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error fetching report';
-      setError(msg);
-      toast.error(msg);
+      setError(err.message || 'Failed to fetch report');
       return null;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  /**
-   * MODERATOR: Approve report & take action (delete content)
-   * @param {string} id
-   * @param {Object} actionData - { action, reason, contentId, contentType }
-   *   action: 'delete_content', 'warn_user', 'ban_user', 'suspend_user'
-   */
-  const approveReport = async (id, actionData) => {
-    setLoading(true);
-    setError(null);
+  // Fetch flagged content
+  const fetchFlaggedContent = useCallback(async () => {
+    setIsLoading(true);
+    
     try {
-      const response = await reportService.updateReportStatus(id, {
-        status: 'approved',
-        action: actionData.action,
-        reason: actionData.reason,
-      });
-
+      const response = await moderationService.getFlaggedContent();
+      
       if (response.success) {
-        // If action requires content deletion or user ban, execute it
-        if (actionData.action === 'delete_content' && actionData.contentId) {
-          await deleteContent(actionData.contentType, actionData.contentId);
+        setFlaggedContent(response.data?.content || []);
+      }
+    } catch (err) {
+      toast.error('Failed to load flagged content');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch moderation stats
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await moderationService.getModerationStats();
+      
+      if (response.success) {
+        setStats(response.data || {
+          totalReports: 0,
+          pendingReports: 0,
+          resolvedToday: 0,
+          averageResolutionTime: 0,
+          flaggedContentCount: 0
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load moderation stats:', err);
+    }
+  }, []);
+
+  // Create new report
+  const createReport = useCallback(async (reportData) => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const response = await moderationService.createReport(reportData);
+      
+      if (response.success) {
+        const newReport = new Report(response.data);
+        
+        // Add to my reports
+        setMyReports(prev => [newReport, ...prev]);
+        
+        toast.success('Report submitted successfully! We will review it shortly.');
+        
+        return { success: true, data: newReport };
+      } else {
+        toast.error(response.message || 'Failed to submit report');
+        return { success: false, error: response.message };
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit report');
+      return { success: false, error: err.message };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  // Update report status
+  const updateReportStatus = useCallback(async (reportId, status) => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await moderationService.updateReport(reportId, { status });
+      
+      if (response.success) {
+        const updateReport = (report) => {
+          if (report.id === reportId) {
+            return new Report({ ...report, status });
+          }
+          return report;
+        };
+        
+        setReports(prev => prev.map(updateReport));
+        
+        if (currentReport?.id === reportId) {
+          setCurrentReport(updateReport(currentReport));
         }
-        if (actionData.action === 'ban_user' && actionData.userId) {
-          await banUser(actionData.userId, actionData.reason);
+        
+        toast.success(`Report status updated to ${status}`);
+        
+        return { success: true };
+      } else {
+        toast.error(response.message || 'Failed to update report');
+        return { success: false, error: response.message };
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to update report');
+      return { success: false, error: err.message };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [currentReport]);
+
+  // Assign report to moderator
+  const assignReport = useCallback(async (reportId, moderatorId) => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await moderationService.assignReport(reportId, moderatorId);
+      
+      if (response.success) {
+        const updateReport = (report) => {
+          if (report.id === reportId) {
+            return new Report({ ...report, assignedTo: moderatorId, status: 'investigating' });
+          }
+          return report;
+        };
+        
+        setReports(prev => prev.map(updateReport));
+        
+        toast.success('Report assigned');
+        
+        return { success: true };
+      } else {
+        toast.error(response.message || 'Failed to assign report');
+        return { success: false, error: response.message };
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to assign report');
+      return { success: false, error: err.message };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  // Resolve report with action
+  const resolveReport = useCallback(async (reportId, action, notes = '') => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await moderationService.resolveReport(reportId, { action, notes });
+      
+      if (response.success) {
+        const updateReport = (report) => {
+          if (report.id === reportId) {
+            return new Report({
+              ...report,
+              status: 'resolved',
+              action,
+              actionNotes: notes,
+              resolvedAt: new Date().toISOString()
+            });
+          }
+          return report;
+        };
+        
+        setReports(prev => prev.map(updateReport));
+        
+        if (currentReport?.id === reportId) {
+          setCurrentReport(updateReport(currentReport));
         }
-        if (actionData.action === 'suspend_user' && actionData.userId) {
-          await suspendUser(actionData.userId, actionData.reason);
+        
+        // Remove from main list if filtering by pending
+        if (filters.status === 'pending') {
+          setReports(prev => prev.filter(r => r.id !== reportId));
         }
-
-        // Update local state
-        setData(prev => ({
-          ...prev,
-          reports: prev.reports.map(r =>
-            r._id === id
-              ? { ...r, status: 'approved', moderatorAction: actionData.action }
-              : r
-          ),
-        }));
-        toast.success('Report approved & action taken!');
-        return true;
+        
+        toast.success(`Report resolved with action: ${action}`);
+        
+        // Refresh stats
+        fetchStats();
+        
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to approve report');
+        toast.error(response.message || 'Failed to resolve report');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error approving report';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to resolve report');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [currentReport, filters.status, fetchStats]);
 
-  /**
-   * MODERATOR: Dismiss/reject report (no action taken)
-   * @param {string} id
-   * @param {string} reason
-   */
-  const dismissReport = async (id, reason = '') => {
-    setLoading(true);
-    setError(null);
+  // Dismiss report
+  const dismissReport = useCallback(async (reportId, notes = '') => {
+    setIsSubmitting(true);
+    
     try {
-      const response = await reportService.updateReportStatus(id, {
-        status: 'dismissed',
-        reason: reason,
-      });
-
+      const response = await moderationService.dismissReport(reportId, { notes });
+      
       if (response.success) {
-        setData(prev => ({
-          ...prev,
-          reports: prev.reports.map(r =>
-            r._id === id ? { ...r, status: 'dismissed' } : r
-          ),
-        }));
-        toast.success('Report dismissed!');
-        return true;
+        const updateReport = (report) => {
+          if (report.id === reportId) {
+            return new Report({
+              ...report,
+              status: 'dismissed',
+              action: 'none',
+              actionNotes: notes,
+              resolvedAt: new Date().toISOString()
+            });
+          }
+          return report;
+        };
+        
+        setReports(prev => prev.map(updateReport));
+        
+        if (currentReport?.id === reportId) {
+          setCurrentReport(updateReport(currentReport));
+        }
+        
+        // Remove from main list if filtering by pending
+        if (filters.status === 'pending') {
+          setReports(prev => prev.filter(r => r.id !== reportId));
+        }
+        
+        toast.success('Report dismissed');
+        
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to dismiss report');
+        toast.error(response.message || 'Failed to dismiss report');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error dismissing report';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to dismiss report');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [currentReport, filters.status]);
 
-  /**
-   * Helper: Delete reported content (material, message, etc)
-   * @param {string} contentType - 'material', 'message', 'session'
-   * @param {string} contentId
-   */
-  const deleteContent = async (contentType, contentId) => {
+  // Review flagged content
+  const reviewFlaggedContent = useCallback(async (contentId, decision, notes = '') => {
+    setIsSubmitting(true);
+    
     try {
-      const deleteMap = {
-        material: `/api/materials/${contentId}`,
-        message: `/api/messages/${contentId}`,
-        session: `/api/sessions/${contentId}`,
-      };
-      const url = deleteMap[contentType];
-      if (!url) throw new Error('Unknown content type');
-
-      await axios.delete(url);
-      toast.success(`${contentType} deleted!`);
-    } catch (err) {
-      toast.error(`Failed to delete ${contentType}`);
-    }
-  };
-
-  /**
-   * MODERATOR: Ban user (permanent)
-   * @param {string} userId
-   * @param {string} reason
-   */
-  const banUser = async (userId, reason = '') => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await userService.banUser(userId, reason);
+      const response = await moderationService.reviewFlaggedContent(contentId, { decision, notes });
+      
       if (response.success) {
-        toast.success('User banned!');
-        return true;
+        // Remove from flagged content
+        setFlaggedContent(prev => prev.filter(c => c.id !== contentId));
+        
+        toast.success(`Content ${decision === 'approve' ? 'approved' : 'removed'}`);
+        
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to ban user');
+        toast.error(response.message || 'Failed to review content');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error banning user';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to review content');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, []);
 
-  /**
-   * MODERATOR: Suspend user (temporary)
-   * @param {string} userId
-   * @param {string} reason
-   * @param {number} days - suspension duration (default 7)
-   */
-  const suspendUser = async (userId, reason = '', days = 7) => {
-    setLoading(true);
-    setError(null);
+  // Warn user
+  const warnUser = useCallback(async (userId, message) => {
+    setIsSubmitting(true);
+    
     try {
-      const response = await userService.suspendUser(userId, reason, days);
+      const response = await userService.warnUser(userId, { message });
+      
       if (response.success) {
-        toast.success(`User suspended for ${days} days!`);
-        return true;
+        toast.success('Warning sent to user');
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to suspend user');
+        toast.error(response.message || 'Failed to warn user');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error suspending user';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to warn user');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, []);
 
-  /**
-   * MODERATOR: Warn user (soft warning)
-   * @param {string} userId
-   * @param {string} reason
-   */
-  const warnUser = async (userId, reason = '') => {
-    setLoading(true);
-    setError(null);
+  // Delete reported content
+  const deleteContent = useCallback(async (contentId, contentType) => {
+    setIsSubmitting(true);
+    
     try {
-      const response = await userService.warnUser(userId, reason);
+      let response;
+      switch (contentType) {
+        case 'material':
+          const { materialService } = await import('../services/materialService');
+          response = await materialService.deleteMaterial(contentId);
+          break;
+        case 'review':
+          response = await reviewService.deleteReview(contentId);
+          break;
+        default:
+          throw new Error('Unknown content type');
+      }
+      
       if (response.success) {
-        toast.success('User warned!');
-        return true;
+        toast.success('Content deleted');
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to warn user');
+        toast.error(response.message || 'Failed to delete content');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error warning user';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to delete content');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, []);
 
-  /**
-   * MODERATOR: Get stats (dashboard widget)
-   */
-  const getStats = async () => {
-    try {
-      const response = await reportService.getReportStats();
-      if (response.success) {
-        return response.data?.stats || {};
-      }
-      return {};
-    } catch (err) {
-      return {};
+  // Update filters
+  const updateFilters = useCallback((newFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  // Clear filters
+  const clearFilters = useCallback(() => {
+    setFilters({
+      status: 'pending',
+      priority: '',
+      type: '',
+      assignedToMe: false
+    });
+  }, []);
+
+  // Auto-refresh setup
+  const startAutoRefresh = useCallback((intervalMs = 30000) => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
     }
-  };
+    
+    refreshIntervalRef.current = setInterval(() => {
+      fetchReports(pagination.page);
+      fetchStats();
+    }, intervalMs);
+  }, [fetchReports, fetchStats, pagination.page]);
+
+  const stopAutoRefresh = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    fetchReports();
+    fetchStats();
+    
+    return () => {
+      stopAutoRefresh();
+    };
+  }, []);
+
+  // Refresh when filters change
+  useEffect(() => {
+    fetchReports(1);
+  }, [filters.status, filters.priority, filters.type, filters.assignedToMe]);
 
   return {
     // State
-    reports: data.reports,
-    report: data.report,
-    pendingReports: data.pendingReports,
-    loading,
+    reports,
+    myReports,
+    flaggedContent,
+    currentReport,
+    stats,
+    filters,
+    pagination,
+    isLoading,
+    isSubmitting,
     error,
+    reportReasons,
     
-    // Functions
-    submitReport,
-    listReports,
-    getReportById,
-    approveReport,
+    // Actions
+    fetchReports,
+    fetchMyReports,
+    fetchReportById,
+    fetchFlaggedContent,
+    fetchStats,
+    createReport,
+    updateReportStatus,
+    assignReport,
+    resolveReport,
     dismissReport,
-    deleteContent,
-    banUser,
-    suspendUser,
+    reviewFlaggedContent,
     warnUser,
-    getStats,
+    deleteContent,
+    updateFilters,
+    clearFilters,
+    startAutoRefresh,
+    stopAutoRefresh,
+    
+    // Pagination helpers
+    goToPage: (page) => fetchReports(page),
+    nextPage: () => fetchReports(Math.min(pagination.totalPages, pagination.page + 1)),
+    prevPage: () => fetchReports(Math.max(1, pagination.page - 1))
   };
 };
+
+export default useModerationController;

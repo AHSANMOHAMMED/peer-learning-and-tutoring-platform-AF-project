@@ -42,6 +42,31 @@ export const userService = {
     return await apiService.put(`/api/users/${userId}`, userData);
   },
 
+  // Get all users (admin only) - alias for getAllUsers
+  async getUsers(params = {}) {
+    return await this.getAllUsers(params);
+  },
+
+  // Ban user (admin only)
+  async banUser(userId, data = {}) {
+    return await apiService.post(`/api/users/${userId}/ban`, data);
+  },
+
+  // Unban user (admin only)
+  async unbanUser(userId) {
+    return await apiService.post(`/api/users/${userId}/unban`);
+  },
+
+  // Suspend user (admin only)
+  async suspendUser(userId, data = {}) {
+    return await apiService.post(`/api/users/${userId}/suspend`, data);
+  },
+
+  // Activate user (admin only)
+  async activateUser(userId) {
+    return await apiService.post(`/api/users/${userId}/activate`);
+  },
+
   // Delete user (admin only)
   async deleteUser(userId) {
     return await apiService.delete(`/api/users/${userId}`);

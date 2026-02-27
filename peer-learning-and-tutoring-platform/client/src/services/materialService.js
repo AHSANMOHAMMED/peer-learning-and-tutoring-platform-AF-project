@@ -1,117 +1,72 @@
-import apiService from './api';
+import { apiService } from './api';
 
-/**
- * MaterialService - Handles all material/resource-related API calls
- */
 export const materialService = {
-  /**
-   * Get all materials with optional filters
-   * @param {Object} filters - Filter parameters (subject, grade, type, page, limit)
-   * @returns {Promise} Materials data with pagination
-   */
-  async getMaterials(filters = {}) {
-    const queryParams = new URLSearchParams(filters).toString();
-    return await apiService.get(`/api/materials${queryParams ? `?${queryParams}` : ''}`);
+  // Get all materials with filters and pagination
+  async getMaterials(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return await apiService.get(`/api/materials?${queryString}`);
   },
 
-  /**
-   * Get material by ID
-   * @param {string} materialId - Material ID
-   * @returns {Promise} Material data
-   */
+  // Get material by ID
   async getMaterialById(materialId) {
     return await apiService.get(`/api/materials/${materialId}`);
   },
 
-  /**
-   * Upload a new material
-   * @param {FormData} formData - Form data containing file and metadata
-   * @returns {Promise} Uploaded material data
-   */
-  async uploadMaterial(formData) {
-    return await apiService.post('/api/materials', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+  // Create new material
+  async createMaterial(materialData) {
+    return await apiService.post('/api/materials', materialData);
   },
 
-  /**
-   * Update material metadata
-   * @param {string} materialId - Material ID
-   * @param {Object} updateData - Data to update
-   * @returns {Promise} Updated material data
-   */
-  async updateMaterial(materialId, updateData) {
-    return await apiService.put(`/api/materials/${materialId}`, updateData);
+  // Update material
+  async updateMaterial(materialId, materialData) {
+    return await apiService.put(`/api/materials/${materialId}`, materialData);
   },
 
-  /**
-   * Delete a material
-   * @param {string} materialId - Material ID
-   * @returns {Promise} Response data
-   */
+  // Delete material
   async deleteMaterial(materialId) {
     return await apiService.delete(`/api/materials/${materialId}`);
   },
 
-  /**
-   * Get materials by tutor
-   * @param {string} tutorId - Tutor ID
-   * @param {Object} filters - Optional filters
-   * @returns {Promise} Materials data
-   */
-  async getMaterialsByTutor(tutorId, filters = {}) {
-    const queryParams = new URLSearchParams(filters).toString();
-    return await apiService.get(`/api/materials/tutor/${tutorId}${queryParams ? `?${queryParams}` : ''}`);
-  },
-
-  /**
-   * Download a material
-   * @param {string} materialId - Material ID
-   * @returns {Promise} Download URL or blob
-   */
+  // Download material
   async downloadMaterial(materialId) {
     return await apiService.get(`/api/materials/${materialId}/download`);
   },
 
-  /**
-   * Get material categories/types
-   * @returns {Promise} Available categories
-   */
-  async getCategories() {
-    return await apiService.get('/api/materials/categories');
+  // Get materials by subject
+  async getMaterialsBySubject(subject, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return await apiService.get(`/api/materials/subject/${subject}?${queryString}`);
   },
 
-  /**
-   * Search materials
-   * @param {string} query - Search query
-   * @param {Object} filters - Additional filters
-   * @returns {Promise} Search results
-   */
-  async searchMaterials(query, filters = {}) {
-    return await apiService.get('/api/materials/search', {
-      params: { query, ...filters }
-    });
+  // Get my materials (for logged in user)
+  async getMyMaterials(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return await apiService.get(`/api/materials/my-materials?${queryString}`);
   },
 
-  /**
-   * Share material with students
-   * @param {string} materialId - Material ID
-   * @param {Array} studentIds - Array of student IDs
-   * @returns {Promise} Response data
-   */
-  async shareMaterial(materialId, studentIds) {
-    return await apiService.post(`/api/materials/${materialId}/share`, { studentIds });
+  // Search materials
+  async searchMaterials(searchParams) {
+    return await apiService.post('/api/materials/search', searchParams);
   },
 
-  /**
-   * Get shared materials for current user
-   * @returns {Promise} Shared materials
-   */
-  async getSharedMaterials() {
-    return await apiService.get('/api/materials/shared');
+  // Rate material
+  async rateMaterial(materialId, rating) {
+    return await apiService.post(`/api/materials/${materialId}/rate`, { rating });
+  },
+
+  // Approve material (moderator only)
+  async approveMaterial(materialId, data = {}) {
+    return await apiService.post(`/api/materials/${materialId}/approve`, data);
+  },
+
+  // Reject material (moderator only)
+  async rejectMaterial(materialId, data = {}) {
+    return await apiService.post(`/api/materials/${materialId}/reject`, data);
+  },
+
+  // Get pending materials (moderator only)
+  async getPendingMaterials(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return await apiService.get(`/api/materials/pending?${queryString}`);
   }
 };
-
-export default materialService;

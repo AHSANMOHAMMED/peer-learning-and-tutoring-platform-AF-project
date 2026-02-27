@@ -1,266 +1,482 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { materialService } from '../services/materialService';
+import { Material } from '../models/Material';
 import toast from 'react-hot-toast';
-import * as materialService from '../services/materialService';
 
 /**
- * Material Controller Hook
- * Handles: Create, Read, Update, Delete, Approve, Reject materials
- * Returns: data state, loading, error, and CRUD functions
+ * useMaterialController - Controller hook for study materials CRUD
+ * Handles all material operations with auto-refresh and optimistic updates
+ * 
+ * MVC Pattern: Controller (Business Logic Layer)
  */
 export const useMaterialController = () => {
-  const [data, setData] = useState({
-    materials: [],      // List view
-    material: null,     // Detail view
-    pending: [],        // Moderator: pending approvals
+  // State
+  const [materials, setMaterials] = useState([]);
+  const [myMaterials, setMyMaterials] = useState([]);
+  const [pendingMaterials, setPendingMaterials] = useState([]);
+  const [currentMaterial, setCurrentMaterial] = useState(null);
+  const [categories] = useState([
+    'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English',
+    'History', 'Computer Science', 'Economics', 'Art', 'Music'
+  ]);
+  const [filters, setFilters] = useState({
+    subject: '',
+    search: '',
+    sortBy: 'newest', // newest, mostDownloaded, highestRated
+    status: 'approved' // approved, pending, rejected, all
   });
-  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    totalPages: 0
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Auto-refresh interval ref
+  const refreshIntervalRef = useRef(null);
 
-  /**
-   * Fetch all materials with optional filters
-   * @param {Object} filters - { subject, tags, status, search }
-   */
-  const list = async (filters = {}) => {
-    setLoading(true);
+  // Fetch all materials with filters
+  const fetchMaterials = useCallback(async (page = 1, customFilters = null) => {
+    const activeFilters = customFilters || filters;
+    setIsLoading(true);
     setError(null);
+    
     try {
-      const response = await materialService.getMaterials(filters);
+      const params = {
+        page,
+        limit: pagination.limit,
+        subject: activeFilters.subject,
+        search: activeFilters.search,
+        sortBy: activeFilters.sortBy,
+        status: activeFilters.status
+      };
+      
+      const response = await materialService.getMaterials(params);
+      
       if (response.success) {
-        setData(prev => ({ ...prev, materials: response.data?.materials || [] }));
-        return response.data?.materials || [];
+        const materialsData = response.data?.materials || response.data || [];
+        const paginationData = response.data?.pagination || {};
+        
+        setMaterials(materialsData.map(m => new Material(m)));
+        setPagination({
+          page,
+          limit: pagination.limit,
+          total: paginationData.total || materialsData.length,
+          totalPages: paginationData.totalPages || Math.ceil(paginationData.total / pagination.limit)
+        });
       } else {
-        throw new Error(response.message || 'Failed to fetch materials');
+        setError(response.message || 'Failed to fetch materials');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error fetching materials';
-      setError(msg);
-      toast.error(msg);
-      return [];
+      setError(err.message || 'Failed to fetch materials');
+      toast.error('Failed to load materials');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, [filters, pagination.limit]);
 
-  /**
-   * Fetch single material by ID
-   * @param {string} id
-   */
-  const getById = async (id) => {
-    setLoading(true);
+  // Fetch current user's materials
+  const fetchMyMaterials = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
+    
+    try {
+      const response = await materialService.getMyMaterials();
+      
+      if (response.success) {
+        const materialsData = response.data?.materials || response.data || [];
+        setMyMaterials(materialsData.map(m => new Material(m)));
+      } else {
+        setError(response.message || 'Failed to fetch your materials');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch your materials');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch pending materials (moderator only)
+  const fetchPendingMaterials = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await materialService.getMaterials({ status: 'pending' });
+      
+      if (response.success) {
+        const materialsData = response.data?.materials || response.data || [];
+        setPendingMaterials(materialsData.map(m => new Material(m)));
+      } else {
+        setError(response.message || 'Failed to fetch pending materials');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch pending materials');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Get single material by ID
+  const fetchMaterialById = useCallback(async (id) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
       const response = await materialService.getMaterialById(id);
+      
       if (response.success) {
-        setData(prev => ({ ...prev, material: response.data?.material || null }));
-        return response.data?.material || null;
+        const material = new Material(response.data);
+        setCurrentMaterial(material);
+        return material;
       } else {
-        throw new Error(response.message || 'Failed to fetch material');
+        setError(response.message || 'Failed to fetch material');
+        return null;
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error fetching material';
-      setError(msg);
-      toast.error(msg);
+      setError(err.message || 'Failed to fetch material');
       return null;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  /**
-   * Create new material with file upload
-   * @param {FormData} formData - { file, title, description, tags, category }
-   */
-  const create = async (formData) => {
-    setLoading(true);
+  // Create new material
+  const createMaterial = useCallback(async (formData) => {
+    setIsSubmitting(true);
     setError(null);
+    
     try {
-      // formData is already FormData object
       const response = await materialService.createMaterial(formData);
+      
       if (response.success) {
-        const newMaterial = response.data?.material;
-        setData(prev => ({
-          ...prev,
-          materials: [newMaterial, ...prev.materials],
-        }));
+        const newMaterial = new Material(response.data);
+        
+        // Optimistic update
+        setMaterials(prev => [newMaterial, ...prev]);
+        setMyMaterials(prev => [newMaterial, ...prev]);
+        
         toast.success('Material uploaded successfully!');
-        return newMaterial;
+        
+        // Refresh to get server state
+        fetchMaterials();
+        fetchMyMaterials();
+        
+        return { success: true, data: newMaterial };
       } else {
-        throw new Error(response.message || 'Failed to upload material');
+        toast.error(response.message || 'Failed to upload material');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error uploading material';
-      setError(msg);
-      toast.error(msg);
-      return null;
+      toast.error(err.message || 'Failed to upload material');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [fetchMaterials, fetchMyMaterials]);
 
-  /**
-   * Update material (title, description, tags, category)
-   * @param {string} id
-   * @param {Object} updateData - { title, description, tags, category }
-   */
-  const update = async (id, updateData) => {
-    setLoading(true);
+  // Update material
+  const updateMaterial = useCallback(async (id, updateData) => {
+    setIsSubmitting(true);
     setError(null);
+    
     try {
       const response = await materialService.updateMaterial(id, updateData);
+      
       if (response.success) {
-        const updated = response.data?.material;
-        setData(prev => ({
-          ...prev,
-          materials: prev.materials.map(m => m._id === id ? updated : m),
-          material: prev.material?._id === id ? updated : prev.material,
-        }));
-        toast.success('Material updated!');
-        return updated;
+        const updatedMaterial = new Material(response.data);
+        
+        // Optimistic update in all lists
+        setMaterials(prev => prev.map(m => m.id === id ? updatedMaterial : m));
+        setMyMaterials(prev => prev.map(m => m.id === id ? updatedMaterial : m));
+        setPendingMaterials(prev => prev.map(m => m.id === id ? updatedMaterial : m));
+        
+        if (currentMaterial?.id === id) {
+          setCurrentMaterial(updatedMaterial);
+        }
+        
+        toast.success('Material updated successfully!');
+        return { success: true, data: updatedMaterial };
       } else {
-        throw new Error(response.message || 'Failed to update material');
+        toast.error(response.message || 'Failed to update material');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error updating material';
-      setError(msg);
-      toast.error(msg);
-      return null;
+      toast.error(err.message || 'Failed to update material');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [currentMaterial]);
 
-  /**
-   * Delete material (owner or moderator)
-   * @param {string} id
-   */
-  const deleteMaterial = async (id) => {
-    setLoading(true);
+  // Delete material
+  const deleteMaterial = useCallback(async (id) => {
+    setIsSubmitting(true);
     setError(null);
+    
     try {
       const response = await materialService.deleteMaterial(id);
+      
       if (response.success) {
-        setData(prev => ({
-          ...prev,
-          materials: prev.materials.filter(m => m._id !== id),
-          material: prev.material?._id === id ? null : prev.material,
-        }));
-        toast.success('Material deleted!');
-        return true;
+        // Remove from all lists
+        setMaterials(prev => prev.filter(m => m.id !== id));
+        setMyMaterials(prev => prev.filter(m => m.id !== id));
+        setPendingMaterials(prev => prev.filter(m => m.id !== id));
+        
+        if (currentMaterial?.id === id) {
+          setCurrentMaterial(null);
+        }
+        
+        toast.success('Material deleted successfully!');
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to delete material');
+        toast.error(response.message || 'Failed to delete material');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error deleting material';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to delete material');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [currentMaterial]);
 
-  /**
-   * MODERATOR: Approve pending material
-   * @param {string} id
-   */
-  const approve = async (id) => {
-    setLoading(true);
-    setError(null);
+  // Approve material (moderator)
+  const approveMaterial = useCallback(async (id, notes = '') => {
+    setIsSubmitting(true);
+    
     try {
-      const response = await materialService.approveMaterial(id);
+      const response = await materialService.approveMaterial(id, { notes });
+      
       if (response.success) {
-        const approved = response.data?.material;
-        setData(prev => ({
-          ...prev,
-          materials: prev.materials.map(m => m._id === id ? approved : m),
-          pending: prev.pending.filter(m => m._id !== id),
-        }));
+        // Move from pending to approved
+        setPendingMaterials(prev => prev.filter(m => m.id !== id));
+        
         toast.success('Material approved!');
-        return approved;
+        
+        // Refresh lists
+        fetchMaterials();
+        fetchPendingMaterials();
+        
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to approve material');
+        toast.error(response.message || 'Failed to approve material');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error approving material';
-      setError(msg);
-      toast.error(msg);
-      return null;
+      toast.error(err.message || 'Failed to approve material');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [fetchMaterials, fetchPendingMaterials]);
 
-  /**
-   * MODERATOR: Reject pending material
-   * @param {string} id
-   * @param {string} reason
-   */
-  const reject = async (id, reason = '') => {
-    setLoading(true);
-    setError(null);
+  // Reject material (moderator)
+  const rejectMaterial = useCallback(async (id, reason = '') => {
+    setIsSubmitting(true);
+    
     try {
-      const response = await materialService.rejectMaterial(id, reason);
+      const response = await materialService.rejectMaterial(id, { reason });
+      
       if (response.success) {
-        setData(prev => ({
-          ...prev,
-          pending: prev.pending.filter(m => m._id !== id),
-        }));
-        toast.success('Material rejected!');
-        return true;
+        // Remove from pending
+        setPendingMaterials(prev => prev.filter(m => m.id !== id));
+        
+        toast.success('Material rejected');
+        
+        // Refresh lists
+        fetchPendingMaterials();
+        
+        return { success: true };
       } else {
-        throw new Error(response.message || 'Failed to reject material');
+        toast.error(response.message || 'Failed to reject material');
+        return { success: false, error: response.message };
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error rejecting material';
-      setError(msg);
-      toast.error(msg);
-      return false;
+      toast.error(err.message || 'Failed to reject material');
+      return { success: false, error: err.message };
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [fetchPendingMaterials]);
 
-  /**
-   * Fetch pending materials (moderator only)
-   */
-  const listPending = async () => {
-    setLoading(true);
-    setError(null);
+  // Search materials
+  const searchMaterials = useCallback(async (searchQuery, searchFilters = {}) => {
+    setIsLoading(true);
+    
     try {
-      const response = await materialService.getPendingMaterials();
+      const response = await materialService.searchMaterials({
+        query: searchQuery,
+        ...searchFilters
+      });
+      
       if (response.success) {
-        setData(prev => ({ ...prev, pending: response.data?.materials || [] }));
-        return response.data?.materials || [];
+        const materialsData = response.data?.materials || response.data || [];
+        return materialsData.map(m => new Material(m));
       } else {
-        throw new Error(response.message || 'Failed to fetch pending materials');
+        return [];
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Error fetching pending';
-      setError(msg);
-      toast.error(msg);
+      toast.error('Search failed');
       return [];
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Rate material
+  const rateMaterial = useCallback(async (id, rating) => {
+    try {
+      const response = await materialService.rateMaterial(id, rating);
+      
+      if (response.success) {
+        // Update rating in local state
+        const updateRating = (material) => {
+          if (material.id === id) {
+            return new Material({
+              ...material,
+              averageRating: response.data?.averageRating || rating,
+              ratings: [...(material.ratings || []), rating]
+            });
+          }
+          return material;
+        };
+        
+        setMaterials(prev => prev.map(updateRating));
+        setMyMaterials(prev => prev.map(updateRating));
+        
+        toast.success('Rating submitted!');
+        return { success: true };
+      } else {
+        toast.error(response.message || 'Failed to rate material');
+        return { success: false, error: response.message };
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to rate material');
+      return { success: false, error: err.message };
+    }
+  }, []);
+
+  // Download material
+  const downloadMaterial = useCallback(async (id) => {
+    try {
+      const response = await materialService.downloadMaterial(id);
+      
+      if (response.success && response.data?.url) {
+        // Trigger download
+        window.open(response.data.url, '_blank');
+        
+        // Update download count optimistically
+        const incrementDownloads = (material) => {
+          if (material.id === id) {
+            return new Material({
+              ...material,
+              downloads: (material.downloads || 0) + 1
+            });
+          }
+          return material;
+        };
+        
+        setMaterials(prev => prev.map(incrementDownloads));
+        setMyMaterials(prev => prev.map(incrementDownloads));
+        
+        return { success: true };
+      } else {
+        toast.error('Download failed');
+        return { success: false, error: 'Download failed' };
+      }
+    } catch (err) {
+      toast.error(err.message || 'Download failed');
+      return { success: false, error: err.message };
+    }
+  }, []);
+
+  // Update filters
+  const updateFilters = useCallback((newFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  // Clear filters
+  const clearFilters = useCallback(() => {
+    setFilters({
+      subject: '',
+      search: '',
+      sortBy: 'newest',
+      status: 'approved'
+    });
+  }, []);
+
+  // Auto-refresh setup
+  const startAutoRefresh = useCallback((intervalMs = 30000) => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+    }
+    
+    refreshIntervalRef.current = setInterval(() => {
+      fetchMaterials(pagination.page);
+    }, intervalMs);
+  }, [fetchMaterials, pagination.page]);
+
+  const stopAutoRefresh = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
+    }
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    fetchMaterials();
+    
+    return () => {
+      stopAutoRefresh();
+    };
+  }, []);
+
+  // Refresh when filters change
+  useEffect(() => {
+    fetchMaterials(1);
+  }, [filters.subject, filters.sortBy, filters.status]);
 
   return {
     // State
-    materials: data.materials,
-    material: data.material,
-    pending: data.pending,
-    loading,
+    materials,
+    myMaterials,
+    pendingMaterials,
+    currentMaterial,
+    categories,
+    filters,
+    pagination,
+    isLoading,
+    isSubmitting,
     error,
     
-    // Functions
-    list,
-    getById,
-    create,
-    update,
-    delete: deleteMaterial,
-    approve,
-    reject,
-    listPending,
+    // Actions
+    fetchMaterials,
+    fetchMyMaterials,
+    fetchPendingMaterials,
+    fetchMaterialById,
+    createMaterial,
+    updateMaterial,
+    deleteMaterial,
+    approveMaterial,
+    rejectMaterial,
+    searchMaterials,
+    rateMaterial,
+    downloadMaterial,
+    updateFilters,
+    clearFilters,
+    startAutoRefresh,
+    stopAutoRefresh,
+    
+    // Pagination helpers
+    goToPage: (page) => fetchMaterials(page),
+    nextPage: () => fetchMaterials(Math.min(pagination.totalPages, pagination.page + 1)),
+    prevPage: () => fetchMaterials(Math.max(1, pagination.page - 1))
   };
 };
+
+export default useMaterialController;

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Message, Conversation } from '../models/Message';
 import { messageService } from '../services/messageService';
 
@@ -259,10 +259,10 @@ export function useMessageViewModel() {
     setState(messageViewModel.getState());
   }, []);
 
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = messageViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, [updateState]);
 
   return {
     ...state,

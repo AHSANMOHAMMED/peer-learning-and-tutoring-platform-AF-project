@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Tutor } from '../models/Tutor';
 import { tutorService } from '../services/tutorService';
 
@@ -284,10 +284,10 @@ export function useTutorViewModel() {
   }, []);
 
   // Subscribe to tutor view model changes
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = tutorViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, [updateState]);
 
   return {
     ...state,

@@ -71,7 +71,32 @@ const userSchema = new mongoose.Schema({
   emailVerificationToken: String,
   passwordResetToken: String,
   passwordResetExpires: Date,
-  lastLogin: Date
+  lastLogin: Date,
+  // Forum and gamification fields
+  reputation: {
+    type: Number,
+    default: 0
+  },
+  totalPoints: {
+    type: Number,
+    default: 0
+  },
+  badges: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserBadge'
+  }],
+  subjectPoints: {
+    type: Map,
+    of: Number,
+    default: {}
+  },
+  forumStats: {
+    questionsAsked: { type: Number, default: 0 },
+    answersGiven: { type: Number, default: 0 },
+    bestAnswers: { type: Number, default: 0 },
+    upvotesReceived: { type: Number, default: 0 },
+    downvotesReceived: { type: Number, default: 0 }
+  }
 }, {
   timestamps: true
 });
@@ -80,6 +105,8 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ email: 1 });
 userSchema.index({ username: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ reputation: -1 });
+userSchema.index({ totalPoints: -1 });
 
 // Virtual for full name
 userSchema.virtual('fullName').get(function() {
@@ -129,6 +156,32 @@ userSchema.statics.findByEmailOrUsername = function(identifier) {
       { username: identifier }
     ]
   });
+};
+
+// Method to update forum stats
+userSchema.methods.updateForumStats = async function(type, increment = 1) {
+  const validTypes = ['questionsAsked', 'answersGiven', 'bestAnswers', 'upvotesReceived', 'downvotesReceived'];
+  if (validTypes.includes(type)) {
+    this.forumStats[type] += increment;
+    return this.save();
+  }
+  throw new Error(`Invalid forum stat type: ${type}`);
+};
+
+// Method to add subject points
+userSchema.methods.addSubjectPoints = function(subject, points) {
+  const currentPoints = this.subjectPoints.get(subject) || 0;
+  this.subjectPoints.set(subject, currentPoints + points);
+  return this.save();
+};
+
+// Method to get user's forum rank
+userSchema.methods.getForumRank = async function() {
+  const totalUsers = await this.constructor.countDocuments();
+  const usersWithHigherReputation = await this.constructor.countDocuments({ 
+    reputation: { $gt: this.reputation } 
+  });
+  return Math.floor(((totalUsers - usersWithHigherReputation) / totalUsers) * 100);
 };
 
 module.exports = mongoose.model('User', userSchema);

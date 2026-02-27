@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Booking } from '../models/Booking';
 import { bookingService } from '../services/bookingService';
 
@@ -325,10 +325,10 @@ export function useBookingViewModel() {
   }, []);
 
   // Subscribe to booking view model changes
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = bookingViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, [updateState]);
 
   return {
     ...state,

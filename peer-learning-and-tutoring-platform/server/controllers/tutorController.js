@@ -1,13 +1,14 @@
 const Tutor = require('../models/Tutor');
 const User = require('../models/User');
 const Review = require('../models/Review');
+const TutorService = require('../services/tutorService');
 const { validationResult } = require('express-validator');
 
 // Get all tutors with search and filters
 const getTutors = async (req, res) => {
   try {
     const searchParams = req.query;
-    const result = await Tutor.search(searchParams);
+    const result = await TutorService.searchTutors(searchParams);
     
     res.json({
       success: true,
@@ -259,13 +260,12 @@ const addAvailability = async (req, res) => {
       });
     }
     
-    tutor.addAvailability(availabilityData);
-    await tutor.save();
+    const updatedTutor = await TutorService.addAvailability(id, availabilityData);
     
     res.json({
       success: true,
       message: 'Availability added successfully',
-      data: tutor.availability
+      data: updatedTutor.availability
     });
   } catch (error) {
     console.error('Add availability error:', error);
@@ -301,13 +301,12 @@ const removeAvailability = async (req, res) => {
       });
     }
     
-    tutor.removeAvailability(slotId);
-    await tutor.save();
+    const updatedTutor = await TutorService.removeAvailability(id, slotId);
     
     res.json({
       success: true,
       message: 'Availability removed successfully',
-      data: tutor.availability
+      data: updatedTutor.availability
     });
   } catch (error) {
     console.error('Remove availability error:', error);
@@ -344,13 +343,12 @@ const addSubject = async (req, res) => {
       });
     }
     
-    tutor.addSubject(subjectData);
-    await tutor.save();
+    const updatedTutor = await TutorService.addSubject(id, subjectData);
     
     res.json({
       success: true,
       message: 'Subject added successfully',
-      data: tutor.subjects
+      data: updatedTutor.subjects
     });
   } catch (error) {
     console.error('Add subject error:', error);
@@ -386,13 +384,12 @@ const removeSubject = async (req, res) => {
       });
     }
     
-    tutor.removeSubject(subjectId);
-    await tutor.save();
+    const updatedTutor = await TutorService.removeSubject(id, subjectId);
     
     res.json({
       success: true,
       message: 'Subject removed successfully',
-      data: tutor.subjects
+      data: updatedTutor.subjects
     });
   } catch (error) {
     console.error('Remove subject error:', error);
@@ -500,7 +497,7 @@ const getFeaturedTutors = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
     
-    const tutors = await Tutor.getFeatured(parseInt(limit));
+    const tutors = await TutorService.getFeaturedTutors(parseInt(limit));
     
     res.json({
       success: true,
@@ -521,7 +518,7 @@ const getTopRatedTutors = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
     
-    const tutors = await Tutor.getTopRated(parseInt(limit));
+    const tutors = await TutorService.getTopRatedTutors(parseInt(limit));
     
     res.json({
       success: true,

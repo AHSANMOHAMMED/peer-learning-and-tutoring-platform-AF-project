@@ -6,6 +6,7 @@ import Footer from './components/common/Footer'
 import Home from './pages/Home'
 import LoginView from './views/LoginView'
 import RegisterView from './views/RegisterView'
+import ForgotPasswordView from './views/ForgotPasswordView'
 import StudentDashboard from './views/StudentDashboard'
 import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
@@ -13,6 +14,8 @@ import SessionRoom from './components/SessionRoom'
 import ResourceLibrary from './components/ResourceLibrary'
 import AdminDashboard from './views/AdminDashboard'
 import ParentDashboard from './views/ParentDashboard'
+import ModeratorDashboard from './components/ModeratorDashboard'
+import UserManagementView from './views/UserManagementView'
 
 // Forum Components
 import QuestionList from './components/forum/QuestionList'
@@ -148,6 +151,14 @@ function App() {
                 </PublicRoute>
               } 
             />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPasswordView />
+                </PublicRoute>
+              }
+            />
             
             {/* Unauthorized Page */}
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -186,6 +197,14 @@ function App() {
                   <AdminDashboard />
                 </RoleProtectedRoute>
               } 
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <RoleProtectedRoute allowedRoles={['admin']}>
+                  <UserManagementView />
+                </RoleProtectedRoute>
+              }
             />
             <Route 
               path="/parent/dashboard" 

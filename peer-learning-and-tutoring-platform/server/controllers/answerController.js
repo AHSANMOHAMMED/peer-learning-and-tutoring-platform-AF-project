@@ -2,7 +2,6 @@ const Answer = require('../models/Answer');
 const Question = require('../models/Question');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
-const PointTransaction = require('../models/PointTransaction');
 const { validationResult } = require('express-validator');
 
 // Get answers for a question

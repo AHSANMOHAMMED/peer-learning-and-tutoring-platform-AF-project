@@ -1,7 +1,6 @@
 const Vote = require('../models/Vote');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
-const PointTransaction = require('../models/PointTransaction');
 const PointsService = require('../services/pointsService');
 const { validationResult } = require('express-validator');
 

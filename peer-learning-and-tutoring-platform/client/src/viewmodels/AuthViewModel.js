@@ -216,7 +216,7 @@ export function useAuthViewModel() {
   useEffect(() => {
     const unsubscribe = authViewModel.subscribe(updateState);
     return unsubscribe;
-  }, []);
+  }, [updateState]);
 
   return {
     ...state,

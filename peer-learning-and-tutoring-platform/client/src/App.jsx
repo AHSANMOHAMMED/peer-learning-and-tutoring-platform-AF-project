@@ -15,6 +15,11 @@ import AdminDashboard from './views/AdminDashboard'
 import ParentDashboard from './views/ParentDashboard'
 import ModeratorDashboard from './components/ModeratorDashboard'
 
+// Forum Components
+import QuestionList from './components/forum/QuestionList'
+import QuestionDetail from './components/forum/QuestionDetail'
+import AskQuestion from './components/forum/AskQuestion'
+
 // Unauthorized Page
 const UnauthorizedPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -226,6 +231,11 @@ function App() {
                 </RoleProtectedRoute>
               } 
             />
+
+            {/* Forum Routes */}
+            <Route path="/forum" element={<QuestionList />} />
+            <Route path="/forum/ask" element={<AskQuestion />} />
+            <Route path="/forum/question/:id" element={<QuestionDetail />} />
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" />} />

@@ -113,9 +113,8 @@ app.use('/api/questions', require('./routes/questions'));
 app.use('/api/answers', require('./routes/answers'));
 app.use('/api/votes', require('./routes/votes'));
 app.use('/api/comments', require('./routes/comments'));
-app.use('/api/points', require('./routes/points'));
 app.use('/api/badges', require('./routes/badges'));
-app.use('/api/leaderboard', require('./routes/leaderboard'));
+// app.use('/api/leaderboard', require('./routes/leaderboard')); // Removed - not part of Q&A
 
 // Q&A Module Routes (Isolated Feature)
 app.use('/api/qa', require('./modules/qa/routes/qa.routes'));

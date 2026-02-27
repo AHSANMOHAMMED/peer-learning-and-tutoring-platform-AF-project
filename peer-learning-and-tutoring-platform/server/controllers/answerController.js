@@ -2,7 +2,6 @@ const Answer = require('../models/Answer');
 const Question = require('../models/Question');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
-const PointTransaction = require('../models/PointTransaction');
 const { validationResult } = require('express-validator');
 
 // Get answers for a question
@@ -12,7 +11,8 @@ const getAnswersByQuestion = async (req, res) => {
     const {
       page = 1,
       limit = 20,
-      sortBy = 'oldest'
+      sortBy = 'oldest',
+      status = 'all'
     } = req.query;
 
     // Check if question exists
@@ -27,7 +27,18 @@ const getAnswersByQuestion = async (req, res) => {
       sortBy
     };
 
-    const answers = await Answer.getByQuestion(questionId, options);
+    // Filter by status if provided
+    const query = { question: questionId };
+    if (status !== 'all') {
+      query.status = status;
+    }
+
+    const answers = await Answer.find(query)
+      .sort({ createdAt: sortBy === 'newest' ? -1 : 1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation')
+      .populate('acceptedBy', 'username profile.firstName profile.lastName');
 
     // Get user votes for each answer if authenticated
     let userVotes = {};
@@ -300,6 +311,58 @@ const acceptAnswer = async (req, res) => {
   }
 };
 
+// Update answer status (for tutors)
+const updateAnswerStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, tutorComment } = req.body;
+
+    // Validate status
+    const validStatuses = ['pending', 'correct', 'incorrect', 'needs_improvement'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const answer = await Answer.findById(id).populate('question');
+    if (!answer) {
+      return res.status(404).json({ error: 'Answer not found' });
+    }
+
+    // Check if user is tutor of the question or admin
+    if (answer.question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this answer status' });
+    }
+
+    answer.status = status;
+    answer.tutorComment = tutorComment || '';
+    
+    // If status is correct, also mark as accepted
+    if (status === 'correct') {
+      answer.isAccepted = true;
+      answer.acceptedBy = req.user._id;
+      answer.acceptedAt = new Date();
+    }
+
+    await answer.save();
+    await answer.populate('author', 'username profile.firstName profile.lastName profile.avatar');
+    await answer.populate('acceptedBy', 'username profile.firstName profile.lastName');
+
+    // Emit real-time event
+    if (global.io) {
+      global.io.to(answer.author.toString()).emit('answerStatusUpdated', {
+        answer,
+        status,
+        tutorComment
+      });
+    }
+
+    res.json(answer);
+  } catch (error) {
+    console.error('Error in updateAnswerStatus:', error);
+    res.status(500).json({ error: 'Failed to update answer status' });
+  }
+};
+
 // Get answer statistics
 const getAnswerStats = async (req, res) => {
   try {
@@ -330,5 +393,6 @@ module.exports = {
   updateAnswer,
   deleteAnswer,
   acceptAnswer,
+  updateAnswerStatus,
   getAnswerStats
 };

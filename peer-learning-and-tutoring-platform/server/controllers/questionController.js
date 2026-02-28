@@ -23,7 +23,8 @@ const getQuestions = async (req, res) => {
       grade = 'all',
       tags = '',
       sortBy = 'newest',
-      search = ''
+      search = '',
+      category = 'all'
     } = req.query;
 
     const options = {
@@ -148,7 +149,7 @@ const createQuestion = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, body, tags, subject, grade } = req.body;
+    const { title, content, tags, subject, grade } = req.body;
     
     // Validate subject exists in Sri Lankan curriculum
     const allSubjects = [...SRI_LANKAN_SUBJECTS.core, ...SRI_LANKAN_SUBJECTS.religion, ...SRI_LANKAN_SUBJECTS.language, ...SRI_LANKAN_SUBJECTS.elective];
@@ -163,7 +164,7 @@ const createQuestion = async (req, res) => {
     
     const question = new Question({
       title,
-      body,
+      body: content, // Map content to body field
       tags: tags || [],
       subject,
       grade,
@@ -172,15 +173,15 @@ const createQuestion = async (req, res) => {
     
     await question.save();
     
-    // Award points for posting question (+2 points)
-    await PointsService.awardQuestionPosted(req.user._id, question._id, subject);
+    // Award points for posting question (+2 points) - temporarily disabled
+    // await PointsService.awardQuestionPosted(req.user._id, question._id, subject);
     
     // Update user's forum stats
     const User = require('../models/User');
     const user = await User.findById(req.user._id);
     if (user) {
       await user.updateForumStats('questionsAsked');
-      await user.addSubjectPoints(category, 2);
+      await user.addSubjectPoints(subject, 2);
     }
     
     // Populate author details for response
@@ -204,44 +205,57 @@ const createQuestion = async (req, res) => {
 // Update question
 const updateQuestion = async (req, res) => {
   try {
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
-    
     const { id } = req.params;
-    const { title, body, tags, category } = req.body;
+    const { title, content, body, tags, subject, grade } = req.body;
     
     const question = await Question.findById(id);
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
     }
     
     // Check if user is the author or admin
     if (question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to update this question' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Not authorized to update this question' 
+      });
     }
     
     // Don't allow editing if question is closed
     if (question.isClosed) {
-      return res.status(400).json({ error: 'Cannot edit a closed question' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Cannot edit a closed question' 
+      });
     }
     
-    question.title = title || question.title;
-    question.body = body || question.body;
-    question.tags = tags || question.tags;
-    question.category = category || question.category;
+    // Update fields (support both 'body' and 'content' for compatibility)
+    if (title) question.title = title;
+    if (body || content) question.body = body || content;
+    if (tags) question.tags = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim());
+    if (subject) question.subject = subject;
+    if (grade) question.grade = parseInt(grade);
     
     await question.save();
     
     // Populate author details for response
     await question.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     
-    res.json(question);
+    res.json({
+      success: true,
+      message: 'Question updated successfully',
+      data: question
+    });
   } catch (error) {
     console.error('Error in updateQuestion:', error);
-    res.status(500).json({ error: 'Failed to update question' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to update question',
+      error: error.message 
+    });
   }
 };
 
@@ -252,12 +266,18 @@ const deleteQuestion = async (req, res) => {
 
     const question = await Question.findById(id);
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
     }
 
     // Check if user is the author or admin
     if (question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to delete this question' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Not authorized to delete this question' 
+      });
     }
 
     // Delete related answers, votes, and comments
@@ -265,12 +285,19 @@ const deleteQuestion = async (req, res) => {
     await Vote.deleteMany({ targetType: 'question', targetId: id });
     await Comment.deleteMany({ targetType: 'question', targetId: id });
 
-    await question.remove();
+    await question.deleteOne();
 
-    res.json({ message: 'Question deleted successfully' });
+    res.json({ 
+      success: true,
+      message: 'Question and all related data deleted successfully' 
+    });
   } catch (error) {
     console.error('Error in deleteQuestion:', error);
-    res.status(500).json({ error: 'Failed to delete question' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to delete question',
+      error: error.message 
+    });
   }
 };
 
@@ -282,12 +309,18 @@ const closeQuestion = async (req, res) => {
 
     const question = await Question.findById(id);
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
     }
 
     // Check if user is the author or admin
     if (question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to close this question' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Not authorized to close this question' 
+      });
     }
 
     question.isClosed = true;
@@ -295,13 +328,106 @@ const closeQuestion = async (req, res) => {
     question.closedBy = req.user._id;
 
     await question.save();
-
     await question.populate('closedBy', 'username profile.firstName profile.lastName');
 
-    res.json(question);
+    res.json({
+      success: true,
+      message: 'Question closed successfully',
+      data: question
+    });
   } catch (error) {
     console.error('Error in closeQuestion:', error);
-    res.status(500).json({ error: 'Failed to close question' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to close question',
+      error: error.message
+    });
+  }
+};
+
+// Approve question (admin only)
+const approveQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Only admins can approve questions' 
+      });
+    }
+
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
+    }
+
+    question.status = 'approved';
+    question.approvedBy = req.user._id;
+    question.approvedAt = new Date();
+
+    await question.save();
+    await question.populate('approvedBy', 'username');
+
+    res.json({
+      success: true,
+      message: 'Question approved successfully',
+      data: question
+    });
+  } catch (error) {
+    console.error('Error in approveQuestion:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to approve question',
+      error: error.message
+    });
+  }
+};
+
+// Reject question (admin only)
+const rejectQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Only admins can reject questions' 
+      });
+    }
+
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
+    }
+
+    question.status = 'rejected';
+    question.rejectedBy = req.user._id;
+    question.rejectedAt = new Date();
+    question.rejectReason = reason;
+
+    await question.save();
+    await question.populate('rejectedBy', 'username');
+
+    res.json({
+      success: true,
+      message: 'Question rejected successfully',
+      data: question
+    });
+  } catch (error) {
+    console.error('Error in rejectQuestion:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to reject question',
+      error: error.message
+    });
   }
 };
 
@@ -360,5 +486,7 @@ module.exports = {
   getQuestionStats,
   updateQuestion,
   deleteQuestion,
-  closeQuestion
+  closeQuestion,
+  approveQuestion,
+  rejectQuestion
 };

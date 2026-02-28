@@ -4,7 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
-// const BadgeService = require('./services/badgeService'); // Temporarily disabled
+const BadgeService = require('./services/badgeService');
 
 // Initialize database connection
 connectDB();
@@ -75,9 +75,26 @@ io.on('connection', (socket) => {
 
 // Middleware
 const corsOptions = {
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      process.env.CLIENT_URL
+    ].filter(Boolean);
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins in development
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
@@ -86,34 +103,35 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Basic route for testing
-app.get('/api/health', (req, res) => {
+// Basic route for testing - accepts all HTTP methods (GET, POST, etc.)
+app.all('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'PeerLearn API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    method: req.method
   });
 });
 
 // API Routes
-// app.use('/api/auth', require('./routes/auth')); // Temporarily disabled
-// app.use('/api/users', require('./routes/users')); // Temporarily disabled
-// app.use('/api/tutors', require('./routes/tutors')); // Temporarily disabled
-// app.use('/api/bookings', require('./routes/bookings')); // Temporarily disabled
-// app.use('/api/reviews', require('./routes/reviews')); // Temporarily disabled
-// app.use('/api/messages', require('./routes/messages')); // Temporarily disabled
-// app.use('/api/notifications', require('./routes/notifications')); // Temporarily disabled
-// app.use('/api/sessions', require('./routes/sessions')); // Temporarily commented
-// app.use('/api/materials', require('./routes/materials')); // Temporarily commented
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/tutors', require('./routes/tutors'));
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/sessions', require('./routes/sessions'));
+app.use('/api/materials', require('./routes/materials'));
 app.use('/api/moderation', require('./routes/moderation'));
 app.use('/api/admin', require('./routes/admin'));
 
 // Forum and Gamification Routes
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/answers', require('./routes/answers'));
-// app.use('/api/votes', require('./routes/votes')); // Temporarily disabled
-// app.use('/api/comments', require('./routes/comments')); // Temporarily disabled
-// app.use('/api/badges', require('./routes/badges')); // Temporarily disabled
+app.use('/api/votes', require('./routes/votes'));
+app.use('/api/comments', require('./routes/comments'));
+app.use('/api/badges', require('./routes/badges'));
 // app.use('/api/leaderboard', require('./routes/leaderboard')); // Removed - not part of Q&A
 
 // Q&A Module Routes (Isolated Feature)

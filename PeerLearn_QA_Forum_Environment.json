@@ -1,0 +1,54 @@
+{
+  "_postman_id": "qa-forum-environment",
+  "name": "PeerLearn - Q&A Forum (Local)",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string",
+      "enabled": true
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string",
+      "enabled": true,
+      "description": "JWT Bearer token - automatically filled from Auth/Profile login or register request"
+    },
+    {
+      "key": "questionId",
+      "value": "",
+      "type": "string",
+      "enabled": true,
+      "description": "Question ID extracted from 1.1 POST Create Question response"
+    },
+    {
+      "key": "answerId",
+      "value": "",
+      "type": "string",
+      "enabled": true,
+      "description": "Answer ID extracted from 2.1 POST Create Answer response"
+    },
+    {
+      "key": "commentId",
+      "value": "",
+      "type": "string",
+      "enabled": true,
+      "description": "Comment ID extracted from 2.3 POST Add Comment response"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string",
+      "enabled": true,
+      "description": "Current user ID from Auth/Profile login request"
+    },
+    {
+      "key": "userEmail",
+      "value": "ahmed.khan@example.com",
+      "type": "string",
+      "enabled": true,
+      "description": "Email used for testing - from Auth module"
+    }
+  ]
+}

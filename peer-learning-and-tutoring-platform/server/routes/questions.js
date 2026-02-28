@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const questionController = require('../controllers/questionController');
+const { body } = require('express-validator');
+const { authenticate } = require('../middleware/auth');
 const Question = require('../models/Question');
 
 // Public routes
@@ -37,47 +40,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Protected routes (temporarily without auth for testing)
-router.post('/', async (req, res) => {
-  try {
-    const { title, body, subject, grade, tags } = req.body;
-    const question = new Question({
-      title,
-      body,
-      subject,
-      grade,
-      tags,
-      author: '507f1f77bcf86cd799439011' // Mock user ID
-    });
-    await question.save();
-    res.status(201).json(question);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create question' });
-  }
-});
-
-router.put('/:id', async (req, res) => {
-  try {
-    const question = await Question.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
-    }
-    res.json(question);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update question' });
-  }
-});
-
-router.delete('/:id', async (req, res) => {
-  try {
-    const question = await Question.findByIdAndDelete(req.params.id);
-    if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
-    }
-    res.json({ message: 'Question deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete question' });
-  }
-});
+// Protected routes
+router.post('/', authenticate, questionController.createQuestion);
+router.put('/:id', authenticate, questionController.updateQuestion);
+router.delete('/:id', authenticate, questionController.deleteQuestion);
+router.post('/:id/close', authenticate, questionController.closeQuestion);
+router.put('/:id/approve', authenticate, questionController.approveQuestion);
+router.put('/:id/reject', authenticate, questionController.rejectQuestion);
 
 module.exports = router;

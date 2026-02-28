@@ -55,12 +55,12 @@ const upload = multer({
 exports.uploadMaterials = async (req, res) => {
   try {
     const { title, description, subject, grade, tags, categories, type, difficulty, estimatedTime, language, license } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No files uploaded'
+        message: 'No files uploaded. Please attach at least one file.'
       });
     }
 
@@ -142,7 +142,7 @@ exports.uploadMaterials = async (req, res) => {
 exports.uploadLink = async (req, res) => {
   try {
     const { title, description, subject, grade, tags, categories, url, difficulty, estimatedTime, language, license } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!url) {
       return res.status(400).json({
@@ -298,7 +298,7 @@ exports.getMaterialById = async (req, res) => {
 exports.downloadMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const material = await Material.findById(id);
 
@@ -340,7 +340,7 @@ exports.downloadMaterial = async (req, res) => {
 // Get user's materials
 exports.getUserMaterials = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { page = 1, limit = 20, status } = req.query;
 
     const result = await Material.getUserMaterials(userId, {
@@ -367,7 +367,7 @@ exports.getUserMaterials = async (req, res) => {
 exports.updateMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const updates = req.body;
 
     const material = await Material.findById(id);
@@ -422,7 +422,7 @@ exports.updateMaterial = async (req, res) => {
 exports.deleteMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const material = await Material.findById(id);
 
@@ -471,7 +471,7 @@ exports.addReview = async (req, res) => {
   try {
     const { id } = req.params;
     const { rating, comment } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({
@@ -582,7 +582,7 @@ exports.approveMaterial = async (req, res) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
-    const adminId = req.user.id;
+    const adminId = req.user._id;
 
     const material = await Material.findById(id);
 
@@ -620,7 +620,7 @@ exports.rejectMaterial = async (req, res) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const adminId = req.user.id;
+    const adminId = req.user._id;
 
     const material = await Material.findById(id);
 

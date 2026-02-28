@@ -1,6 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
+const validate = require('../middleware/validate');
 const {
   register,
   login,
@@ -41,11 +42,7 @@ const registerValidation = [
   body('profile.grade')
     .optional()
     .isInt({ min: 6, max: 13 })
-    .withMessage('Grade must be between 6 and 13'),
-  body('profile.phone')
-    .optional()
-    .isMobilePhone()
-    .withMessage('Please provide a valid phone number')
+    .withMessage('Grade must be between 6 and 13')
 ];
 
 const loginValidation = [
@@ -83,12 +80,12 @@ const resetPasswordValidation = [
 ];
 
 // Routes
-router.post('/register', registerValidation, register);
-router.post('/login', loginValidation, login);
+router.post('/register', registerValidation, validate, register);
+router.post('/login', loginValidation, validate, login);
 router.get('/me', authenticate, getCurrentUser);
 router.post('/logout', authenticate, logout);
-router.put('/change-password', authenticate, changePasswordValidation, changePassword);
-router.post('/forgot-password', forgotPasswordValidation, forgotPassword);
-router.post('/reset-password', resetPasswordValidation, resetPassword);
+router.put('/change-password', authenticate, changePasswordValidation, validate, changePassword);
+router.post('/forgot-password', forgotPasswordValidation, validate, forgotPassword);
+router.post('/reset-password', resetPasswordValidation, validate, resetPassword);
 
 module.exports = router;

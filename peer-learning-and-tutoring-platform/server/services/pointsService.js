@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Badge = require('../models/Badge');
 const UserBadge = require('../models/UserBadge');
+const PointTransaction = require('../modules/qa/models/PointTransaction');
 
 class PointsService {
   // Point constants as per requirements
@@ -15,15 +16,13 @@ class PointsService {
   static async awardPoints(userId, points, type, referenceId = null, referenceType = null, description = '', metadata = {}) {
     try {
       // Create point transaction
-      const transaction = await PointTransaction.createTransaction({
-        user: userId,
+      const transaction = await new PointTransaction({
+        userId,
+        action: type,
         points,
-        type,
-        referenceId,
-        referenceType,
-        description,
-        metadata
-      });
+        subject: referenceId,
+        subjectType: referenceType || 'question'
+      }).save();
 
       // Check for new badges after points award
       await this.checkAndAwardBadges(userId);
@@ -259,7 +258,7 @@ class PointsService {
     return await this.awardPoints(
       userId,
       this.POINTS.QUESTION_POSTED,
-      'question_posted',
+      'question_created',
       questionId,
       'question',
       'Question posted',

@@ -1,16 +1,16 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const materialController = require('../controllers/materialController');
-const auth = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
 
 // Upload materials (files)
-router.post('/upload', auth, materialController.upload.array('files', 5));
+router.post('/upload', authenticate, materialController.upload.array('files', 5));
 
 // Upload link material
-router.post('/upload-link', auth, [
+router.post('/upload-link', authenticate, [
   body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title must be 1-200 characters'),
   body('description').trim().isLength({ min: 1, max: 2000 }).withMessage('Description must be 1-2000 characters'),
   body('subject').notEmpty().withMessage('Subject is required'),
@@ -44,19 +44,19 @@ router.get('/:id', [
 ], validate, materialController.getMaterialById);
 
 // Download material
-router.get('/:id/download', auth, [
+router.get('/:id/download', authenticate, [
   param('id').isMongoId().withMessage('Invalid material ID')
 ], validate, materialController.downloadMaterial);
 
 // Get user's materials
-router.get('/user/my-materials', auth, [
+router.get('/user/my-materials', authenticate, [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
   query('status').optional().isIn(['pending', 'approved', 'rejected', 'flagged'])
 ], validate, materialController.getUserMaterials);
 
 // Update material
-router.put('/:id', auth, [
+router.put('/:id', authenticate, [
   param('id').isMongoId().withMessage('Invalid material ID'),
   body('title').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Title must be 1-200 characters'),
   body('description').optional().trim().isLength({ min: 1, max: 2000 }).withMessage('Description must be 1-2000 characters'),
@@ -71,12 +71,12 @@ router.put('/:id', auth, [
 ], validate, materialController.updateMaterial);
 
 // Delete material
-router.delete('/:id', auth, [
+router.delete('/:id', authenticate, [
   param('id').isMongoId().withMessage('Invalid material ID')
 ], validate, materialController.deleteMaterial);
 
 // Add review to material
-router.post('/:id/reviews', auth, [
+router.post('/:id/reviews', authenticate, [
   param('id').isMongoId().withMessage('Invalid material ID'),
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('comment').optional().trim().isLength({ max: 1000 }).withMessage('Comment must be less than 1000 characters')
@@ -86,5 +86,23 @@ router.post('/:id/reviews', auth, [
 router.get('/popular/list', [
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
 ], validate, materialController.getPopularMaterials);
+
+// Admin only - Get pending materials for approval
+router.get('/admin/pending', authenticate, authorize('admin'), [
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+], validate, materialController.getPendingMaterials);
+
+// Admin only - Approve material
+router.put('/:id/approve', authenticate, authorize('admin'), [
+  param('id').isMongoId().withMessage('Invalid material ID'),
+  body('notes').optional().trim().isLength({ max: 500 }).withMessage('Notes must be less than 500 characters')
+], validate, materialController.approveMaterial);
+
+// Admin only - Reject material
+router.put('/:id/reject', authenticate, authorize('admin'), [
+  param('id').isMongoId().withMessage('Invalid material ID'),
+  body('reason').trim().isLength({ min: 1, max: 500 }).withMessage('Rejection reason is required (1-500 characters)')
+], validate, materialController.rejectMaterial);
 
 module.exports = router;

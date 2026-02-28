@@ -19,10 +19,10 @@ router.get('/stats', answerController.getAnswerStats);
 router.get('/:id', answerController.getAnswerById);
 
 // Protected routes
-router.post('/question/:questionId', answerController.createAnswer);
-router.put('/:id', answerController.updateAnswer);
-router.delete('/:id', answerController.deleteAnswer);
-router.post('/:id/accept', answerController.acceptAnswer);
-router.patch('/:id/status', answerController.updateAnswerStatus);
+router.post('/question/:questionId', auth, validate(validateAnswer), answerController.createAnswer);
+router.put('/:id', auth, validate(validateAnswer), answerController.updateAnswer);
+router.delete('/:id', auth, answerController.deleteAnswer);
+router.post('/:id/accept', auth, answerController.acceptAnswer);
+router.patch('/:id/status', auth, answerController.updateAnswerStatus);
 
 module.exports = router;

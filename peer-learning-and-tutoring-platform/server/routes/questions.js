@@ -11,9 +11,9 @@ router.get('/subjects', questionController.getSubjectsByGrade);
 router.get('/:id', questionController.getQuestionById);
 
 // Protected routes
-router.post('/', questionController.createQuestion);
-router.put('/:id', questionController.updateQuestion);
-router.delete('/:id', questionController.deleteQuestion);
-router.post('/:id/close', questionController.closeQuestion);
+router.post('/', auth, questionController.createQuestion);
+router.put('/:id', auth, questionController.updateQuestion);
+router.delete('/:id', auth, questionController.deleteQuestion);
+router.post('/:id/close', auth, questionController.closeQuestion);
 
 module.exports = router;

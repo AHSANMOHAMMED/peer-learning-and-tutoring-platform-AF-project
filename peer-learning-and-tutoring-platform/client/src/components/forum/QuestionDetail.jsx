@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, MessageSquare, Eye, Clock, User, CheckCircle, Edit, Trash2, Flag } from 'lucide-react';
 import { qaApi } from '../../services/api';
+import axios from 'axios';
 import VoteButtons from './VoteButtons';
 import AnswerList from './AnswerList';
 import CommentSection from './CommentSection';

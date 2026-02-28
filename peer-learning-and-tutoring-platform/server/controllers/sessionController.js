@@ -8,7 +8,7 @@ const videoService = require('../services/videoService');
 exports.startSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { config = {} } = req.body;
 
     const booking = await Booking.findById(id)
@@ -81,7 +81,7 @@ exports.startSession = async (req, res) => {
 exports.joinSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const booking = await Booking.findById(id);
 
@@ -127,7 +127,7 @@ exports.joinSession = async (req, res) => {
 exports.leaveSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { connectionQuality } = req.body;
 
     const booking = await Booking.findById(id);
@@ -171,7 +171,7 @@ exports.leaveSession = async (req, res) => {
 exports.endSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { analytics = {} } = req.body;
 
     const booking = await Booking.findById(id);
@@ -231,7 +231,7 @@ exports.endSession = async (req, res) => {
 exports.startRecording = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const booking = await Booking.findById(id);
 
@@ -286,7 +286,7 @@ exports.startRecording = async (req, res) => {
 exports.stopRecording = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const booking = await Booking.findById(id);
 
@@ -349,7 +349,7 @@ exports.stopRecording = async (req, res) => {
 exports.reportTechnicalIssue = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { issueType } = req.body;
 
     const booking = await Booking.findById(id);
@@ -393,7 +393,7 @@ exports.reportTechnicalIssue = async (req, res) => {
 exports.getSessionDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const booking = await Booking.findById(id)
       .populate('studentId', 'profile.firstName profile.lastName username profile.avatar')
@@ -447,7 +447,7 @@ exports.getSessionDetails = async (req, res) => {
 // Get session history
 exports.getSessionHistory = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { page = 1, limit = 10, status } = req.query;
 
     // Determine if user is student or tutor

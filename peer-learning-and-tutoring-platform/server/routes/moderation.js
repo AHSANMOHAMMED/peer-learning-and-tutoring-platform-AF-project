@@ -53,6 +53,97 @@ router.put(
   authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
+    body('assignedTo').isMongoId().withMessage('Invalid assignedTo ID')
+  ],
+  validate,
+  moderationController.assignReport
+);
+
+// Resolve report
+router.put(
+  '/reports/:id/resolve',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('action').isIn(['warn', 'suspend', 'ban', 'remove_content', 'no_action']).withMessage('Invalid action'),
+    body('reason').optional().trim().isLength({ max: 1000 }).withMessage('Reason must be less than 1000 characters')
+  ],
+  validate,
+  moderationController.resolveReport
+);
+
+// Dismiss report
+router.put(
+  '/reports/:id/dismiss',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+  ],
+  validate,
+  moderationController.dismissReport
+);
+
+// Escalate report
+router.put(
+  '/reports/:id/escalate',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+  ],
+  validate,
+  moderationController.escalateReport
+);
+
+// Get moderator actions
+router.get(
+  '/actions',
+  authenticate,
+  [
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+  ],
+  validate,
+  moderationController.getModeratorActions
+);
+
+// Get pending appeals
+router.get(
+  '/appeals/pending',
+  authenticate,
+  [
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+  ],
+  validate,
+  moderationController.getPendingAppeals
+);
+
+// Review appeal
+router.put(
+  '/appeals/:id/review',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid appeal ID'),
+    body('decision').isIn(['approve', 'deny']).withMessage('Decision must be approve or deny'),
+    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+  ],
+  validate,
+  moderationController.reviewAppeal
+);
+
+// Get moderation statistics
+router.get(
+  '/stats',
+  authenticate,
+  moderationController.getModerationStats
+);
+router.put(
+  '/reports/:id/assign',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
     body('moderatorId').isMongoId().withMessage('Invalid moderator ID')
   ],
   validate,

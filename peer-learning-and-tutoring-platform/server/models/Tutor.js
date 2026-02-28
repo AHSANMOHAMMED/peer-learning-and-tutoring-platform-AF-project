@@ -52,8 +52,8 @@ const tutorSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
+    // Note: index removed as explicit index below covers userId queries
   },
   subjects: [subjectSchema],
   availability: [availabilitySchema],

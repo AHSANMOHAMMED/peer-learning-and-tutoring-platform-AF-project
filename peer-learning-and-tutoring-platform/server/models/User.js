@@ -102,8 +102,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
+// Note: email and username already have indexes via unique: true
 userSchema.index({ role: 1 });
 userSchema.index({ reputation: -1 });
 userSchema.index({ totalPoints: -1 });

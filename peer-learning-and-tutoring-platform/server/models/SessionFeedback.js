@@ -10,8 +10,8 @@ const sessionFeedbackSchema = new mongoose.Schema({
   reviewerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
+    // Note: index removed as explicit index below covers reviewerId queries
   },
   reviewerType: {
     type: String,

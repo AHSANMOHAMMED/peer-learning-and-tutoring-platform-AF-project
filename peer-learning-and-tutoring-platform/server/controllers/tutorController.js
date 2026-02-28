@@ -534,6 +534,90 @@ const getTopRatedTutors = async (req, res) => {
   }
 };
 
+// Suspend tutor (admin)
+const suspendTutor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can suspend tutors'
+      });
+    }
+    
+    const tutor = await Tutor.findById(id);
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tutor not found'
+      });
+    }
+    
+    tutor.status = 'suspended';
+    tutor.suspendedBy = req.user._id;
+    tutor.suspendedAt = new Date();
+    tutor.suspensionReason = reason;
+    
+    await tutor.save();
+    
+    res.json({
+      success: true,
+      message: 'Tutor suspended successfully',
+      data: tutor
+    });
+  } catch (error) {
+    console.error('Suspend tutor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to suspend tutor',
+      error: error.message
+    });
+  }
+};
+
+// Activate tutor (admin)
+const activateTutor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can activate tutors'
+      });
+    }
+    
+    const tutor = await Tutor.findById(id);
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tutor not found'
+      });
+    }
+    
+    tutor.status = 'active';
+    tutor.activatedBy = req.user._id;
+    tutor.activatedAt = new Date();
+    
+    await tutor.save();
+    
+    res.json({
+      success: true,
+      message: 'Tutor activated successfully',
+      data: tutor
+    });
+  } catch (error) {
+    console.error('Activate tutor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to activate tutor',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getTutors,
   getTutorById,
@@ -548,5 +632,7 @@ module.exports = {
   getTutorStats,
   verifyTutor,
   getFeaturedTutors,
-  getTopRatedTutors
+  getTopRatedTutors,
+  suspendTutor,
+  activateTutor
 };

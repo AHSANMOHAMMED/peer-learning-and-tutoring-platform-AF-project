@@ -114,11 +114,7 @@ const createAnswer = async (req, res) => {
     console.log('Creating answer with data:', req.body);
     console.log('Question ID:', req.params.questionId);
     
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
+ 
 
     const { questionId } = req.params;
     const { body } = req.body;

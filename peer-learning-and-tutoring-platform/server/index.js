@@ -4,7 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
-const BadgeService = require('./services/badgeService');
+// const BadgeService = require('./services/badgeService'); // Temporarily disabled
 
 // Initialize database connection
 connectDB();
@@ -96,13 +96,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/tutors', require('./routes/tutors'));
-app.use('/api/bookings', require('./routes/bookings'));
-app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/messages', require('./routes/messages'));
-app.use('/api/notifications', require('./routes/notifications'));
+// app.use('/api/auth', require('./routes/auth')); // Temporarily disabled
+// app.use('/api/users', require('./routes/users')); // Temporarily disabled
+// app.use('/api/tutors', require('./routes/tutors')); // Temporarily disabled
+// app.use('/api/bookings', require('./routes/bookings')); // Temporarily disabled
+// app.use('/api/reviews', require('./routes/reviews')); // Temporarily disabled
+// app.use('/api/messages', require('./routes/messages')); // Temporarily disabled
+// app.use('/api/notifications', require('./routes/notifications')); // Temporarily disabled
 // app.use('/api/sessions', require('./routes/sessions')); // Temporarily commented
 // app.use('/api/materials', require('./routes/materials')); // Temporarily commented
 app.use('/api/moderation', require('./routes/moderation'));
@@ -111,13 +111,13 @@ app.use('/api/admin', require('./routes/admin'));
 // Forum and Gamification Routes
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/answers', require('./routes/answers'));
-app.use('/api/votes', require('./routes/votes'));
-app.use('/api/comments', require('./routes/comments'));
-app.use('/api/badges', require('./routes/badges'));
+// app.use('/api/votes', require('./routes/votes')); // Temporarily disabled
+// app.use('/api/comments', require('./routes/comments')); // Temporarily disabled
+// app.use('/api/badges', require('./routes/badges')); // Temporarily disabled
 // app.use('/api/leaderboard', require('./routes/leaderboard')); // Removed - not part of Q&A
 
 // Q&A Module Routes (Isolated Feature)
-app.use('/api/qa', require('./modules/qa/routes/qa.routes'));
+// app.use('/api/qa', require('./modules/qa/routes/qa.routes')); // Temporarily disabled
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,7 +1,7 @@
 const Answer = require('../models/Answer');
 const Question = require('../models/Question');
-const Vote = require('../models/Vote');
-const Comment = require('../models/Comment');
+// const Vote = require('../models/Vote'); // Temporarily disabled
+// const Comment = require('../models/Comment'); // Temporarily disabled
 const { validationResult } = require('express-validator');
 
 // Get answers for a question
@@ -42,18 +42,19 @@ const getAnswersByQuestion = async (req, res) => {
 
     // Get user votes for each answer if authenticated
     let userVotes = {};
-    if (req.user) {
-      const answerIds = answers.map(a => a._id);
-      const votes = await Vote.find({
-        targetType: 'answer',
-        targetId: { $in: answerIds },
-        user: req.user._id
-      });
-      userVotes = votes.reduce((acc, vote) => {
-        acc[vote.targetId.toString()] = vote.voteType;
-        return acc;
-      }, {});
-    }
+    // TODO: Re-enable when Vote model is properly integrated
+    // if (req.user) {
+    //   const answerIds = answers.map(a => a._id);
+    //   const votes = await Vote.find({
+    //     targetType: 'answer',
+    //     targetId: { $in: answerIds },
+    //     user: req.user._id
+    //   });
+    //   userVotes = votes.reduce((acc, vote) => {
+    //     acc[vote.targetId.toString()] = vote.voteType;
+    //     return acc;
+    //   }, {});
+    // }
 
     const answersWithVotes = answers.map(answer => ({
       ...answer.toObject(),
@@ -94,13 +95,19 @@ const getAnswerById = async (req, res) => {
 
     // Get user's vote if authenticated
     let userVote = null;
-    if (req.user) {
-      userVote = await Vote.getUserVote('answer', id, req.user._id);
-    }
+    // TODO: Re-enable when Vote model is properly integrated
+    // if (req.user) {
+    //   const vote = await Vote.findOne({
+    //     targetType: 'answer',
+    //     targetId: id,
+    //     user: req.user._id
+    //   });
+    //   userVote = vote ? vote.voteType : null;
+    // }
 
     res.json({
       answer,
-      userVote: userVote ? userVote.voteType : null
+      userVote: userVote
     });
   } catch (error) {
     console.error('Error in getAnswerById:', error);
@@ -236,8 +243,9 @@ const deleteAnswer = async (req, res) => {
     }
 
     // Delete related votes and comments
-    await Vote.deleteMany({ targetType: 'answer', targetId: id });
-    await Comment.deleteMany({ targetType: 'answer', targetId: id });
+    // TODO: Re-enable when Vote and Comment models are properly integrated
+    // await Vote.deleteMany({ targetType: 'answer', targetId: id });
+    // await Comment.deleteMany({ targetType: 'answer', targetId: id });
 
     await answer.remove();
 
@@ -269,21 +277,23 @@ const acceptAnswer = async (req, res) => {
     } else {
       await answer.accept(req.user._id);
 
+      // TODO: Re-enable points system when PointTransaction model is restored
       // Award points for accepted answer
-      await PointTransaction.createTransaction({
-        user: answer.author,
-        points: 15,
-        type: 'answer_accepted',
-        referenceId: answer._id,
-        referenceType: 'answer',
-        description: 'Answer was accepted'
-      });
+      // await PointTransaction.createTransaction({
+      //   user: answer.author,
+      //   points: 15,
+      //   type: 'answer_accepted',
+      //   referenceId: answer._id,
+      //   referenceType: 'answer',
+      //   description: 'Answer was accepted'
+      // });
 
+      // TODO: Re-enable user stats when User model is properly integrated
       // Update answer author's forum stats
-      const User = require('../models/User');
-      const answerAuthor = await User.findById(answer.author);
-      await answerAuthor.updateForumStats('bestAnswers');
-      await answerAuthor.addSubjectPoints(answer.question.category, 15);
+      // const User = require('../models/User');
+      // const answerAuthor = await User.findById(answer.author);
+      // await answerAuthor.updateForumStats('bestAnswers');
+      // await answerAuthor.addSubjectPoints(answer.question.category, 15);
     }
 
     await answer.populate([

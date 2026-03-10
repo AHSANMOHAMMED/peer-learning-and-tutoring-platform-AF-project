@@ -30,6 +30,15 @@ import TutoringSessionRoom from './views/Tutoring/SessionRoom'
 import ModerationQueue from './views/Moderation/ModerationQueue'
 import ReportForm from './views/Moderation/ReportForm'
 
+// NEW: Phase 1 - Peer Tutoring & Group Rooms
+import PeerMatchingPage from './pages/PeerMatchingPage'
+import GroupStudyPage from './pages/GroupStudyPage'
+
+// NEW: Phase 2 - Lecture Courses & Advanced Session Room
+import LectureCatalogPage from './pages/LectureCatalogPage'
+import CourseDetailPage from './pages/CourseDetailPage'
+import SessionRoom from './pages/SessionRoom'
+
 // NEW: Dashboard Layout and Components
 import DashboardLayout from './components/Dashboard/DashboardLayout'
 import DashboardHome from './components/Dashboard/DashboardHome'
@@ -189,6 +198,17 @@ function App() {
               <Route path="tutoring/schedule" element={<ScheduleSession />} />
               <Route path="tutoring/sessions" element={<MySessions />} />
               <Route path="sessions/:sessionId" element={<TutoringSessionRoom />} />
+              
+              {/* NEW: Phase 1 - Peer Tutoring & Group Rooms */}
+              <Route path="peer/matching" element={<PeerMatchingPage />} />
+              <Route path="peer/sessions/:sessionId" element={<SessionRoom />} />
+              <Route path="groups" element={<GroupStudyPage />} />
+              <Route path="groups/:groupId" element={<SessionRoom />} />
+              
+              {/* NEW: Phase 2 - Lecture Courses */}
+              <Route path="lectures" element={<LectureCatalogPage />} />
+              <Route path="lectures/:courseId" element={<CourseDetailPage />} />
+              <Route path="lectures/:courseId/sessions/:sessionId" element={<SessionRoom />} />
               
               {/* Moderator Routes */}
               <Route 

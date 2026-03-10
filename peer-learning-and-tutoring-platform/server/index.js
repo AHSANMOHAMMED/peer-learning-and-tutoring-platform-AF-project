@@ -252,6 +252,15 @@ app.use('/api/video', require('./routes/video'));
 // NEW: Phase 6 - Social Features
 app.use('/api/social', require('./routes/social'));
 
+// NEW: Interactive Session Features
+app.use('/api/lectures', require('./routes/polls'));
+app.use('/api/breakout', require('./routes/breakout'));
+app.use('/api/files', require('./routes/files'));
+app.use('/api/qa', require('./routes/qa'));
+
+// NEW: Recommendation Engine
+app.use('/api/recommendations', require('./routes/recommendations'));
+
 // Q&A Module Routes (Isolated Feature)
 // app.use('/api/qa', require('./modules/qa/routes/qa.routes')); // Temporarily disabled
 

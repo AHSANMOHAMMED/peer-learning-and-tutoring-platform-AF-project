@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const GamificationService = require('../services/GamificationService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { param, body, validationResult } = require('express-validator');
 
 /**
@@ -9,7 +9,7 @@ const { param, body, validationResult } = require('express-validator');
  * @desc    Get user's gamification profile
  * @access  Private
  */
-router.get('/profile', auth, async (req, res) => {
+router.get('/profile', authenticate, async (req, res) => {
   try {
     const summary = await GamificationService.getUserSummary(req.user._id);
 
@@ -34,7 +34,7 @@ router.get('/profile', auth, async (req, res) => {
  * @desc    Get all available badges
  * @access  Private
  */
-router.get('/badges', auth, async (req, res) => {
+router.get('/badges', authenticate, async (req, res) => {
   try {
     const badges = await GamificationService.getAllBadges(req.user._id);
 
@@ -59,7 +59,7 @@ router.get('/badges', auth, async (req, res) => {
  * @desc    Get user's earned badges
  * @access  Private
  */
-router.get('/badges/my', auth, async (req, res) => {
+router.get('/badges/my', authenticate, async (req, res) => {
   try {
     const UserGamification = require('../models/UserGamification');
     
@@ -95,7 +95,7 @@ router.get('/badges/my', auth, async (req, res) => {
  * @desc    Mark badges as viewed
  * @access  Private
  */
-router.post('/badges/viewed', auth, async (req, res) => {
+router.post('/badges/viewed', authenticate, async (req, res) => {
   try {
     await GamificationService.markBadgesAsViewed(req.user._id);
 
@@ -154,7 +154,7 @@ router.get('/leaderboard', async (req, res) => {
  * @desc    Get leaderboard users near current user's ranking
  * @access  Private
  */
-router.get('/leaderboard/nearby', auth, async (req, res) => {
+router.get('/leaderboard/nearby', authenticate, async (req, res) => {
   try {
     const summary = await GamificationService.getUserSummary(req.user._id);
 
@@ -182,7 +182,7 @@ router.get('/leaderboard/nearby', auth, async (req, res) => {
  * @desc    Get gamification statistics (Admin)
  * @access  Private (Admin)
  */
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -259,7 +259,7 @@ router.get('/stats', auth, async (req, res) => {
  * @access  Private (Admin)
  */
 router.post('/award-points', [
-  auth,
+  authenticate,
   body('userId').isMongoId(),
   body('points').isInt({ min: 1 }),
   body('reason').trim()
@@ -310,7 +310,7 @@ router.post('/award-points', [
  * @desc    Force badge check for current user
  * @access  Private
  */
-router.post('/check-badges', auth, async (req, res) => {
+router.post('/check-badges', authenticate, async (req, res) => {
   try {
     const newBadges = await GamificationService.checkAndAwardBadges(req.user._id);
 

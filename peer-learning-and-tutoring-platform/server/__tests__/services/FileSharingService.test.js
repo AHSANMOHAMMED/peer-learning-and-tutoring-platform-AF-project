@@ -3,7 +3,7 @@
  * Tests file upload, download, sharing, and management functionality
  */
 
-const FileSharingService = require('../../server/services/FileSharingService');
+const FileSharingService = require('../../services/FileSharingService');
 const fs = require('fs').promises;
 const path = require('path');
 

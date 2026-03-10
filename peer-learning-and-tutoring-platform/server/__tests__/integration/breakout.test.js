@@ -5,16 +5,16 @@
 
 const request = require('supertest');
 const express = require('express');
-const breakoutRoutes = require('../server/routes/breakout');
-const authenticate = require('../server/middleware/authenticate');
-const authorize = require('../server/middleware/authorize');
+const breakoutRoutes = require('../../routes/breakout');
+const { authenticate } = require('../../middleware/auth');
+const authorize = require('../../middleware/authorize');
 
 // Mock middleware
-jest.mock('../server/middleware/authenticate');
-jest.mock('../server/middleware/authorize');
+jest.mock('../../middleware/auth');
+jest.mock('../../middleware/authorize');
 
 // Mock BreakoutRoomService
-jest.mock('../server/services/BreakoutRoomService', () => ({
+jest.mock('../../services/BreakoutRoomService', () => ({
   createBreakoutRooms: jest.fn(),
   startBreakoutRooms: jest.fn(),
   endBreakoutRooms: jest.fn(),

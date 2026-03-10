@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const NFTCertificateService = require('../services/NFTCertificateService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult, param } = require('express-validator');
 
 /**
@@ -10,7 +10,7 @@ const { body, validationResult, param } = require('express-validator');
  * @access  Private
  */
 router.post('/create', [
-  auth,
+  authenticate,
   body('courseId').notEmpty().withMessage('Course ID is required')
 ], async (req, res) => {
   try {
@@ -76,7 +76,7 @@ router.post('/create', [
  * @desc    Get user's NFT certificates
  * @access  Private
  */
-router.get('/my-certificates', auth, async (req, res) => {
+router.get('/my-certificates', authenticate, async (req, res) => {
   try {
     const certificates = await NFTCertificateService.getUserCertificates(
       req.user._id
@@ -130,7 +130,7 @@ router.get('/verify/:code', async (req, res) => {
  * @desc    Check certificate eligibility
  * @access  Private
  */
-router.get('/:id/eligibility', auth, async (req, res) => {
+router.get('/:id/eligibility', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -160,7 +160,7 @@ router.get('/:id/eligibility', auth, async (req, res) => {
  * @desc    Get LinkedIn share URL for certificate
  * @access  Private
  */
-router.post('/:id/share-linkedin', auth, async (req, res) => {
+router.post('/:id/share-linkedin', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -187,7 +187,7 @@ router.post('/:id/share-linkedin', auth, async (req, res) => {
  * @desc    Get Twitter share URL for certificate
  * @access  Private
  */
-router.post('/:id/share-twitter', auth, async (req, res) => {
+router.post('/:id/share-twitter', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -214,7 +214,7 @@ router.post('/:id/share-twitter', auth, async (req, res) => {
  * @desc    Get certificate statistics (Admin only)
  * @access  Private (Admin)
  */
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -247,7 +247,7 @@ router.get('/stats', auth, async (req, res) => {
  * @access  Private (Admin)
  */
 router.post('/:id/revoke', [
-  auth,
+  authenticate,
   body('reason').notEmpty().withMessage('Revocation reason is required')
 ], async (req, res) => {
   try {

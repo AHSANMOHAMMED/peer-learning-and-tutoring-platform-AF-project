@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const LectureService = require('../services/LectureService');
 const LectureCourse = require('../models/LectureCourse');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult, query } = require('express-validator');
 
 /**
@@ -11,7 +11,7 @@ const { body, validationResult, query } = require('express-validator');
  * @access  Private (Instructors/Admins)
  */
 router.post('/courses', [
-  auth,
+  authenticate,
   body('title').notEmpty().trim().withMessage('Course title is required'),
   body('description').notEmpty().trim().withMessage('Course description is required'),
   body('subject').notEmpty().withMessage('Subject is required'),
@@ -110,7 +110,7 @@ router.get('/courses', [
  * @desc    Get detailed information about a specific course
  * @access  Private
  */
-router.get('/courses/:id', auth, async (req, res) => {
+router.get('/courses/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -145,7 +145,7 @@ router.get('/courses/:id', auth, async (req, res) => {
  * @desc    Enroll in a course
  * @access  Private
  */
-router.post('/courses/:id/enroll', auth, async (req, res) => {
+router.post('/courses/:id/enroll', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -192,7 +192,7 @@ router.post('/courses/:id/enroll', auth, async (req, res) => {
  * @desc    Unenroll from a course
  * @access  Private
  */
-router.delete('/courses/:id/enroll', auth, async (req, res) => {
+router.delete('/courses/:id/enroll', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -234,7 +234,7 @@ router.delete('/courses/:id/enroll', auth, async (req, res) => {
  * @desc    Get specific session details
  * @access  Private (Enrolled students or instructor)
  */
-router.get('/courses/:id/sessions/:sessionId', auth, async (req, res) => {
+router.get('/courses/:id/sessions/:sessionId', authenticate, async (req, res) => {
   try {
     const { id, sessionId } = req.params;
 
@@ -276,7 +276,7 @@ router.get('/courses/:id/sessions/:sessionId', auth, async (req, res) => {
  * @desc    Start a live lecture session
  * @access  Private (Instructor only)
  */
-router.put('/courses/:id/sessions/:sessionId/start', auth, async (req, res) => {
+router.put('/courses/:id/sessions/:sessionId/start', authenticate, async (req, res) => {
   try {
     const { id, sessionId } = req.params;
 
@@ -329,7 +329,7 @@ router.put('/courses/:id/sessions/:sessionId/start', auth, async (req, res) => {
  * @desc    End a live lecture session
  * @access  Private (Instructor only)
  */
-router.put('/courses/:id/sessions/:sessionId/end', auth, async (req, res) => {
+router.put('/courses/:id/sessions/:sessionId/end', authenticate, async (req, res) => {
   try {
     const { id, sessionId } = req.params;
 
@@ -382,7 +382,7 @@ router.put('/courses/:id/sessions/:sessionId/end', auth, async (req, res) => {
  * @access  Private (Instructor only)
  */
 router.post('/courses/:id/sessions/:sessionId/polls', [
-  auth,
+  authenticate,
   body('question').notEmpty().withMessage('Question is required'),
   body('options').isArray({ min: 2 }).withMessage('At least 2 options are required'),
   body('correctAnswer').optional().isInt()
@@ -438,7 +438,7 @@ router.post('/courses/:id/sessions/:sessionId/polls', [
  * @access  Private (Enrolled students)
  */
 router.post('/courses/:id/sessions/:sessionId/polls/:pollId/respond', [
-  auth,
+  authenticate,
   body('answer').isInt().withMessage('Answer index is required')
 ], async (req, res) => {
   try {
@@ -493,7 +493,7 @@ router.post('/courses/:id/sessions/:sessionId/polls/:pollId/respond', [
  * @access  Private (Enrolled students)
  */
 router.post('/courses/:id/sessions/:sessionId/questions', [
-  auth,
+  authenticate,
   body('question').notEmpty().trim().withMessage('Question is required')
 ], async (req, res) => {
   try {
@@ -548,7 +548,7 @@ router.post('/courses/:id/sessions/:sessionId/questions', [
  * @access  Private (Instructor only)
  */
 router.put('/courses/:id/sessions/:sessionId/questions/:questionId/answer', [
-  auth,
+  authenticate,
   body('answer').notEmpty().trim().withMessage('Answer is required')
 ], async (req, res) => {
   try {
@@ -603,7 +603,7 @@ router.put('/courses/:id/sessions/:sessionId/questions/:questionId/answer', [
  * @access  Private
  */
 router.get('/my-courses', [
-  auth,
+  authenticate,
   query('status').optional().isIn(['active', 'completed', 'dropped']),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 })
@@ -639,7 +639,7 @@ router.get('/my-courses', [
  * @access  Private (Enrolled students)
  */
 router.post('/courses/:id/reviews', [
-  auth,
+  authenticate,
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('comment').optional().trim()
 ], async (req, res) => {

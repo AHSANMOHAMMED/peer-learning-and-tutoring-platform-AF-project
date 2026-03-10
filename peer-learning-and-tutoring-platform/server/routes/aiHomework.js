@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AIHomeworkAssistant = require('../services/AIHomeworkAssistant');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, param, validationResult } = require('express-validator');
 
 /**
@@ -10,7 +10,7 @@ const { body, param, validationResult } = require('express-validator');
  * @access  Private
  */
 router.post('/start', [
-  auth,
+  authenticate,
   body('subject').isIn(['mathematics', 'physics', 'chemistry', 'biology', 'english', 'history', 'geography', 'general']),
   body('topic').optional().trim(),
   body('grade').notEmpty().trim()
@@ -57,7 +57,7 @@ router.post('/start', [
  * @access  Private
  */
 router.post('/:sessionId/message', [
-  auth,
+  authenticate,
   param('sessionId').isMongoId(),
   body('message').notEmpty().trim()
 ], async (req, res) => {
@@ -98,7 +98,7 @@ router.post('/:sessionId/message', [
  * @access  Private
  */
 router.post('/:sessionId/end', [
-  auth,
+  authenticate,
   param('sessionId').isMongoId()
 ], async (req, res) => {
   try {
@@ -136,7 +136,7 @@ router.post('/:sessionId/end', [
  * @desc    Get user's active AI homework sessions
  * @access  Private
  */
-router.get('/sessions/active', auth, async (req, res) => {
+router.get('/sessions/active', authenticate, async (req, res) => {
   try {
     const sessions = await AIHomeworkAssistant.getUserActiveSessions(req.user._id);
 
@@ -161,7 +161,7 @@ router.get('/sessions/active', auth, async (req, res) => {
  * @desc    Get user's AI homework session history
  * @access  Private
  */
-router.get('/sessions/history', auth, async (req, res) => {
+router.get('/sessions/history', authenticate, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
     const sessions = await AIHomeworkAssistant.getUserSessionHistory(req.user._id, limit);
@@ -188,7 +188,7 @@ router.get('/sessions/history', auth, async (req, res) => {
  * @access  Private
  */
 router.get('/:sessionId/summary', [
-  auth,
+  authenticate,
   param('sessionId').isMongoId()
 ], async (req, res) => {
   try {
@@ -227,7 +227,7 @@ router.get('/:sessionId/summary', [
  * @access  Private
  */
 router.post('/:sessionId/practice', [
-  auth,
+  authenticate,
   param('sessionId').isMongoId()
 ], async (req, res) => {
   try {
@@ -266,7 +266,7 @@ router.post('/:sessionId/practice', [
  * @access  Private
  */
 router.post('/:sessionId/rate', [
-  auth,
+  authenticate,
   param('sessionId').isMongoId(),
   body('rating').isInt({ min: 1, max: 5 }),
   body('feedback').optional().trim()
@@ -313,7 +313,7 @@ router.post('/:sessionId/rate', [
  * @desc    Get AI homework usage statistics (Admin)
  * @access  Private (Admin)
  */
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({

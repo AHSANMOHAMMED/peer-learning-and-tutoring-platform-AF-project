@@ -3,7 +3,7 @@
  * Tests breakout room creation, management, and participant tracking
  */
 
-const BreakoutRoomService = require('../../server/services/BreakoutRoomService');
+const BreakoutRoomService = require('../../services/BreakoutRoomService');
 
 describe('BreakoutRoomService', () => {
   beforeEach(() => {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PaymentService = require('../services/PaymentService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
 /**
@@ -10,7 +10,7 @@ const { body, validationResult } = require('express-validator');
  * @access  Private
  */
 router.post('/create-intent', [
-  auth,
+  authenticate,
   body('courseId').notEmpty().withMessage('Course ID is required')
 ], async (req, res) => {
   try {
@@ -52,7 +52,7 @@ router.post('/create-intent', [
  * @access  Private
  */
 router.post('/confirm', [
-  auth,
+  authenticate,
   body('paymentIntentId').notEmpty().withMessage('Payment intent ID is required')
 ], async (req, res) => {
   try {
@@ -90,7 +90,7 @@ router.post('/confirm', [
  * @desc    Get user's payment history
  * @access  Private
  */
-router.get('/history', auth, async (req, res) => {
+router.get('/history', authenticate, async (req, res) => {
   try {
     const history = await PaymentService.getPaymentHistory(req.user._id);
 
@@ -116,7 +116,7 @@ router.get('/history', auth, async (req, res) => {
  * @access  Private (Admin only)
  */
 router.post('/refund', [
-  auth,
+  authenticate,
   body('paymentIntentId').notEmpty(),
   body('amount').optional().isInt({ min: 1 }),
   body('reason').optional().trim()
@@ -198,7 +198,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
  * @access  Private (Tutors only)
  */
 router.post('/connect-account', [
-  auth,
+  authenticate,
   body('country').optional().isString(),
   body('firstName').notEmpty(),
   body('lastName').notEmpty()
@@ -246,7 +246,7 @@ router.post('/connect-account', [
  * @desc    Get platform earnings summary (Admin only)
  * @access  Private (Admin)
  */
-router.get('/earnings', auth, async (req, res) => {
+router.get('/earnings', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({

@@ -21,7 +21,7 @@ jest.mock('../../services/PollingService', () => ({
   deletePoll: jest.fn()
 }));
 
-const PollingService = require('../server/services/PollingService');
+const PollingService = require('../../services/PollingService');
 
 describe('Polling API Integration Tests', () => {
   let app;

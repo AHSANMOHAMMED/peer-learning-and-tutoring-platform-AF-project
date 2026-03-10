@@ -5,12 +5,12 @@
 
 const request = require('supertest');
 const express = require('express');
-const pollRoutes = require('../server/routes/polls');
-const authenticate = require('../server/middleware/authenticate');
+const pollRoutes = require('../../routes/polls');
+const { authenticate } = require('../../middleware/auth');
 
 // Mock middleware and service
-jest.mock('../server/middleware/authenticate');
-jest.mock('../server/services/PollingService', () => ({
+jest.mock('../../middleware/auth');
+jest.mock('../../services/PollingService', () => ({
   createPoll: jest.fn(),
   startPoll: jest.fn(),
   endPoll: jest.fn(),

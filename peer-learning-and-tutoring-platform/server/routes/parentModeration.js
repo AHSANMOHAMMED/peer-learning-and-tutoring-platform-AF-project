@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ParentDashboardService = require('../services/ParentDashboardService');
 const AIModerationService = require('../services/AIModerationService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, param, query, validationResult } = require('express-validator');
 
 // ==========================================
@@ -15,7 +15,7 @@ const { body, param, query, validationResult } = require('express-validator');
  * @access  Private
  */
 router.post('/moderation/analyze', [
-  auth,
+  authenticate,
   body('content').notEmpty().trim(),
   body('context').optional().trim()
 ], async (req, res) => {
@@ -57,7 +57,7 @@ router.post('/moderation/analyze', [
  * @access  Private
  */
 router.post('/moderation/chat', [
-  auth,
+  authenticate,
   body('message').notEmpty().trim(),
   body('roomId').optional().isMongoId()
 ], async (req, res) => {
@@ -101,7 +101,7 @@ router.post('/moderation/chat', [
  * @access  Private
  */
 router.post('/moderation/academic-integrity', [
-  auth,
+  authenticate,
   body('question').notEmpty().trim()
 ], async (req, res) => {
   try {
@@ -142,7 +142,7 @@ router.post('/moderation/academic-integrity', [
  * @desc    Get moderation statistics (Admin)
  * @access  Private (Admin)
  */
-router.get('/moderation/stats', auth, async (req, res) => {
+router.get('/moderation/stats', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
       return res.status(403).json({
@@ -176,7 +176,7 @@ router.get('/moderation/stats', auth, async (req, res) => {
  * @desc    Get moderation queue (Admin)
  * @access  Private (Admin/Moderator)
  */
-router.get('/moderation/queue', auth, async (req, res) => {
+router.get('/moderation/queue', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
       return res.status(403).json({
@@ -215,7 +215,7 @@ router.get('/moderation/queue', auth, async (req, res) => {
  * @access  Private (Parents)
  */
 router.post('/parent/link-student', [
-  auth,
+  authenticate,
   body('studentEmail').isEmail(),
   body('relationship').optional().isIn(['parent', 'guardian', 'other'])
 ], async (req, res) => {
@@ -259,7 +259,7 @@ router.post('/parent/link-student', [
  * @access  Private
  */
 router.post('/parent/respond-link/:linkId', [
-  auth,
+  authenticate,
   param('linkId').isMongoId(),
   body('approve').isBoolean(),
   body('permissions').optional().isObject()
@@ -305,7 +305,7 @@ router.post('/parent/respond-link/:linkId', [
  * @desc    Get parent's linked students
  * @access  Private (Parents)
  */
-router.get('/parent/students', auth, async (req, res) => {
+router.get('/parent/students', authenticate, async (req, res) => {
   try {
     const students = await ParentDashboardService.getLinkedStudents(req.user._id);
 
@@ -331,7 +331,7 @@ router.get('/parent/students', auth, async (req, res) => {
  * @access  Private (Parents)
  */
 router.get('/parent/student/:studentId/summary', [
-  auth,
+  authenticate,
   param('studentId').isMongoId()
 ], async (req, res) => {
   try {
@@ -373,7 +373,7 @@ router.get('/parent/student/:studentId/summary', [
  * @access  Private (Parents)
  */
 router.get('/parent/student/:studentId/progress', [
-  auth,
+  authenticate,
   param('studentId').isMongoId(),
   query('timeRange').optional().isIn(['7d', '30d', '90d'])
 ], async (req, res) => {
@@ -409,7 +409,7 @@ router.get('/parent/student/:studentId/progress', [
  * @access  Private (Parents)
  */
 router.get('/parent/student/:studentId/schedule', [
-  auth,
+  authenticate,
   param('studentId').isMongoId()
 ], async (req, res) => {
   try {
@@ -444,7 +444,7 @@ router.get('/parent/student/:studentId/schedule', [
  * @access  Private (Parents)
  */
 router.get('/parent/student/:studentId/grades', [
-  auth,
+  authenticate,
   param('studentId').isMongoId()
 ], async (req, res) => {
   try {
@@ -476,7 +476,7 @@ router.get('/parent/student/:studentId/grades', [
  * @desc    Get parent alerts
  * @access  Private (Parents)
  */
-router.get('/parent/alerts', auth, async (req, res) => {
+router.get('/parent/alerts', authenticate, async (req, res) => {
   try {
     const alerts = await ParentDashboardService.getParentAlerts(req.user._id);
 
@@ -502,7 +502,7 @@ router.get('/parent/alerts', auth, async (req, res) => {
  * @access  Private
  */
 router.put('/parent/link/:linkId/permissions', [
-  auth,
+  authenticate,
   param('linkId').isMongoId(),
   body('permissions').isObject()
 ], async (req, res) => {
@@ -538,7 +538,7 @@ router.put('/parent/link/:linkId/permissions', [
  * @access  Private
  */
 router.delete('/parent/link/:linkId', [
-  auth,
+  authenticate,
   param('linkId').isMongoId()
 ], async (req, res) => {
   try {

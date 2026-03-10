@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query, validationResult } = require('express-validator');
-const authenticate = require('../middleware/authenticate');
+const { authenticate } = require('../middleware/auth');
 const RecommendationService = require('../services/RecommendationService');
 
 // Validation middleware

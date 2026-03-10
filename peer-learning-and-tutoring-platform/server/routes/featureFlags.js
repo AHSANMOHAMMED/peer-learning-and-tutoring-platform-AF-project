@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const FeatureFlagService = require('../services/FeatureFlagService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
 /**
@@ -9,7 +9,7 @@ const { body, validationResult } = require('express-validator');
  * @desc    Get all feature flags
  * @access  Private (Admin/Moderator)
  */
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     if (!['admin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
@@ -41,7 +41,7 @@ router.get('/', auth, async (req, res) => {
  * @desc    Get feature flags for current user
  * @access  Private
  */
-router.get('/my-flags', auth, async (req, res) => {
+router.get('/my-flags', authenticate, async (req, res) => {
   try {
     const flags = await FeatureFlagService.getFlagsForUser(req.user);
 
@@ -66,7 +66,7 @@ router.get('/my-flags', auth, async (req, res) => {
  * @desc    Get feature flag by key
  * @access  Private (Admin/Moderator)
  */
-router.get('/:key', auth, async (req, res) => {
+router.get('/:key', authenticate, async (req, res) => {
   try {
     if (!['admin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
@@ -107,7 +107,7 @@ router.get('/:key', auth, async (req, res) => {
  * @access  Private (Admin)
  */
 router.post('/', [
-  auth,
+  authenticate,
   body('key').notEmpty().trim().withMessage('Flag key is required'),
   body('name').notEmpty().trim().withMessage('Flag name is required'),
   body('description').optional().trim(),
@@ -154,7 +154,7 @@ router.post('/', [
  * @desc    Update a feature flag
  * @access  Private (Admin)
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -187,7 +187,7 @@ router.put('/:id', auth, async (req, res) => {
  * @desc    Toggle a feature flag
  * @access  Private (Admin/Moderator)
  */
-router.post('/:id/toggle', auth, async (req, res) => {
+router.post('/:id/toggle', authenticate, async (req, res) => {
   try {
     if (!['admin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
@@ -220,7 +220,7 @@ router.post('/:id/toggle', auth, async (req, res) => {
  * @desc    Delete a feature flag
  * @access  Private (Admin)
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({
@@ -252,7 +252,7 @@ router.delete('/:id', auth, async (req, res) => {
  * @desc    Get feature flag analytics
  * @access  Private (Admin/Moderator)
  */
-router.get('/:id/analytics', auth, async (req, res) => {
+router.get('/:id/analytics', authenticate, async (req, res) => {
   try {
     if (!['admin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({

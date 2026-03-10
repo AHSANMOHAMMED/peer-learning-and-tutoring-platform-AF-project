@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const GroupService = require('../services/GroupService');
 const GroupRoom = require('../models/GroupRoom');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult, query } = require('express-validator');
 
 /**
@@ -11,7 +11,7 @@ const { body, validationResult, query } = require('express-validator');
  * @access  Private
  */
 router.post('/', [
-  auth,
+  authenticate,
   body('title').notEmpty().trim().withMessage('Room title is required'),
   body('description').notEmpty().trim().withMessage('Room description is required'),
   body('subject').notEmpty().withMessage('Subject is required'),
@@ -98,7 +98,7 @@ router.get('/', [
  * @desc    Get detailed information about a specific group room
  * @access  Private
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -141,7 +141,7 @@ router.get('/:id', auth, async (req, res) => {
  * @access  Private
  */
 router.post('/:id/join', [
-  auth,
+  authenticate,
   body('message').optional().isString().trim()
 ], async (req, res) => {
   try {
@@ -197,7 +197,7 @@ router.post('/:id/join', [
  * @desc    Leave a group room
  * @access  Private
  */
-router.delete('/:id/leave', auth, async (req, res) => {
+router.delete('/:id/leave', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -241,7 +241,7 @@ router.delete('/:id/leave', auth, async (req, res) => {
  * @access  Private (Host only)
  */
 router.put('/:id/approve', [
-  auth,
+  authenticate,
   body('participantId').isMongoId().withMessage('Valid participant ID is required'),
   body('approve').isBoolean().withMessage('Approve flag is required')
 ], async (req, res) => {
@@ -298,7 +298,7 @@ router.put('/:id/approve', [
  * @access  Private
  */
 router.post('/:id/chat', [
-  auth,
+  authenticate,
   body('message').notEmpty().trim().withMessage('Message is required'),
   body('type').optional().isIn(['text', 'file'])
 ], async (req, res) => {
@@ -354,7 +354,7 @@ router.post('/:id/chat', [
  * @access  Private (Host and moderators)
  */
 router.put('/:id/settings', [
-  auth,
+  authenticate,
   body('allowScreenShare').optional().isBoolean(),
   body('allowFileShare').optional().isBoolean(),
   body('allowVoiceChat').optional().isBoolean(),
@@ -413,7 +413,7 @@ router.put('/:id/settings', [
  * @access  Private
  */
 router.get('/my-rooms', [
-  auth,
+  authenticate,
   query('status').optional().isIn(['active', 'inactive']),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 })
@@ -448,7 +448,7 @@ router.get('/my-rooms', [
  * @desc    Delete/close a group room
  * @access  Private (Host only)
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 

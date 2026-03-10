@@ -3,7 +3,7 @@
  * Tests poll creation, voting, and management functionality
  */
 
-const PollingService = require('../../server/services/PollingService');
+const PollingService = require('../../services/PollingService');
 
 describe('PollingService', () => {
   beforeEach(() => {

@@ -3,7 +3,7 @@ const router = express.Router();
 const AIService = require('../services/AIService');
 const AnalyticsService = require('../services/AnalyticsService');
 const RecordingService = require('../services/RecordingService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult, query } = require('express-validator');
 
 /**
@@ -12,7 +12,7 @@ const { body, validationResult, query } = require('express-validator');
  * @access  Private
  */
 router.post('/transcribe', [
-  auth,
+  authenticate,
   body('recordingUrl').notEmpty().withMessage('Recording URL is required'),
   body('provider').optional().isIn(['openai', 'google', 'deepgram'])
 ], async (req, res) => {
@@ -52,7 +52,7 @@ router.post('/transcribe', [
  * @access  Private
  */
 router.post('/summarize', [
-  auth,
+  authenticate,
   body('transcript').notEmpty().withMessage('Transcript is required'),
   body('type').optional().isIn(['bullet', 'detailed', 'key-points'])
 ], async (req, res) => {
@@ -92,7 +92,7 @@ router.post('/summarize', [
  * @access  Private
  */
 router.post('/quiz', [
-  auth,
+  authenticate,
   body('content').notEmpty().withMessage('Content is required'),
   body('numQuestions').optional().isInt({ min: 1, max: 20 })
 ], async (req, res) => {
@@ -131,7 +131,7 @@ router.post('/quiz', [
  * @desc    Get personalized learning recommendations
  * @access  Private
  */
-router.get('/recommendations', auth, async (req, res) => {
+router.get('/recommendations', authenticate, async (req, res) => {
   try {
     const userData = {
       completedSessions: req.user.profile?.completedSessions || [],
@@ -174,7 +174,7 @@ router.get('/recommendations', auth, async (req, res) => {
  * @access  Private (Admin/Moderator)
  */
 router.get('/platform', [
-  auth,
+  authenticate,
   query('startDate').optional().isISO8601(),
   query('endDate').optional().isISO8601()
 ], async (req, res) => {
@@ -215,7 +215,7 @@ router.get('/platform', [
  * @desc    Get user-specific analytics
  * @access  Private
  */
-router.get('/user', auth, async (req, res) => {
+router.get('/user', authenticate, async (req, res) => {
   try {
     const analytics = await AnalyticsService.getUserAnalytics(req.user._id);
 
@@ -240,7 +240,7 @@ router.get('/user', auth, async (req, res) => {
  * @desc    Get real-time platform metrics
  * @access  Private (Admin/Moderator)
  */
-router.get('/realtime', auth, async (req, res) => {
+router.get('/realtime', authenticate, async (req, res) => {
   try {
     if (!['admin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
@@ -273,7 +273,7 @@ router.get('/realtime', auth, async (req, res) => {
  * @access  Private
  */
 router.post('/engagement', [
-  auth,
+  authenticate,
   body('sessionData').isArray().withMessage('Session data is required')
 ], async (req, res) => {
   try {
@@ -314,7 +314,7 @@ router.post('/engagement', [
  * @access  Private (Instructor/Admin)
  */
 router.post('/start', [
-  auth,
+  authenticate,
   body('sessionType').notEmpty().isIn(['lecture', 'group', 'peer']),
   body('sessionId').notEmpty(),
   body('roomId').notEmpty()
@@ -359,7 +359,7 @@ router.post('/start', [
  * @desc    Stop a recording
  * @access  Private (Instructor/Admin)
  */
-router.post('/:id/stop', auth, async (req, res) => {
+router.post('/:id/stop', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -386,7 +386,7 @@ router.post('/:id/stop', auth, async (req, res) => {
  * @desc    Get recording status
  * @access  Private
  */
-router.get('/:id/status', auth, async (req, res) => {
+router.get('/:id/status', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 

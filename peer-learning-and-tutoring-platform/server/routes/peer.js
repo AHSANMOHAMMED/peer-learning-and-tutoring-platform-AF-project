@@ -3,7 +3,7 @@ const router = express.Router();
 const MatchingService = require('../services/MatchingService');
 const PeerSession = require('../models/PeerSession');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { body, validationResult, query } = require('express-validator');
 
 /**
@@ -12,7 +12,7 @@ const { body, validationResult, query } = require('express-validator');
  * @access  Private
  */
 router.post('/request-help', [
-  auth,
+  authenticate,
   body('subject').notEmpty().withMessage('Subject is required'),
   body('grade').notEmpty().withMessage('Grade is required'),
   body('topic').notEmpty().withMessage('Topic is required'),
@@ -81,7 +81,7 @@ router.post('/request-help', [
  * @access  Private
  */
 router.get('/matches', [
-  auth,
+  authenticate,
   query('subject').notEmpty().withMessage('Subject is required'),
   query('grade').notEmpty().withMessage('Grade is required'),
   query('topic').notEmpty().withMessage('Topic is required'),
@@ -134,7 +134,7 @@ router.get('/matches', [
  * @access  Private
  */
 router.post('/sessions', [
-  auth,
+  authenticate,
   body('helperId').isMongoId().withMessage('Valid helper ID is required'),
   body('subject').notEmpty().withMessage('Subject is required'),
   body('grade').notEmpty().withMessage('Grade is required'),
@@ -225,7 +225,7 @@ router.post('/sessions', [
  * @access  Private
  */
 router.put('/sessions/:id/accept', [
-  auth,
+  authenticate,
   body('message').optional().isString()
 ], async (req, res) => {
   try {
@@ -304,7 +304,7 @@ router.put('/sessions/:id/accept', [
  * @access  Private
  */
 router.put('/sessions/:id/complete', [
-  auth,
+  authenticate,
   body('feedback').optional().isObject(),
   body('feedback.rating').optional().isInt({ min: 1, max: 5 }),
   body('feedback.comment').optional().isString()
@@ -394,7 +394,7 @@ router.put('/sessions/:id/complete', [
  * @access  Private
  */
 router.get('/sessions', [
-  auth,
+  authenticate,
   query('status').optional().isIn(['pending', 'matched', 'active', 'completed', 'cancelled']),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 })
@@ -450,7 +450,7 @@ router.get('/sessions', [
  * @desc    Get specific peer session details
  * @access  Private
  */
-router.get('/sessions/:id', auth, async (req, res) => {
+router.get('/sessions/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 

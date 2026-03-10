@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CourseMarketplaceService = require('../services/CourseMarketplaceService');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const { query, body, param, validationResult } = require('express-validator');
 
 /**
@@ -199,7 +199,7 @@ router.get('/price-ranges', async (req, res) => {
  * @desc    Get recommended courses for user
  * @access  Private
  */
-router.get('/recommended', auth, async (req, res) => {
+router.get('/recommended', authenticate, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 8;
     const courses = await CourseMarketplaceService.getRecommendedCourses(
@@ -228,7 +228,7 @@ router.get('/recommended', auth, async (req, res) => {
  * @desc    Get tutor's marketplace courses
  * @access  Private (Tutors)
  */
-router.get('/tutor/courses', auth, async (req, res) => {
+router.get('/tutor/courses', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'tutor' && req.user.role !== 'admin') {
       return res.status(403).json({
@@ -263,7 +263,7 @@ router.get('/tutor/courses', auth, async (req, res) => {
  * @access  Private (Tutors)
  */
 router.post('/tutor/courses/:id/publish', [
-  auth,
+  authenticate,
   param('id').isMongoId()
 ], async (req, res) => {
   try {
@@ -309,7 +309,7 @@ router.post('/tutor/courses/:id/publish', [
  * @access  Private (Tutors)
  */
 router.post('/tutor/courses/:id/unpublish', [
-  auth,
+  authenticate,
   param('id').isMongoId()
 ], async (req, res) => {
   try {
@@ -355,7 +355,7 @@ router.post('/tutor/courses/:id/unpublish', [
  * @access  Private
  */
 router.post('/courses/:id/purchase', [
-  auth,
+  authenticate,
   param('id').isMongoId()
 ], async (req, res) => {
   try {
@@ -398,7 +398,7 @@ router.post('/courses/:id/purchase', [
  * @desc    Get marketplace analytics (Admin)
  * @access  Private (Admin)
  */
-router.get('/analytics', auth, async (req, res) => {
+router.get('/analytics', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({

@@ -1,0 +1,69 @@
+{
+  "short_name": "PeerLearn",
+  "name": "PeerLearn - Peer Learning Platform",
+  "description": "Connect with peers and tutors for collaborative learning sessions",
+  "icons": [
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#3B82F6",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "My Sessions",
+      "short_name": "Sessions",
+      "description": "View your upcoming learning sessions",
+      "url": "/dashboard/tutoring/sessions",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Find Tutors",
+      "short_name": "Tutors",
+      "description": "Browse and book tutors",
+      "url": "/dashboard/student/tutors",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Study Groups",
+      "short_name": "Groups",
+      "description": "Join group study sessions",
+      "url": "/dashboard/groups",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard view of PeerLearn"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile view of PeerLearn"
+    }
+  ]
+}

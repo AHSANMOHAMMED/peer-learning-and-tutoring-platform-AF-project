@@ -2,19 +2,29 @@ const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
-const PointTransaction = require('../models/PointTransaction');
+const PointsService = require('../services/pointsService');
 const { validationResult } = require('express-validator');
 
-// Get all questions with pagination and filtering
+// Sri Lankan subjects for Grades 6-13
+const SRI_LANKAN_SUBJECTS = {
+  core: ['Mathematics', 'English', 'Science', 'History', 'Geography', 'Civic Education', 'Health & Physical Education'],
+  religion: ['Buddhism', 'Islam', 'Saivaneri', 'Roman Catholicism', 'Christianity'],
+  language: ['Sinhala', 'Tamil'],
+  elective: ['ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies']
+};
+
+// Get all questions with pagination and filtering by grade and subject
 const getQuestions = async (req, res) => {
   try {
     const {
       page = 1,
       limit = 20,
-      category = 'all',
+      subject = 'all',
+      grade = 'all',
       tags = '',
       sortBy = 'newest',
-      search = ''
+      search = '',
+      category = 'all'
     } = req.query;
 
     const options = {
@@ -29,17 +39,25 @@ const getQuestions = async (req, res) => {
       const tagArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
       questions = await Question.search(search, {
         ...options,
-        category: category === 'all' ? null : category,
+        subject: subject === 'all' ? null : subject,
+        grade: grade === 'all' ? null : parseInt(grade),
         tags: tagArray
       });
-    } else if (category === 'popular') {
-      questions = await Question.getPopular(parseInt(limit));
-    } else if (category === 'unanswered') {
-      questions = await Question.getUnanswered(parseInt(limit));
+    } else if (subject === 'all' && grade === 'all') {
+      // Get all questions
+      questions = await Question.find({ isClosed: false })
+        .sort({ createdAt: -1 })
+        .skip((parseInt(page) - 1) * parseInt(limit))
+        .limit(parseInt(limit))
+        .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     } else {
+      // Filter by grade and/or subject
       const query = { isClosed: false };
-      if (category !== 'all') {
-        query.category = category;
+      if (subject !== 'all') {
+        query.subject = subject;
+      }
+      if (grade !== 'all') {
+        query.grade = parseInt(grade);
       }
       if (tags) {
         const tagArray = tags.split(',').map(tag => tag.trim());
@@ -126,53 +144,48 @@ const getQuestionById = async (req, res) => {
 // Create new question
 const createQuestion = async (req, res) => {
   try {
-    console.log('Creating question with data:', req.body);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
     
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
+    const { title, content, tags, subject, grade } = req.body;
     
-    const { title, body, tags, category } = req.body;
+    // Validate subject exists in Sri Lankan curriculum
+    const allSubjects = [...SRI_LANKAN_SUBJECTS.core, ...SRI_LANKAN_SUBJECTS.religion, ...SRI_LANKAN_SUBJECTS.language, ...SRI_LANKAN_SUBJECTS.elective];
+    if (!allSubjects.includes(subject)) {
+      return res.status(400).json({ error: 'Invalid subject. Must be from Sri Lankan curriculum.' });
+    }
     
-    // Temporarily add mock user for testing
-    req.user = { _id: '507f1f77bcf86cd799439012' };
+    // Validate grade
+    if (grade < 6 || grade > 13) {
+      return res.status(400).json({ error: 'Grade must be between 6 and 13.' });
+    }
     
-    console.log('Creating question object...');
     const question = new Question({
       title,
-      body,
+      body: content, // Map content to body field
       tags: tags || [],
-      category,
+      subject,
+      grade,
       author: req.user._id
     });
     
-    console.log('Saving question...');
     await question.save();
     
-    console.log('Question saved successfully:', question._id);
-    
-    // Temporarily disable points and user stats for testing
-    // Award points for posting question
-    // await PointTransaction.createTransaction({
-    //   user: req.user._id,
-    //   points: 2,
-    //   type: 'question_posted',
-    //   referenceId: question._id,
-    //   referenceType: 'question',
-    //   description: 'Posted a question'
-    // });
+    // Award points for posting question (+2 points) - temporarily disabled
+    // await PointsService.awardQuestionPosted(req.user._id, question._id, subject);
     
     // Update user's forum stats
-    // const User = require('../models/User');
-    // const user = await User.findById(req.user._id);
-    // await user.updateForumStats('questionsAsked');
-    // await user.addSubjectPoints(category, 2);
+    const User = require('../models/User');
+    const user = await User.findById(req.user._id);
+    if (user) {
+      await user.updateForumStats('questionsAsked');
+      await user.addSubjectPoints(subject, 2);
+    }
     
-    // Temporarily disable populate for testing
     // Populate author details for response
-    // await question.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
+    await question.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     
     // Emit real-time event
     if (global.io) {
@@ -182,7 +195,6 @@ const createQuestion = async (req, res) => {
       });
     }
     
-    console.log('Sending response...');
     res.status(201).json(question);
   } catch (error) {
     console.error('Error in createQuestion:', error);
@@ -193,44 +205,57 @@ const createQuestion = async (req, res) => {
 // Update question
 const updateQuestion = async (req, res) => {
   try {
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
-    
     const { id } = req.params;
-    const { title, body, tags, category } = req.body;
+    const { title, content, body, tags, subject, grade } = req.body;
     
     const question = await Question.findById(id);
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
     }
     
     // Check if user is the author or admin
     if (question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to update this question' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Not authorized to update this question' 
+      });
     }
     
     // Don't allow editing if question is closed
     if (question.isClosed) {
-      return res.status(400).json({ error: 'Cannot edit a closed question' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Cannot edit a closed question' 
+      });
     }
     
-    question.title = title || question.title;
-    question.body = body || question.body;
-    question.tags = tags || question.tags;
-    question.category = category || question.category;
+    // Update fields (support both 'body' and 'content' for compatibility)
+    if (title) question.title = title;
+    if (body || content) question.body = body || content;
+    if (tags) question.tags = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim());
+    if (subject) question.subject = subject;
+    if (grade) question.grade = parseInt(grade);
     
     await question.save();
     
     // Populate author details for response
     await question.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     
-    res.json(question);
+    res.json({
+      success: true,
+      message: 'Question updated successfully',
+      data: question
+    });
   } catch (error) {
     console.error('Error in updateQuestion:', error);
-    res.status(500).json({ error: 'Failed to update question' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to update question',
+      error: error.message 
+    });
   }
 };
 
@@ -241,12 +266,18 @@ const deleteQuestion = async (req, res) => {
 
     const question = await Question.findById(id);
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
     }
 
     // Check if user is the author or admin
     if (question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to delete this question' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Not authorized to delete this question' 
+      });
     }
 
     // Delete related answers, votes, and comments
@@ -254,12 +285,19 @@ const deleteQuestion = async (req, res) => {
     await Vote.deleteMany({ targetType: 'question', targetId: id });
     await Comment.deleteMany({ targetType: 'question', targetId: id });
 
-    await question.remove();
+    await question.deleteOne();
 
-    res.json({ message: 'Question deleted successfully' });
+    res.json({ 
+      success: true,
+      message: 'Question and all related data deleted successfully' 
+    });
   } catch (error) {
     console.error('Error in deleteQuestion:', error);
-    res.status(500).json({ error: 'Failed to delete question' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to delete question',
+      error: error.message 
+    });
   }
 };
 
@@ -271,12 +309,18 @@ const closeQuestion = async (req, res) => {
 
     const question = await Question.findById(id);
     if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
     }
 
     // Check if user is the author or admin
     if (question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to close this question' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Not authorized to close this question' 
+      });
     }
 
     question.isClosed = true;
@@ -284,13 +328,130 @@ const closeQuestion = async (req, res) => {
     question.closedBy = req.user._id;
 
     await question.save();
-
     await question.populate('closedBy', 'username profile.firstName profile.lastName');
 
-    res.json(question);
+    res.json({
+      success: true,
+      message: 'Question closed successfully',
+      data: question
+    });
   } catch (error) {
     console.error('Error in closeQuestion:', error);
-    res.status(500).json({ error: 'Failed to close question' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to close question',
+      error: error.message
+    });
+  }
+};
+
+// Approve question (admin only)
+const approveQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Only admins can approve questions' 
+      });
+    }
+
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
+    }
+
+    question.status = 'approved';
+    question.approvedBy = req.user._id;
+    question.approvedAt = new Date();
+
+    await question.save();
+    await question.populate('approvedBy', 'username');
+
+    res.json({
+      success: true,
+      message: 'Question approved successfully',
+      data: question
+    });
+  } catch (error) {
+    console.error('Error in approveQuestion:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to approve question',
+      error: error.message
+    });
+  }
+};
+
+// Reject question (admin only)
+const rejectQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Only admins can reject questions' 
+      });
+    }
+
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Question not found' 
+      });
+    }
+
+    question.status = 'rejected';
+    question.rejectedBy = req.user._id;
+    question.rejectedAt = new Date();
+    question.rejectReason = reason;
+
+    await question.save();
+    await question.populate('rejectedBy', 'username');
+
+    res.json({
+      success: true,
+      message: 'Question rejected successfully',
+      data: question
+    });
+  } catch (error) {
+    console.error('Error in rejectQuestion:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to reject question',
+      error: error.message
+    });
+  }
+};
+
+// Get Sri Lankan subjects by grade
+const getSubjectsByGrade = async (req, res) => {
+  try {
+    const { grade } = req.query;
+    
+    // All subjects are available for all grades in Sri Lankan system
+    // But we can provide grade-specific recommendations
+    const subjects = {
+      all: SRI_LANKAN_SUBJECTS,
+      grade: grade ? parseInt(grade) : null
+    };
+    
+    res.json({
+      success: true,
+      subjects: SRI_LANKAN_SUBJECTS,
+      grade: grade ? parseInt(grade) : 'all',
+      message: 'Sri Lankan curriculum subjects for Grades 6-13'
+    });
+  } catch (error) {
+    console.error('Error in getSubjectsByGrade:', error);
+    res.status(500).json({ error: 'Failed to fetch subjects' });
   }
 };
 
@@ -321,8 +482,11 @@ module.exports = {
   getQuestions,
   getQuestionById,
   createQuestion,
+  getSubjectsByGrade,
+  getQuestionStats,
   updateQuestion,
   deleteQuestion,
   closeQuestion,
-  getQuestionStats
+  approveQuestion,
+  rejectQuestion
 };

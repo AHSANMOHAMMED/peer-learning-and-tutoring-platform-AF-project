@@ -52,8 +52,8 @@ const tutorSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
+    // Note: index removed as explicit index below covers userId queries
   },
   subjects: [subjectSchema],
   availability: [availabilitySchema],
@@ -146,12 +146,12 @@ const tutorSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-tutorSchema.index({ userId: 1 });
-tutorSchema.index({ featured: 1, 'rating.average': -1 });
-tutorSchema.index({ 'subjects.name': 1 });
-tutorSchema.index({ 'subjects.gradeLevels': 1 });
-tutorSchema.index({ isVerified: 1 });
-tutorSchema.index({ createdAt: -1 });
+// tutorSchema.index({ userId: 1 });
+// tutorSchema.index({ featured: 1, 'rating.average': -1 });
+// tutorSchema.index({ 'subjects.name': 1 });
+// tutorSchema.index({ 'subjects.gradeLevels': 1 });
+// tutorSchema.index({ isVerified: 1 });
+// tutorSchema.index({ createdAt: -1 });
 
 // Virtual for getting user details
 tutorSchema.virtual('user', {

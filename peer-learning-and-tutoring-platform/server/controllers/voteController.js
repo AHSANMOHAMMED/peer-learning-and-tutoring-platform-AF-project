@@ -1,22 +1,18 @@
 const Vote = require('../models/Vote');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
-const PointTransaction = require('../models/PointTransaction');
+const PointsService = require('../services/pointsService');
 const { validationResult } = require('express-validator');
 
 // Vote on question or answer
 const vote = async (req, res) => {
   try {
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
     const { targetType, targetId, voteType } = req.body;
-
-    // Temporarily add mock user for testing
-    req.user = { _id: '507f1f77bcf86cd799439012' };
 
     // Validate target type
     if (!['question', 'answer'].includes(targetType)) {
@@ -35,64 +31,63 @@ const vote = async (req, res) => {
       return res.status(400).json({ error: 'Cannot vote on your own content' });
     }
 
+    // Get existing vote to determine point changes
+    const existingVote = await Vote.getUserVote(targetType, targetId, req.user._id);
+
     // Toggle vote
     const result = await Vote.toggleVote(targetType, targetId, req.user._id, voteType);
 
-    // Temporarily disable points for testing
-    // Handle point transactions
-    // const User = require('../models/User');
-    // const targetAuthor = await User.findById(target.author);
-
-    // if (result.action === 'created') {
-    //   // Award points to content author
-    //   let points = 0;
-    //   let transactionType = '';
-    //   let description = '';
-
-    //   if (voteType === 'up') {
-    //     points = targetType === 'question' ? 2 : 5;
-    //     transactionType = 'upvote_received';
-    //     description = `Received upvote on ${targetType}`;
-    //   } else {
-    //     points = -1;
-    //     transactionType = 'downvote_received';
-    //     description = `Received downvote on ${targetType}`;
-    //   }
-
-    //   await PointTransaction.createTransaction({
-    //     user: target.author,
-    //     points,
-    //     type: transactionType,
-    //     referenceId: target._id,
-    //     referenceType: targetType,
-    //     description
-    //   });
-
-    //   // Update user's reputation
-    //   await targetAuthor.updateReputation(points);
-    //   await targetAuthor.addSubjectPoints(target.category || 'General', points);
-    // } else if (result.action === 'removed') {
-    //   // Reverse points
-    //   let points = 0;
-    //   if (result.previousVote === 'up') {
-    //     points = targetType === 'question' ? -2 : -5;
-    //   } else if (result.previousVote === 'down') {
-    //     points = 1;
-    //   }
-
-    //   await PointTransaction.createTransaction({
-    //     user: target.author,
-    //     points,
-    //     type: 'vote_removed',
-    //     referenceId: target._id,
-    //     referenceType: targetType,
-    //     description: `Vote removed on ${targetType}`
-    //   });
-
-    //   // Update user's reputation
-    //   await targetAuthor.updateReputation(points);
-    //   await targetAuthor.addSubjectPoints(target.category || 'General', points);
-    // }
+    // Handle point transactions based on vote changes
+    const subject = target.category || 'Other';
+    
+    if (result.action === 'created') {
+      // Award points to content author
+      if (voteType === 'up') {
+        if (targetType === 'question') {
+          await PointsService.awardQuestionUpvoteReceived(target.author, target._id, subject);
+        } else {
+          await PointsService.awardAnswerUpvoteReceived(target.author, target._id, subject);
+        }
+      } else if (voteType === 'down') {
+        if (targetType === 'answer') {
+          await PointsService.awardAnswerDownvoteReceived(target.author, target._id, subject);
+        }
+        // No points deducted for question downvotes per requirements
+      }
+    } else if (result.action === 'changed') {
+      // Reverse previous vote points and award new vote points
+      if (existingVote.voteType === 'up' && voteType === 'down') {
+        // Changing from upvote to downvote
+        if (targetType === 'question') {
+          await PointsService.reversePoints(target.author, PointsService.POINTS.QUESTION_UPVOTE_RECEIVED, 'question_upvote_received', target._id, 'question', 'Upvote removed');
+        } else {
+          await PointsService.reversePoints(target.author, PointsService.POINTS.ANSWER_UPVOTE_RECEIVED, 'answer_upvote_received', target._id, 'answer', 'Upvote removed');
+          await PointsService.awardAnswerDownvoteReceived(target.author, target._id, subject);
+        }
+      } else if (existingVote.voteType === 'down' && voteType === 'up') {
+        // Changing from downvote to upvote
+        if (targetType === 'answer') {
+          await PointsService.reversePoints(target.author, Math.abs(PointsService.POINTS.ANSWER_DOWNVOTE_RECEIVED), 'answer_downvote_received', target._id, 'answer', 'Downvote removed');
+        }
+        
+        if (targetType === 'question') {
+          await PointsService.awardQuestionUpvoteReceived(target.author, target._id, subject);
+        } else {
+          await PointsService.awardAnswerUpvoteReceived(target.author, target._id, subject);
+        }
+      }
+    } else if (result.action === 'removed') {
+      // Reverse points when vote is removed
+      if (existingVote.voteType === 'up') {
+        if (targetType === 'question') {
+          await PointsService.reversePoints(target.author, PointsService.POINTS.QUESTION_UPVOTE_RECEIVED, 'question_upvote_received', target._id, 'question', 'Upvote removed');
+        } else {
+          await PointsService.reversePoints(target.author, PointsService.POINTS.ANSWER_UPVOTE_RECEIVED, 'answer_upvote_received', target._id, 'answer', 'Upvote removed');
+        }
+      } else if (existingVote.voteType === 'down' && targetType === 'answer') {
+        await PointsService.reversePoints(target.author, Math.abs(PointsService.POINTS.ANSWER_DOWNVOTE_RECEIVED), 'answer_downvote_received', target._id, 'answer', 'Downvote removed');
+      }
+    }
 
     // Update target's vote counts
     await target.updateVoteCounts();

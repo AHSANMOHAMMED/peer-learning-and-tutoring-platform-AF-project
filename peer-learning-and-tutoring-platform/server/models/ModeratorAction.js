@@ -176,11 +176,11 @@ const moderatorActionSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-moderatorActionSchema.index({ moderatorId: 1, createdAt: -1 });
-moderatorActionSchema.index({ targetType: 1, targetId: 1 });
-moderatorActionSchema.index({ actionType: 1, createdAt: -1 });
-moderatorActionSchema.index({ reviewStatus: 1 });
-moderatorActionSchema.index({ 'appeal.appealStatus': 1 });
+// moderatorActionSchema.index({ moderatorId: 1, createdAt: -1 });
+// moderatorActionSchema.index({ targetType: 1, targetId: 1 });
+// moderatorActionSchema.index({ actionType: 1, createdAt: -1 });
+// moderatorActionSchema.index({ reviewStatus: 1 });
+// moderatorActionSchema.index({ 'appeal.appealStatus': 1 });
 
 // Virtual for action duration
 moderatorActionSchema.virtual('actionDuration').get(function() {
@@ -393,7 +393,7 @@ moderatorActionSchema.statics.getNeedingReview = async function(options = {}) {
 };
 
 // Static method to get statistics
-moderatorActionSchema.statics.getStatistics = async function(timeframe = '30d') => {
+moderatorActionSchema.statics.getStatistics = async function(timeframe = '30d') {
   const now = new Date();
   let startDate;
   
@@ -447,7 +447,7 @@ moderatorActionSchema.statics.getStatistics = async function(timeframe = '30d') 
 };
 
 // Static method to get moderator performance
-moderatorActionSchema.statics.getModeratorPerformance = async function(moderatorId, timeframe = '30d') => {
+moderatorActionSchema.statics.getModeratorPerformance = async function(moderatorId, timeframe = '30d') {
   const now = new Date();
   let startDate;
   

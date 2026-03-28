@@ -15,7 +15,9 @@ const {
   getTutorStats,
   verifyTutor,
   getFeaturedTutors,
-  getTopRatedTutors
+  getTopRatedTutors,
+  suspendTutor,
+  activateTutor
 } = require('../controllers/tutorController');
 
 const router = express.Router();
@@ -65,5 +67,9 @@ router.delete('/:id/subjects/:subjectId', authenticate, removeSubject);
 
 // Admin only routes
 router.post('/:id/verify', authenticate, authorize('admin'), verifyTutor);
+router.put('/:id/suspend', authenticate, authorize('admin'), [
+  body('reason').notEmpty().withMessage('Suspension reason is required')
+], suspendTutor);
+router.put('/:id/activate', authenticate, authorize('admin'), activateTutor);
 
 module.exports = router;

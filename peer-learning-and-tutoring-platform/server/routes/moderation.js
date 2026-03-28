@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const moderationController = require('../controllers/moderationController');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
 // Submit a report
 router.post(
   '/reports',
-  auth,
+  authenticate,
   [
     body('reportedType').isIn(['user', 'material', 'session', 'review', 'message']).withMessage('Invalid reported type'),
     body('reportedId').isMongoId().withMessage('Invalid reported ID'),
@@ -25,7 +25,7 @@ router.post(
 // Get reports for moderators
 router.get(
   '/reports',
-  auth,
+  authenticate,
   [
     query('status').optional().isIn(['pending', 'under_review', 'resolved', 'dismissed']).withMessage('Invalid status'),
     query('assignedTo').optional().isMongoId().withMessage('Invalid assignedTo ID'),
@@ -39,7 +39,7 @@ router.get(
 // Get report details
 router.get(
   '/reports/:id',
-  auth,
+  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID')
   ],
@@ -50,7 +50,98 @@ router.get(
 // Assign report to moderator
 router.put(
   '/reports/:id/assign',
-  auth,
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('assignedTo').isMongoId().withMessage('Invalid assignedTo ID')
+  ],
+  validate,
+  moderationController.assignReport
+);
+
+// Resolve report
+router.put(
+  '/reports/:id/resolve',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('action').isIn(['warn', 'suspend', 'ban', 'remove_content', 'no_action']).withMessage('Invalid action'),
+    body('reason').optional().trim().isLength({ max: 1000 }).withMessage('Reason must be less than 1000 characters')
+  ],
+  validate,
+  moderationController.resolveReport
+);
+
+// Dismiss report
+router.put(
+  '/reports/:id/dismiss',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+  ],
+  validate,
+  moderationController.dismissReport
+);
+
+// Escalate report
+router.put(
+  '/reports/:id/escalate',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid report ID'),
+    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+  ],
+  validate,
+  moderationController.escalateReport
+);
+
+// Get moderator actions
+router.get(
+  '/actions',
+  authenticate,
+  [
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+  ],
+  validate,
+  moderationController.getModeratorActions
+);
+
+// Get pending appeals
+router.get(
+  '/appeals/pending',
+  authenticate,
+  [
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+  ],
+  validate,
+  moderationController.getPendingAppeals
+);
+
+// Review appeal
+router.put(
+  '/appeals/:id/review',
+  authenticate,
+  [
+    param('id').isMongoId().withMessage('Invalid appeal ID'),
+    body('decision').isIn(['approve', 'deny']).withMessage('Decision must be approve or deny'),
+    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+  ],
+  validate,
+  moderationController.reviewAppeal
+);
+
+// Get moderation statistics
+router.get(
+  '/stats',
+  authenticate,
+  moderationController.getModerationStats
+);
+router.put(
+  '/reports/:id/assign',
+  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('moderatorId').isMongoId().withMessage('Invalid moderator ID')
@@ -62,7 +153,7 @@ router.put(
 // Resolve report
 router.put(
   '/reports/:id/resolve',
-  auth,
+  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('action').isIn(['no_action', 'warning', 'content_removed', 'user_suspended', 'user_banned', 'content_flagged']).withMessage('Invalid action'),
@@ -75,7 +166,7 @@ router.put(
 // Dismiss report
 router.put(
   '/reports/:id/dismiss',
-  auth,
+  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('notes').trim().isLength({ min: 1, max: 2000 }).withMessage('Notes must be 1-2000 characters')
@@ -87,7 +178,7 @@ router.put(
 // Escalate report
 router.put(
   '/reports/:id/escalate',
-  auth,
+  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('reason').trim().isLength({ min: 1, max: 500 }).withMessage('Reason must be 1-500 characters'),
@@ -100,7 +191,7 @@ router.put(
 // Get moderator actions
 router.get(
   '/actions',
-  auth,
+  authenticate,
   [
     query('moderatorId').optional().isMongoId().withMessage('Invalid moderator ID'),
     query('actionType').optional().isIn(['warning', 'suspend', 'ban', 'delete_content', 'approve_content', 'flag_content', 'unflag_content', 'restrict_access', 'verify_user', 'unverify_user', 'escalate', 'assign_case', 'close_case', 'note_only']).withMessage('Invalid action type'),
@@ -115,7 +206,7 @@ router.get(
 // Get pending appeals
 router.get(
   '/appeals/pending',
-  auth,
+  authenticate,
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
@@ -127,7 +218,7 @@ router.get(
 // Review appeal
 router.put(
   '/appeals/:id/review',
-  auth,
+  authenticate,
   [
     param('id').isMongoId().withMessage('Invalid appeal ID'),
     body('status').isIn(['accepted', 'rejected']).withMessage('Invalid status'),
@@ -140,7 +231,7 @@ router.put(
 // Get moderation statistics
 router.get(
   '/statistics',
-  auth,
+  authenticate,
   [
     query('timeframe').optional().isIn(['7d', '30d', '90d']).withMessage('Invalid timeframe')
   ],

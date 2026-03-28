@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, MessageSquare, Eye, Clock, User, CheckCircle, Edit, Trash2, Flag } from 'lucide-react';
 import { qaApi } from '../../services/api';
+import axios from 'axios';
 import VoteButtons from './VoteButtons';
 import AnswerList from './AnswerList';
 import CommentSection from './CommentSection';
@@ -246,8 +247,10 @@ const QuestionDetail = () => {
 
           {/* Question Content */}
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{question.title}</h1>
-            
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              {question.title}
+            </h1>
+
             <div className="prose max-w-none mb-4">
               <div dangerouslySetInnerHTML={{ __html: question.body }} />
             </div>
@@ -274,17 +277,18 @@ const QuestionDetail = () => {
                     {question.author?.profile?.firstName?.[0] || 'U'}
                   </div>
                   <span>
-                    {question.author?.profile?.firstName} {question.author?.profile?.lastName}
+                    {question.author?.profile?.firstName}{' '}
+                    {question.author?.profile?.lastName}
                   </span>
                   <span className="text-gray-400">•</span>
                   <span>{getTimeAgo(question.createdAt)}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
                   {question.views} views
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <MessageSquare className="h-4 w-4" />
                   {question.answerCount} answers
@@ -308,14 +312,14 @@ const QuestionDetail = () => {
               <button className="text-gray-500 hover:text-gray-700">
                 <Flag className="h-4 w-4" />
               </button>
-              <button 
+              <button
                 onClick={handleEditQuestion}
                 className="text-gray-500 hover:text-blue-600"
                 title="Edit Question"
               >
                 <Edit className="h-4 w-4" />
               </button>
-              <button 
+              <button
                 onClick={() => setShowDeleteConfirm(true)}
                 className="text-gray-500 hover:text-red-600"
                 title="Delete Question"
@@ -336,7 +340,8 @@ const QuestionDetail = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
-            {question.answerCount} {question.answerCount === 1 ? 'Answer' : 'Answers'}
+            {question.answerCount}{' '}
+            {question.answerCount === 1 ? 'Answer' : 'Answers'}
           </h2>
           {!showAnswerForm && (
             <button
@@ -351,25 +356,19 @@ const QuestionDetail = () => {
         {/* Answer Form */}
         {showAnswerForm && (
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Your Answer</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Your Answer
+            </h3>
             <form onSubmit={handleAnswerSubmit}>
               <RichTextEditor
                 value={answerContent}
                 onChange={setAnswerContent}
-                // onChange={(value) => {
-                //   setAnswerContent(value);
-                //   // Emit typing indicator
-                //   emitTyping(value.length > 0);
-                // }}
                 placeholder="Write your answer here..."
               />
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowAnswerForm(false);
-                    // emitTyping(false);
-                  }}
+                  onClick={() => setShowAnswerForm(false)}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
@@ -386,22 +385,6 @@ const QuestionDetail = () => {
           </div>
         )}
 
-        {/* Typing Indicator */}
-        {typingUsers.size > 0 && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-              </div>
-              <span>
-                {typingUsers.size === 1 ? 'Someone is typing' : `${typingUsers.size} people are typing`}...
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Answers List */}
         <AnswerList
           answers={answers}
@@ -409,39 +392,6 @@ const QuestionDetail = () => {
           onAnswerUpdate={fetchAnswers}
           onQuestionUpdate={fetchQuestion}
         />
-        
-        {/* Answer Form */}
-        {showAnswerForm && (
-          <div className="mt-6 p-4 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Your Answer</h3>
-            <form onSubmit={handleAnswerSubmit}>
-              <textarea
-                value={answerContent}
-                onChange={(e) => setAnswerContent(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                rows="4"
-                placeholder="Write your answer here..."
-                required
-              />
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAnswerForm(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingAnswer}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {submittingAnswer ? 'Submitting...' : 'Post Answer'}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
 
       {/* Edit Question Modal */}
@@ -452,21 +402,32 @@ const QuestionDetail = () => {
               <h2 className="text-xl font-semibold mb-4">Edit Question</h2>
               <form onSubmit={handleUpdateQuestion}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Title
+                  </label>
                   <input
                     type="text"
                     value={editForm.title}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, title: e.target.value }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category
+                  </label>
                   <select
                     value={editForm.category}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="general">General</option>
@@ -476,18 +437,22 @@ const QuestionDetail = () => {
                     <option value="other">Other</option>
                   </select>
                 </div>
-                
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Body</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Body
+                  </label>
                   <textarea
                     value={editForm.body}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, body: e.target.value }))}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, body: e.target.value }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     rows="6"
                     required
                   />
                 </div>
-                
+
                 <div className="flex justify-end gap-3">
                   <button
                     type="button"
@@ -516,7 +481,8 @@ const QuestionDetail = () => {
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Delete Question</h2>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this question? This action cannot be undone.
+                Are you sure you want to delete this question? This action
+                cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
                 <button

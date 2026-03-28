@@ -1,0 +1,69 @@
+{
+  "_postman_id": "auth-profile-environment",
+  "name": "PeerLearn Local",
+  "description": "Environment variables for Authentication & Profile testing. Base URL, JWT tokens, and user credentials.",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "enabled": true,
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "JWT bearer token for authenticated requests. Obtained from POST /api/auth/login or POST /api/auth/register"
+    },
+    {
+      "key": "tutorToken",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "JWT token for tutor user (for comparing roles in tests)"
+    },
+    {
+      "key": "userEmail",
+      "value": "ahmed.khan@example.com",
+      "enabled": true,
+      "type": "string",
+      "description": "Test user email for login and password reset flows"
+    },
+    {
+      "key": "userPassword",
+      "value": "SecurePass123!",
+      "enabled": true,
+      "type": "string",
+      "description": "Test user password (used in login and change password tests)"
+    },
+    {
+      "key": "newPassword",
+      "value": "NewSecurePass456!",
+      "enabled": true,
+      "type": "string",
+      "description": "New password for password reset/change tests"
+    },
+    {
+      "key": "resetToken",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Password reset token from forgot-password email (copy from actual email or test response)"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "User ID extracted from registration or login response (24-char MongoDB ID)"
+    },
+    {
+      "key": "avatarUrl",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Avatar URL returned from POST /api/users/upload-avatar"
+    }
+  ]
+}

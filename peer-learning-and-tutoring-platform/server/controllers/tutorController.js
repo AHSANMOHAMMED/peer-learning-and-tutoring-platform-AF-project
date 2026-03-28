@@ -1,13 +1,14 @@
 const Tutor = require('../models/Tutor');
 const User = require('../models/User');
 const Review = require('../models/Review');
+const TutorService = require('../services/tutorService');
 const { validationResult } = require('express-validator');
 
 // Get all tutors with search and filters
 const getTutors = async (req, res) => {
   try {
     const searchParams = req.query;
-    const result = await Tutor.search(searchParams);
+    const result = await TutorService.searchTutors(searchParams);
     
     res.json({
       success: true,
@@ -259,13 +260,12 @@ const addAvailability = async (req, res) => {
       });
     }
     
-    tutor.addAvailability(availabilityData);
-    await tutor.save();
+    const updatedTutor = await TutorService.addAvailability(id, availabilityData);
     
     res.json({
       success: true,
       message: 'Availability added successfully',
-      data: tutor.availability
+      data: updatedTutor.availability
     });
   } catch (error) {
     console.error('Add availability error:', error);
@@ -301,13 +301,12 @@ const removeAvailability = async (req, res) => {
       });
     }
     
-    tutor.removeAvailability(slotId);
-    await tutor.save();
+    const updatedTutor = await TutorService.removeAvailability(id, slotId);
     
     res.json({
       success: true,
       message: 'Availability removed successfully',
-      data: tutor.availability
+      data: updatedTutor.availability
     });
   } catch (error) {
     console.error('Remove availability error:', error);
@@ -344,13 +343,12 @@ const addSubject = async (req, res) => {
       });
     }
     
-    tutor.addSubject(subjectData);
-    await tutor.save();
+    const updatedTutor = await TutorService.addSubject(id, subjectData);
     
     res.json({
       success: true,
       message: 'Subject added successfully',
-      data: tutor.subjects
+      data: updatedTutor.subjects
     });
   } catch (error) {
     console.error('Add subject error:', error);
@@ -386,13 +384,12 @@ const removeSubject = async (req, res) => {
       });
     }
     
-    tutor.removeSubject(subjectId);
-    await tutor.save();
+    const updatedTutor = await TutorService.removeSubject(id, subjectId);
     
     res.json({
       success: true,
       message: 'Subject removed successfully',
-      data: tutor.subjects
+      data: updatedTutor.subjects
     });
   } catch (error) {
     console.error('Remove subject error:', error);
@@ -500,7 +497,7 @@ const getFeaturedTutors = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
     
-    const tutors = await Tutor.getFeatured(parseInt(limit));
+    const tutors = await TutorService.getFeaturedTutors(parseInt(limit));
     
     res.json({
       success: true,
@@ -521,7 +518,7 @@ const getTopRatedTutors = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
     
-    const tutors = await Tutor.getTopRated(parseInt(limit));
+    const tutors = await TutorService.getTopRatedTutors(parseInt(limit));
     
     res.json({
       success: true,
@@ -532,6 +529,90 @@ const getTopRatedTutors = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch top rated tutors',
+      error: error.message
+    });
+  }
+};
+
+// Suspend tutor (admin)
+const suspendTutor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can suspend tutors'
+      });
+    }
+    
+    const tutor = await Tutor.findById(id);
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tutor not found'
+      });
+    }
+    
+    tutor.status = 'suspended';
+    tutor.suspendedBy = req.user._id;
+    tutor.suspendedAt = new Date();
+    tutor.suspensionReason = reason;
+    
+    await tutor.save();
+    
+    res.json({
+      success: true,
+      message: 'Tutor suspended successfully',
+      data: tutor
+    });
+  } catch (error) {
+    console.error('Suspend tutor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to suspend tutor',
+      error: error.message
+    });
+  }
+};
+
+// Activate tutor (admin)
+const activateTutor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can activate tutors'
+      });
+    }
+    
+    const tutor = await Tutor.findById(id);
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tutor not found'
+      });
+    }
+    
+    tutor.status = 'active';
+    tutor.activatedBy = req.user._id;
+    tutor.activatedAt = new Date();
+    
+    await tutor.save();
+    
+    res.json({
+      success: true,
+      message: 'Tutor activated successfully',
+      data: tutor
+    });
+  } catch (error) {
+    console.error('Activate tutor error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to activate tutor',
       error: error.message
     });
   }
@@ -551,5 +632,7 @@ module.exports = {
   getTutorStats,
   verifyTutor,
   getFeaturedTutors,
-  getTopRatedTutors
+  getTopRatedTutors,
+  suspendTutor,
+  activateTutor
 };

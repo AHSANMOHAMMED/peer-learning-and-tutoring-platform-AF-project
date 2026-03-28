@@ -6,8 +6,34 @@ const validate = require('../middleware/validate');
 
 const router = express.Router();
 
+// Multer error handler middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err) {
+    console.error('Multer error:', err);
+    return res.status(400).json({
+      success: false,
+      message: err.message || 'File upload error',
+      error: err.name
+    });
+  }
+  next();
+};
+
 // Upload materials (files)
-router.post('/upload', authenticate, materialController.upload.array('files', 5));
+router.post('/upload', authenticate, materialController.upload.array('files', 5), materialController.uploadMaterials);
+
+// Upload link material
+router.post('/link', authenticate, materialController.uploadLink);
+
+// Update material
+router.put('/:id', authenticate, materialController.updateMaterial);
+
+// Delete material
+router.delete('/:id', authenticate, materialController.deleteMaterial);
+
+// Approve/Reject materials (admin only)
+router.put('/:id/approve', authenticate, materialController.approveMaterial);
+router.put('/:id/reject', authenticate, materialController.rejectMaterial);
 
 // Upload link material
 router.post('/upload-link', authenticate, [

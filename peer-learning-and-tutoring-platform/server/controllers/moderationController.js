@@ -9,7 +9,7 @@ const { emitNotification } = require('../services/notificationService');
 exports.submitReport = async (req, res) => {
   try {
     const { reportedType, reportedId, reason, description, evidence = [] } = req.body;
-    const reporterId = req.user.id;
+    const reporterId = req.userId;
 
     // Validate that the reported item exists
     let reportedItem;
@@ -115,7 +115,7 @@ exports.submitReport = async (req, res) => {
 exports.getReports = async (req, res) => {
   try {
     const { status, assignedTo, page = 1, limit = 20 } = req.query;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -150,7 +150,7 @@ exports.getReports = async (req, res) => {
 exports.getReportById = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -209,7 +209,7 @@ exports.assignReport = async (req, res) => {
   try {
     const { id } = req.params;
     const { moderatorId } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -250,7 +250,7 @@ exports.resolveReport = async (req, res) => {
   try {
     const { id } = req.params;
     const { action, notes } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -326,7 +326,7 @@ exports.dismissReport = async (req, res) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -384,7 +384,7 @@ exports.escalateReport = async (req, res) => {
   try {
     const { id } = req.params;
     const { reason, level } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -434,7 +434,7 @@ exports.escalateReport = async (req, res) => {
 exports.getModeratorActions = async (req, res) => {
   try {
     const { moderatorId, actionType, status, page = 1, limit = 20 } = req.query;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -473,7 +473,7 @@ exports.getModeratorActions = async (req, res) => {
 exports.getPendingAppeals = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -508,7 +508,7 @@ exports.reviewAppeal = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, notes } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
@@ -563,7 +563,7 @@ exports.reviewAppeal = async (req, res) => {
 exports.getModerationStats = async (req, res) => {
   try {
     const { timeframe = '30d' } = req.query;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);

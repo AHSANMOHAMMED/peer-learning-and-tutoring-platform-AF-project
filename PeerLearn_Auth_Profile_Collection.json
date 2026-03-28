@@ -1,0 +1,1167 @@
+{
+  "info": {
+    "_postman_id": "auth-profile-collection",
+    "name": "PeerLearn - Authentication & Profiles",
+    "description": "Complete Postman Collection for Authentication (Register, Login, Password Reset) and User Profile Management. Includes role-based access, token handling, and profile operations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Registration & Login",
+      "description": "User registration, login, and logout flows",
+      "item": [
+        {
+          "name": "1.1 POST - Register (Student)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Auth] POST Register Student - Status 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register - Response has success property', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register - JWT token returned', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('token');",
+                  "  pm.expect(responseJson.data.token).to.be.a('string');",
+                  "  pm.environment.set('jwtToken', responseJson.data.token);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register - User object created', function () {",
+                  "  pm.expect(responseJson.data.user).to.have.property('_id');",
+                  "  pm.expect(responseJson.data.user).to.have.property('email');",
+                  "  pm.expect(responseJson.data.user).to.have.property('role');",
+                  "  pm.environment.set('userId', responseJson.data.user._id);",
+                  "  pm.environment.set('userEmail', responseJson.data.user.email);",
+                  "  pm.environment.set('userPassword', 'SecurePass123!');",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register - Role is student', function () {",
+                  "  pm.expect(responseJson.data.user.role).to.equal('student');",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register - Email verified or pending', function () {",
+                  "  pm.expect(responseJson.data.user).to.have.property('emailVerified');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ahmedkhan2024\",\n  \"email\": \"ahmed.khan@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"student\",\n  \"profile\": {\n    \"firstName\": \"Ahmed\",\n    \"lastName\": \"Khan\",\n    \"grade\": 10,\n    \"phone\": \"+94771234567\",\n    \"school\": \"Royal College\",\n    \"bio\": \"Grade 10 student interested in Mathematics and Physics\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.2 POST - Register (Tutor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Auth] POST Register Tutor - Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register Tutor - Role is tutor', function () {",
+                  "  pm.expect(responseJson.data.user.role).to.equal('tutor');",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Register Tutor - Token returned', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('token');",
+                  "  pm.environment.set('tutorToken', responseJson.data.token);",
+                  "  pm.environment.set('tutorId', responseJson.data.user._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"fatimatutor2024\",\n  \"email\": \"fatima.tutor@example.com\",\n  \"password\": \"TutorPass123!\",\n  \"role\": \"tutor\",\n  \"profile\": {\n    \"firstName\": \"Fatima\",\n    \"lastName\": \"Ahmed\",\n    \"phone\": \"+94777654321\",\n    \"bio\": \"Experienced tutor with 5 years of teaching experience. Specializing in Math and Physics for grades 9-12.\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.3 POST - Register (Duplicate Email - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Register Duplicate Email - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Register Duplicate Email - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('email').or.include('already');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ahmedkhan2024\",\n  \"email\": \"ahmed.khan@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"student\",\n  \"profile\": {\n    \"firstName\": \"Ahmed\",\n    \"lastName\": \"Khan\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.4 POST - Register (Missing Required Field - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Register Missing Field - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Register Missing Field - Validation error', function () {",
+                  "  pm.expect(responseJson).to.have.property('message').or.have.property('errors');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ali2024\",\n  \"email\": \"ali@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.5 POST - Login (Valid Credentials)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Auth] POST Login - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Login - JWT token returned', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('token');",
+                  "  pm.expect(responseJson.data.token).to.be.a('string');",
+                  "  pm.environment.set('jwtToken', responseJson.data.token);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Login - User object with role', function () {",
+                  "  pm.expect(responseJson.data.user).to.have.property('_id');",
+                  "  pm.expect(responseJson.data.user).to.have.property('email');",
+                  "  pm.expect(responseJson.data.user).to.have.property('role');",
+                  "  pm.environment.set('userId', responseJson.data.user._id);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] POST Login - Response has success', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.6 POST - Login (Wrong Password - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Login Wrong Password - Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Login Wrong Password - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('password').or.include('credentials').or.include('Invalid');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"WrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.7 POST - Login (User Not Found - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Login User Not Found - Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Login User Not Found - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nonexistent@example.com\",\n  \"password\": \"SomePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.8 GET - Get Current User (Me)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Auth] GET Me - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Auth] GET Me - Has user data', function () {",
+                  "  pm.expect(responseJson.data || responseJson).to.have.property('_id');",
+                  "  pm.expect(responseJson.data || responseJson).to.have.property('email');",
+                  "  pm.expect(responseJson.data || responseJson).to.have.property('role');",
+                  "});",
+                  "",
+                  "pm.test('[Auth] GET Me - Role is in array or string', function () {",
+                  "  const user = responseJson.data || responseJson;",
+                  "  pm.expect(user.role).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "1.9 POST - Logout",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Auth] POST Logout - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Auth] POST Logout - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('success').or.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Password Management",
+      "description": "Password reset, change password flows",
+      "item": [
+        {
+          "name": "2.1 POST - Forgot Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Password] POST Forgot Password - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Password] POST Forgot Password - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('email').or.include('sent').or.include('check');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "2.2 POST - Forgot Password (Non-existent Email - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Negative] POST Forgot Password No User - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('[Negative] POST Forgot Password No User - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nonexistent123@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "2.3 POST - Reset Password (with Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Password] POST Reset Password - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Password] POST Reset Password - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message').or.have.property('success');",
+                  "});",
+                  "",
+                  "pm.test('[Password] POST Reset Password - New token returned', function () {",
+                  "  if (responseJson.data && responseJson.data.token) {",
+                  "    pm.environment.set('jwtToken', responseJson.data.token);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "2.4 POST - Reset Password (Invalid Token - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Reset Password Invalid Token - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Reset Password Invalid Token - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('token').or.include('invalid').or.include('expired');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"invalid_token_12345\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "2.5 PUT - Change Password (Authenticated User)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Password] PUT Change Password - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Password] PUT Change Password - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message').or.have.property('success');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{userPassword}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmPassword\": \"{{newPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "2.6 PUT - Change Password (Wrong Current Password - Negative Test)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] PUT Change Password Wrong Current - Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] PUT Change Password Wrong Current - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('password').or.include('incorrect').or.include('match');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"WrongPassword123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "2.7 PUT - Change Password (Unauthorized - No Token - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] PUT Change Password No Auth - Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] PUT Change Password No Auth - Unauthorized message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('token').or.include('unauthorized').or.include('auth');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"CurrentPass123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "change-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Profile Management",
+      "description": "Get, update, and manage user profiles",
+      "item": [
+        {
+          "name": "3.1 GET - Get My Profile",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Profile] GET My Profile - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Profile] GET My Profile - Has complete profile data', function () {",
+                  "  const profile = responseJson.data || responseJson;",
+                  "  pm.expect(profile).to.have.property('_id');",
+                  "  pm.expect(profile).to.have.property('email');",
+                  "  pm.expect(profile).to.have.property('firstName');",
+                  "  pm.expect(profile).to.have.property('lastName');",
+                  "  pm.expect(profile).to.have.property('role');",
+                  "});",
+                  "",
+                  "pm.test('[Profile] GET My Profile - Has bio/strengths/weaknesses', function () {",
+                  "  const profile = responseJson.data || responseJson;",
+                  "  if (profile.role === 'student') {",
+                  "    pm.expect(profile).to.have.property('strengths');",
+                  "    pm.expect(profile).to.have.property('weaknesses');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "profile"]
+            }
+          }
+        },
+        {
+          "name": "3.2 PUT - Update My Profile",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Profile] PUT Update Profile - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Profile] PUT Update Profile - Success response', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true).or.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('[Profile] PUT Update Profile - Updates reflected', function () {",
+                  "  const profile = responseJson.data || responseJson;",
+                  "  if (profile.bio !== undefined) {",
+                  "    pm.expect(profile.bio).to.equal('Updated bio for student testing');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Khan\",\n  \"bio\": \"Updated bio for student testing\",\n  \"strengths\": [\"Mathematics\", \"Physics\", \"Chemistry\"],\n  \"weaknesses\": [\"English\"],\n  \"grade\": 11\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "profile"]
+            }
+          }
+        },
+        {
+          "name": "3.3 GET - Get Public User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Profile] GET Public Profile - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Profile] GET Public Profile - Has public data', function () {",
+                  "  const profile = responseJson.data || responseJson;",
+                  "  pm.expect(profile).to.have.property('firstName');",
+                  "  pm.expect(profile).to.have.property('lastName');",
+                  "});",
+                  "",
+                  "pm.test('[Profile] GET Public Profile - No sensitive data', function () {",
+                  "  const profile = responseJson.data || responseJson;",
+                  "  pm.expect(profile).to.not.have.property('email');",
+                  "  pm.expect(profile).to.not.have.property('password');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "3.4 GET - Get User Profile (Invalid ID - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] GET Profile Invalid ID - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] GET Profile Invalid ID - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/invalid-user-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "invalid-user-id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Avatar Upload",
+      "description": "Upload and manage user profile avatars",
+      "item": [
+        {
+          "name": "4.1 POST - Upload Avatar",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Avatar] POST Upload - Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Avatar] POST Upload - Success response', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true).or.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('[Avatar] POST Upload - Avatar URL returned', function () {",
+                  "  const data = responseJson.data || responseJson;",
+                  "  pm.expect(data).to.have.property('avatarUrl');",
+                  "  pm.environment.set('avatarUrl', data.avatarUrl);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "description": "User profile picture (JPG, PNG, max 5MB)",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/upload-avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "upload-avatar"]
+            }
+          }
+        },
+        {
+          "name": "4.2 POST - Upload Avatar (No File - Negative Test)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Upload Avatar No File - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Upload Avatar No File - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('file').or.include('required');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/upload-avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "upload-avatar"]
+            }
+          }
+        },
+        {
+          "name": "4.3 POST - Upload Avatar (Unauthorized - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Upload Avatar No Auth - Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Upload Avatar No Auth - Unauthorized message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('token').or.include('unauthorized').or.include('auth');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/upload-avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "upload-avatar"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Email Verification (If Implemented)",
+      "description": "Email verification endpoints for new registrations",
+      "item": [
+        {
+          "name": "5.1 POST - Verify Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Email] POST Verify Email - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Email] POST Verify Email - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message').or.have.property('success');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"verification_token_from_email\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "5.2 POST - Resend Verification Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Email] POST Resend Verification - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Email] POST Resend Verification - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "  pm.expect(responseJson.message).to.include('sent').or.include('email');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/resend-verification",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "resend-verification"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

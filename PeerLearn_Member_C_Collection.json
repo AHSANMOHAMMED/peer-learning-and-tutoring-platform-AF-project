@@ -1,0 +1,1876 @@
+{
+  "info": {
+    "_postman_id": "member-c-workflow-collection",
+    "name": "PeerLearn - Member C Workflow Only",
+    "description": "Complete Postman Collection for Member C (Interaction & Content Lead) - Study Materials, Peer Tutoring, Moderation, Admin Features. Demo-ready with negative test cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Study Materials & Resource Library",
+      "description": "Upload, manage, filter, and approve study materials",
+      "item": [
+        {
+          "name": "1.1 POST - Upload Material (File)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Pre-request setup: Ensure valid JWT token is set",
+                  "const jwtToken = pm.environment.get('jwtToken');",
+                  "if (!jwtToken) {",
+                  "  console.warn('Warning: jwtToken not set in environment');",
+                  "}",
+                  "",
+                  "// Add authorization header",
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + jwtToken",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] POST Upload - Status 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Upload - Response has success property', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Upload - Response contains material ID', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.environment.set('materialId', responseJson.data._id);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Upload - Material has required fields', function () {",
+                  "  pm.expect(responseJson.data).to.have.all.keys('_id', 'title', 'fileName', 'fileUrl', 'subject', 'status', 'createdAt');",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Upload - Status is pending', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('pending');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "description": "Upload study material file(s) - max 5 files",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "title",
+                  "value": "Introduction to Algebra - Complete Guide",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Comprehensive guide covering algebraic equations, functions, and problem-solving techniques for Grade 10 students",
+                  "type": "text"
+                },
+                {
+                  "key": "subject",
+                  "value": "Mathematics",
+                  "type": "text"
+                },
+                {
+                  "key": "grade",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "algebra,equations,functions,math",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "upload"]
+            }
+          }
+        },
+        {
+          "name": "1.2 POST - Upload Material (Link)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] POST Link - Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Link - Response has success', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Link - Material ID stored', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.environment.set('materialIdLink', responseJson.data._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced Physics Lecture Series - Khan Academy\",\n  \"description\": \"High-quality video lectures covering mechanics, thermodynamics, and modern physics concepts\",\n  \"subject\": \"Physics\",\n  \"url\": \"https://www.khanacademy.org/science/physics\",\n  \"grade\": 11,\n  \"tags\": \"physics,video,lecture,mechanics\",\n  \"difficulty\": \"intermediate\",\n  \"estimatedTime\": 120,\n  \"language\": \"en\",\n  \"license\": \"cc-by\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/upload-link",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "upload-link"]
+            }
+          }
+        },
+        {
+          "name": "1.3 GET - List Materials (with filters)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] GET List - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] GET List - Response is array', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('[Materials] GET List - Each material has required fields', function () {",
+                  "  if (responseJson.length > 0) {",
+                  "    pm.expect(responseJson[0]).to.have.property('_id');",
+                  "    pm.expect(responseJson[0]).to.have.property('title');",
+                  "    pm.expect(responseJson[0]).to.have.property('subject');",
+                  "    pm.expect(responseJson[0]).to.have.property('status');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials?subject=Mathematics&tags=algebra&sortBy=createdAt&sortOrder=-1&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials"],
+              "query": [
+                {
+                  "key": "subject",
+                  "value": "Mathematics"
+                },
+                {
+                  "key": "tags",
+                  "value": "algebra"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "Sort by: createdAt, downloadCount, viewCount, rating.average"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "-1",
+                  "description": "1 for ascending, -1 for descending"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.4 GET - Get Material Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] GET Detail - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] GET Detail - Has complete material object', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.expect(responseJson.data).to.have.property('title');",
+                  "  pm.expect(responseJson.data).to.have.property('description');",
+                  "  pm.expect(responseJson.data).to.have.property('subject');",
+                  "  pm.expect(responseJson.data).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialId}}"]
+            }
+          }
+        },
+        {
+          "name": "1.5 GET - Get Material Details (Invalid ID - Negative Test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Materials] GET Detail Invalid ID - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Materials] GET Detail Invalid ID - Error message present', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/invalid-id-123",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "invalid-id-123"]
+            }
+          }
+        },
+        {
+          "name": "1.6 PUT - Update Material Metadata",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] PUT Update - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] PUT Update - Response has success', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] PUT Update - Updated fields reflected', function () {",
+                  "  pm.expect(responseJson.data.title).to.equal('Advanced Introduction to Algebra - Complete Guide 2024');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced Introduction to Algebra - Complete Guide 2024\",\n  \"description\": \"Updated comprehensive guide with new examples and practice problems\",\n  \"tags\": \"algebra,equations,functions,math,updated\",\n  \"difficulty\": \"intermediate\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialId}}"]
+            }
+          }
+        },
+        {
+          "name": "1.7 POST - Add Review to Material",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] POST Review - Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] POST Review - Review created', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Excellent material! Very well structured and easy to follow. Great examples and clear explanations.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialId}}/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialId}}", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "1.8 GET - Get Pending Materials (Admin Only)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] GET Pending - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] GET Pending - Response is array', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/admin/pending?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "admin", "pending"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.9 PUT - Approve Material (Admin Only)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] PUT Approve - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] PUT Approve - Status changed to approved', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('approved');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Material meets all quality standards. Approved for publication.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "1.10 PUT - Reject Material (Admin Only)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Materials] PUT Reject - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Materials] PUT Reject - Status changed to rejected', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('rejected');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Material contains outdated information and does not meet curriculum standards for Grade 10.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialIdLink}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialIdLink}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "1.11 DELETE - Delete Material",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Materials] DELETE - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Materials] DELETE - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialIdLink}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialIdLink}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Peer Tutoring (Sessions & Bookings)",
+      "description": "Schedule, manage, and complete tutoring sessions",
+      "item": [
+        {
+          "name": "2.1 POST - Create Booking (Student requests tutor)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Bookings] POST Create - Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] POST Create - Booking created', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.environment.set('sessionId', responseJson.data._id);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] POST Create - Status is pending', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('pending');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tutorId\": \"{{tutorId}}\",\n  \"subject\": \"Mathematics\",\n  \"grade\": 10,\n  \"date\": \"2026-03-05\",\n  \"startTime\": \"15:00\",\n  \"duration\": 60,\n  \"timezone\": \"Asia/Karachi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "2.2 POST - Check Tutor Availability",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Bookings] POST Check Availability - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] POST Check Availability - Has available field', function () {",
+                  "  pm.expect(responseJson).to.have.property('available');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tutorId\": \"{{tutorId}}\",\n  \"date\": \"2026-03-05\",\n  \"startTime\": \"14:00\",\n  \"duration\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/check-availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "check-availability"]
+            }
+          }
+        },
+        {
+          "name": "2.3 GET - Get My Sessions (Student/Tutor)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Bookings] GET My Sessions - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Bookings] GET My Sessions - Response is array', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/student/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "student", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "2.4 GET - Get Upcoming Bookings",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Bookings] GET Upcoming - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Bookings] GET Upcoming - Array of bookings', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/upcoming",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "upcoming"]
+            }
+          }
+        },
+        {
+          "name": "2.5 GET - Get Session Details",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Bookings] GET Detail - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] GET Detail - Has complete booking object', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.expect(responseJson.data).to.have.property('studentId');",
+                  "  pm.expect(responseJson.data).to.have.property('tutorId');",
+                  "  pm.expect(responseJson.data).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "2.6 POST - Confirm Booking (Tutor accepts)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Bookings] POST Confirm - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] POST Confirm - Status changed to confirmed', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('confirmed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{sessionId}}/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{sessionId}}", "confirm"]
+            }
+          }
+        },
+        {
+          "name": "2.7 POST - Cancel Booking",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Bookings] POST Cancel - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] POST Cancel - Status changed to cancelled', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('cancelled');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Schedule conflict. Need to reschedule.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{sessionId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{sessionId}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "2.8 POST - Complete Session",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Bookings] POST Complete - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Bookings] POST Complete - Status changed to completed', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('completed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{sessionId}}/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings", "{{sessionId}}", "complete"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Safety & Moderation (Reports)",
+      "description": "Report content/users and manage moderation queue",
+      "item": [
+        {
+          "name": "3.1 POST - Submit Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Reports] POST Submit - Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('[Reports] POST Submit - Report created', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.environment.set('reportId', responseJson.data._id);",
+                  "});",
+                  "",
+                  "pm.test('[Reports] POST Submit - Status is pending', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('pending');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportedType\": \"user\",\n  \"reportedId\": \"507f1f77bcf86cd799439011\",\n  \"reason\": \"harassment\",\n  \"description\": \"User sent inappropriate messages in chat and has been harassing other students on the platform.\",\n  \"evidence\": [\n    \"https://example.com/screenshot1.png\",\n    \"https://example.com/screenshot2.png\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "reports"]
+            }
+          }
+        },
+        {
+          "name": "3.2 GET - List Reports (Moderator)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('moderatorToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Reports] GET List - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Reports] GET List - Array of reports', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/reports?status=pending&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "reports"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "pending, under_review, resolved, dismissed"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3 GET - Get Report Details",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('moderatorToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Reports] GET Detail - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Reports] GET Detail - Has complete report object', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('_id');",
+                  "  pm.expect(responseJson.data).to.have.property('reportedType');",
+                  "  pm.expect(responseJson.data).to.have.property('reason');",
+                  "  pm.expect(responseJson.data).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/reports/{{reportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "reports", "{{reportId}}"]
+            }
+          }
+        },
+        {
+          "name": "3.4 PUT - Resolve Report (Moderator Review)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('moderatorToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Reports] PUT Resolve - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Reports] PUT Resolve - Status changed to resolved', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('resolved');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"user_suspended\",\n  \"notes\": \"Evidence reviewed. User has violated harassment policy. 7-day suspension applied.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/reports/{{reportId}}/resolve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "reports", "{{reportId}}", "resolve"]
+            }
+          }
+        },
+        {
+          "name": "3.5 PUT - Dismiss Report (Moderator)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('moderatorToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Reports] PUT Dismiss - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Reports] PUT Dismiss - Status changed to dismissed', function () {",
+                  "  pm.expect(responseJson.data.status).to.equal('dismissed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Report reviewed. Insufficient evidence. No policy violation found. Report dismissed.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/reports/{{reportId}}/dismiss",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "reports", "{{reportId}}", "dismiss"]
+            }
+          }
+        },
+        {
+          "name": "3.6 GET - Get Moderation Statistics",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('moderatorToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Moderation] GET Stats - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Moderation] GET Stats - Has statistics data', function () {",
+                  "  pm.expect(responseJson).to.have.property('data');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/statistics?timeframe=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "statistics"],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": "30d",
+                  "description": "7d, 30d, 90d"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Admin Features (Dashboard & User Management)",
+      "description": "Platform analytics and administrative user actions",
+      "item": [
+        {
+          "name": "4.1 GET - Admin Dashboard Statistics",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Admin] GET Statistics - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Admin] GET Statistics - Has platform metrics', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('totalUsers');",
+                  "  pm.expect(responseJson.data).to.have.property('totalSessions');",
+                  "  pm.expect(responseJson.data).to.have.property('totalMaterials');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "statistics"]
+            }
+          }
+        },
+        {
+          "name": "4.2 GET - List All Tutors (Admin)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Admin] GET Tutors - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Admin] GET Tutors - Array of tutors', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tutors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tutors"]
+            }
+          }
+        },
+        {
+          "name": "4.3 POST - Verify Tutor (Admin Only)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Admin] POST Verify Tutor - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Admin] POST Verify Tutor - Tutor verified', function () {",
+                  "  pm.expect(responseJson.data).to.have.property('isVerified', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tutors/{{tutorId}}/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tutors", "{{tutorId}}", "verify"]
+            }
+          }
+        },
+        {
+          "name": "4.4 GET - List All Users (Admin)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Admin] GET Users - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Admin] GET Users - Array of users', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "4.5 PUT - Update User (Admin)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "pm.test('[Admin] PUT Update User - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('[Admin] PUT Update User - User updated', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false,\n  \"suspensionReason\": \"Policy violation: Harassment. Suspended for 7 days.\",\n  \"suspensionEndDate\": \"2026-03-07\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "4.6 DELETE - Delete User (Admin)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Admin] DELETE User - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Admin] DELETE User - Success message', function () {",
+                  "  pm.expect(responseJson).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "4.7 GET - Get Pending Materials (Admin)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('adminToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Admin] GET Pending Materials - Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Admin] GET Pending Materials - Array', function () {",
+                  "  pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/admin/pending?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "admin", "pending"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Negative Test Cases (Error Handling)",
+      "description": "Test unauthorized access, invalid IDs, and permission denial",
+      "item": [
+        {
+          "name": "5.1 POST - Upload Material without Authentication (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Material No Auth - Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Material No Auth - Error message', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Test Material",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "upload"]
+            }
+          }
+        },
+        {
+          "name": "5.2 PUT - Approve Material as Student (403 Forbidden)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] PUT Approve No Permission - Status 403', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] PUT Approve No Permission - Forbidden message', function () {",
+                  "  pm.expect(responseJson.message).to.include('not authorized') || pm.expect(responseJson.message).to.include('forbidden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Approving as student - should fail\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/{{materialId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "{{materialId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "5.3 GET - Invalid Material ID (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] GET Material Invalid ID - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] GET Material Invalid ID - Error detail', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materials/not-a-valid-mongo-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "materials", "not-a-valid-mongo-id"]
+            }
+          }
+        },
+        {
+          "name": "5.4 POST - Create Booking with Missing Fields (400)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Booking Missing Fields - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Booking Missing Fields - Validation error', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Mathematics\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "5.5 POST - Submit Report with Invalid Type (400)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] POST Report Invalid Type - Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] POST Report Invalid Type - Validation error', function () {",
+                  "  pm.expect(responseJson).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportedType\": \"invalid_type\",\n  \"reportedId\": \"507f1f77bcf86cd799439011\",\n  \"reason\": \"harassment\",\n  \"description\": \"Invalid report type test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/moderation/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "moderation", "reports"]
+            }
+          }
+        },
+        {
+          "name": "5.6 GET - Admin Endpoint as Regular User (403)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.add({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + pm.environment.get('jwtToken')",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('[Negative] GET Admin Stats as Student - Status 403', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "const responseJson = pm.response.json();",
+                  "pm.test('[Negative] GET Admin Stats - Forbidden message', function () {",
+                  "  pm.expect(responseJson.message).to.include('not authorized') || pm.expect(responseJson.message).to.include('forbidden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "statistics"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

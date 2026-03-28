@@ -46,6 +46,13 @@ api.interceptors.response.use(
 
 // Helper function to handle API responses
 const handleResponse = (response) => {
+  // Backend already returns {success, data, message} structure
+  // Just return it directly without double wrapping
+  if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+    return response.data;
+  }
+  
+  // Fallback for responses that don't follow the standard structure
   return {
     success: true,
     data: response.data,
@@ -55,6 +62,12 @@ const handleResponse = (response) => {
 
 // Helper function to handle API errors
 const handleError = (error) => {
+  // If backend returns {success: false, message}, use that
+  if (error.response?.data && typeof error.response.data === 'object' && 'success' in error.response.data) {
+    return error.response.data;
+  }
+  
+  // Otherwise construct error response
   const message = error.response?.data?.message || error.message || 'An error occurred';
   return {
     success: false,

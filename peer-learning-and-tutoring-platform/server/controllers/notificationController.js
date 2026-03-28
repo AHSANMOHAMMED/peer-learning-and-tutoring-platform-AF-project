@@ -13,7 +13,7 @@ const getNotifications = async (req, res) => {
   try {
     const { page = 1, limit = 20, type, isRead } = req.query;
     
-    const result = await getUserNotifications(req.user.id, {
+    const result = await getUserNotifications(req.user._id, {
       page: parseInt(page),
       limit: parseInt(limit),
       type,
@@ -39,7 +39,7 @@ const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const notification = await markNotificationAsRead(id, req.user.id);
+    const notification = await markNotificationAsRead(id, req.user._id);
     
     res.json({
       success: true,
@@ -59,7 +59,7 @@ const markAsRead = async (req, res) => {
 // Mark all notifications as read
 const markAllAsRead = async (req, res) => {
   try {
-    const count = await markAllNotificationsAsRead(req.user.id);
+    const count = await markAllNotificationsAsRead(req.user._id);
     
     res.json({
       success: true,
@@ -81,7 +81,7 @@ const deleteNotificationController = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const notification = await deleteNotification(id, req.user.id);
+    const notification = await deleteNotification(id, req.user._id);
     
     res.json({
       success: true,
@@ -101,7 +101,7 @@ const deleteNotificationController = async (req, res) => {
 // Get unread count
 const getUnreadCount = async (req, res) => {
   try {
-    const count = await getUnreadNotificationCount(req.user.id);
+    const count = await getUnreadNotificationCount(req.user._id);
     
     res.json({
       success: true,

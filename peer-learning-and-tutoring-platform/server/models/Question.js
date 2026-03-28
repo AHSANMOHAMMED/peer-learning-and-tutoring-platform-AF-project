@@ -18,11 +18,21 @@ const questionSchema = new mongoose.Schema({
     trim: true,
     maxlength: 30
   }],
-  category: {
+  subject: {
     type: String,
     required: true,
-    enum: ['Mathematics', 'Science', 'English', 'History', 'Geography', 'Computer Science', 'Physics', 'Chemistry', 'Biology', 'Other'],
-    default: 'Other'
+    enum: [
+      'Mathematics', 'English', 'Science', 'History', 'Geography', 'Civic Education', 
+      'Health & Physical Education', 'Buddhism', 'Islam', 'Saivaneri', 
+      'Roman Catholicism', 'Christianity', 'Sinhala', 'Tamil', 
+      'ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies'
+    ]
+  },
+  grade: {
+    type: Number,
+    required: true,
+    min: 6,
+    max: 13
   },
   author: {
     type: mongoose.Schema.Types.ObjectId,
@@ -66,12 +76,12 @@ const questionSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-questionSchema.index({ author: 1, createdAt: -1 });
-questionSchema.index({ category: 1, createdAt: -1 });
-questionSchema.index({ tags: 1 });
-questionSchema.index({ upvotes: -1 });
-questionSchema.index({ views: -1 });
-questionSchema.index({ createdAt: -1 });
+// questionSchema.index({ author: 1, createdAt: -1 });
+// questionSchema.index({ category: 1, createdAt: -1 });
+// questionSchema.index({ tags: 1 });
+// questionSchema.index({ upvotes: -1 });
+// questionSchema.index({ views: -1 });
+// questionSchema.index({ createdAt: -1 });
 
 // Virtual for vote score
 questionSchema.virtual('voteScore').get(function() {

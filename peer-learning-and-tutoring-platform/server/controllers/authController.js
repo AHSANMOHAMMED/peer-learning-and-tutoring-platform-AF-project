@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const AuthService = require('../services/authService');
+const emailService = require('../services/emailService');
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -14,45 +16,20 @@ const register = async (req, res) => {
   try {
     const { username, email, password, role, profile } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this email or username already exists'
-      });
-    }
-
-    // Create new user
-    const user = new User({
-      username,
-      email,
-      password,
-      role,
-      profile
-    });
-
-    await user.save();
-
-    // Generate token
-    const token = generateToken(user._id);
+    // Use AuthService to register user
+    const result = await AuthService.registerUser({ username, email, password, role, profile });
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      data: {
-        token,
-        user: user.toPublicJSON()
-      }
+      data: result
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('already exists') ? 400 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Registration failed',
+      message: error.message || 'Registration failed',
       error: error.message
     });
   }
@@ -63,54 +40,20 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email or username
-    const user = await User.findByEmailOrUsername(email);
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is deactivated'
-      });
-    }
-
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
-    // Generate token
-    const token = generateToken(user._id);
+    // Use AuthService to authenticate user
+    const result = await AuthService.loginUser(email, password);
 
     res.json({
       success: true,
       message: 'Login successful',
-      data: {
-        token,
-        user: user.toPublicJSON()
-      }
+      data: result
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('Invalid credentials') || error.message.includes('deactivated') ? 401 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Login failed',
+      message: error.message || 'Login failed',
       error: error.message
     });
   }
@@ -166,28 +109,8 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    // Verify current password
-    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
-
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password is incorrect'
-      });
-    }
-
-    // Update password
-    user.password = newPassword;
-    await user.save();
+    // Use AuthService to change password
+    await AuthService.changePassword(req.userId, currentPassword, newPassword);
 
     res.json({
       success: true,
@@ -195,9 +118,10 @@ const changePassword = async (req, res) => {
     });
   } catch (error) {
     console.error('Change password error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('incorrect') ? 400 : error.message.includes('not found') ? 404 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Failed to change password',
+      message: error.message || 'Failed to change password',
       error: error.message
     });
   }
@@ -217,20 +141,24 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    // Use AuthService to generate reset token
+    const resetToken = await AuthService.generateResetToken(user);
 
-    user.passwordResetToken = resetToken;
-    user.passwordResetExpires = resetTokenExpiry;
-    await user.save();
-
-    // TODO: Send email with reset token
+    // Log the token for development
     console.log(`Password reset token for ${email}: ${resetToken}`);
+
+    // Try to send email, but don't fail if it doesn't work
+    try {
+      if (process.env.EMAIL_USER) {
+        await emailService.sendPasswordResetCode(email, resetToken);
+      }
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError.message);
+    }
 
     res.json({
       success: true,
-      message: 'Password reset email sent'
+      message: 'Password reset code sent. Check console for development.'
     });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -247,23 +175,8 @@ const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    const user = await User.findOne({
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: new Date() }
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired reset token'
-      });
-    }
-
-    // Update password and clear reset token
-    user.password = newPassword;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save();
+    // Use AuthService to reset password
+    await AuthService.resetPassword(token, newPassword);
 
     res.json({
       success: true,
@@ -271,9 +184,10 @@ const resetPassword = async (req, res) => {
     });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({
+    const statusCode = error.message.includes('Invalid') || error.message.includes('expired') ? 400 : 500;
+    res.status(statusCode).json({
       success: false,
-      message: 'Failed to reset password',
+      message: error.message || 'Failed to reset password',
       error: error.message
     });
   }

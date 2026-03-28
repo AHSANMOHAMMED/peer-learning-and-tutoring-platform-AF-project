@@ -1,0 +1,76 @@
+{
+  "_postman_id": "member-c-environment",
+  "name": "PeerLearn Local",
+  "description": "Environment variables for Member C workflow testing. Base URL, JWT tokens, and resource IDs.",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "enabled": true,
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "JWT bearer token for student/regular user. Get from POST /api/auth/login response"
+    },
+    {
+      "key": "moderatorToken",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "JWT token for moderator role. Login as moderator user"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "JWT token for admin role. Login with admin credentials"
+    },
+    {
+      "key": "studentId",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Current student/user ID. Extract from GET /api/users/profile or login response"
+    },
+    {
+      "key": "tutorId",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Tutor/Teacher ID. Get from GET /api/tutors response"
+    },
+    {
+      "key": "materialId",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Study material ID. Extract from POST /api/materials/upload response"
+    },
+    {
+      "key": "materialIdLink",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Material link URL ID. Extract from POST /api/materials/upload-link response"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Tutoring session/booking ID. Extract from POST /api/bookings response"
+    },
+    {
+      "key": "reportId",
+      "value": "",
+      "enabled": true,
+      "type": "string",
+      "description": "Report ID for moderation cases. Extract from POST /api/moderation/reports response"
+    }
+  ]
+}

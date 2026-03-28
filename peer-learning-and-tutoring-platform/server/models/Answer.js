@@ -21,6 +21,16 @@ const answerSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  status: {
+    type: String,
+    enum: ['pending', 'correct', 'incorrect', 'needs_improvement'],
+    default: 'pending'
+  },
+  tutorComment: {
+    type: String,
+    trim: true,
+    maxlength: 1000
+  },
   acceptedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -45,11 +55,11 @@ const answerSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-answerSchema.index({ question: 1, createdAt: 1 });
-answerSchema.index({ author: 1, createdAt: -1 });
-answerSchema.index({ isAccepted: 1 });
-answerSchema.index({ upvotes: -1 });
-answerSchema.index({ createdAt: -1 });
+// answerSchema.index({ question: 1, createdAt: 1 });
+// answerSchema.index({ author: 1, createdAt: -1 });
+// answerSchema.index({ isAccepted: 1 });
+// answerSchema.index({ upvotes: -1 });
+// answerSchema.index({ createdAt: -1 });
 
 // Virtual for vote score
 answerSchema.virtual('voteScore').get(function() {

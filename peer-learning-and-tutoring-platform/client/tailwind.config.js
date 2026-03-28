@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         primary: {
           50: '#eff6ff',
@@ -30,8 +33,42 @@ export default {
           700: '#15803d',
           800: '#166534',
           900: '#14532d',
-        }
-      }
+        },
+        // Role-specific theme colors
+        student: {
+          light: '#60a5fa',
+          DEFAULT: '#3b82f6',
+          dark: '#1d4ed8',
+          gradient: 'from-blue-500 to-indigo-600',
+        },
+        tutor: {
+          light: '#34d399',
+          DEFAULT: '#10b981',
+          dark: '#047857',
+          gradient: 'from-emerald-500 to-teal-600',
+        },
+        admin: {
+          light: '#f87171',
+          DEFAULT: '#dc2626',
+          dark: '#991b1b',
+          gradient: 'from-slate-700 to-slate-900',
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.5s ease-out',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+      },
     },
   },
   plugins: [],

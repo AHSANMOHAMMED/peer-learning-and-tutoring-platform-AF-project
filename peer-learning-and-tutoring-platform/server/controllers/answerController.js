@@ -1,8 +1,7 @@
 const Answer = require('../models/Answer');
 const Question = require('../models/Question');
-const Vote = require('../models/Vote');
-const Comment = require('../models/Comment');
-const PointTransaction = require('../models/PointTransaction');
+// const Vote = require('../models/Vote'); // Temporarily disabled
+// const Comment = require('../models/Comment'); // Temporarily disabled
 const { validationResult } = require('express-validator');
 
 // Get answers for a question
@@ -12,7 +11,8 @@ const getAnswersByQuestion = async (req, res) => {
     const {
       page = 1,
       limit = 20,
-      sortBy = 'oldest'
+      sortBy = 'oldest',
+      status = 'all'
     } = req.query;
 
     // Check if question exists
@@ -27,22 +27,34 @@ const getAnswersByQuestion = async (req, res) => {
       sortBy
     };
 
-    const answers = await Answer.getByQuestion(questionId, options);
+    // Filter by status if provided
+    const query = { question: questionId };
+    if (status !== 'all') {
+      query.status = status;
+    }
+
+    const answers = await Answer.find(query)
+      .sort({ createdAt: sortBy === 'newest' ? -1 : 1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation')
+      .populate('acceptedBy', 'username profile.firstName profile.lastName');
 
     // Get user votes for each answer if authenticated
     let userVotes = {};
-    if (req.user) {
-      const answerIds = answers.map(a => a._id);
-      const votes = await Vote.find({
-        targetType: 'answer',
-        targetId: { $in: answerIds },
-        user: req.user._id
-      });
-      userVotes = votes.reduce((acc, vote) => {
-        acc[vote.targetId.toString()] = vote.voteType;
-        return acc;
-      }, {});
-    }
+    // TODO: Re-enable when Vote model is properly integrated
+    // if (req.user) {
+    //   const answerIds = answers.map(a => a._id);
+    //   const votes = await Vote.find({
+    //     targetType: 'answer',
+    //     targetId: { $in: answerIds },
+    //     user: req.user._id
+    //   });
+    //   userVotes = votes.reduce((acc, vote) => {
+    //     acc[vote.targetId.toString()] = vote.voteType;
+    //     return acc;
+    //   }, {});
+    // }
 
     const answersWithVotes = answers.map(answer => ({
       ...answer.toObject(),
@@ -83,13 +95,19 @@ const getAnswerById = async (req, res) => {
 
     // Get user's vote if authenticated
     let userVote = null;
-    if (req.user) {
-      userVote = await Vote.getUserVote('answer', id, req.user._id);
-    }
+    // TODO: Re-enable when Vote model is properly integrated
+    // if (req.user) {
+    //   const vote = await Vote.findOne({
+    //     targetType: 'answer',
+    //     targetId: id,
+    //     user: req.user._id
+    //   });
+    //   userVote = vote ? vote.voteType : null;
+    // }
 
     res.json({
       answer,
-      userVote: userVote ? userVote.voteType : null
+      userVote: userVote
     });
   } catch (error) {
     console.error('Error in getAnswerById:', error);
@@ -103,11 +121,7 @@ const createAnswer = async (req, res) => {
     console.log('Creating answer with data:', req.body);
     console.log('Question ID:', req.params.questionId);
     
-    // Temporarily disable validation for testing
-    // const errors = validationResult(req);
-    // if (!errors.isEmpty()) {
-    //   return res.status(400).json({ errors: errors.array() });
-    // }
+ 
 
     const { questionId } = req.params;
     const { body } = req.body;
@@ -229,8 +243,9 @@ const deleteAnswer = async (req, res) => {
     }
 
     // Delete related votes and comments
-    await Vote.deleteMany({ targetType: 'answer', targetId: id });
-    await Comment.deleteMany({ targetType: 'answer', targetId: id });
+    // TODO: Re-enable when Vote and Comment models are properly integrated
+    // await Vote.deleteMany({ targetType: 'answer', targetId: id });
+    // await Comment.deleteMany({ targetType: 'answer', targetId: id });
 
     await answer.remove();
 
@@ -262,21 +277,23 @@ const acceptAnswer = async (req, res) => {
     } else {
       await answer.accept(req.user._id);
 
+      // TODO: Re-enable points system when PointTransaction model is restored
       // Award points for accepted answer
-      await PointTransaction.createTransaction({
-        user: answer.author,
-        points: 15,
-        type: 'answer_accepted',
-        referenceId: answer._id,
-        referenceType: 'answer',
-        description: 'Answer was accepted'
-      });
+      // await PointTransaction.createTransaction({
+      //   user: answer.author,
+      //   points: 15,
+      //   type: 'answer_accepted',
+      //   referenceId: answer._id,
+      //   referenceType: 'answer',
+      //   description: 'Answer was accepted'
+      // });
 
+      // TODO: Re-enable user stats when User model is properly integrated
       // Update answer author's forum stats
-      const User = require('../models/User');
-      const answerAuthor = await User.findById(answer.author);
-      await answerAuthor.updateForumStats('bestAnswers');
-      await answerAuthor.addSubjectPoints(answer.question.category, 15);
+      // const User = require('../models/User');
+      // const answerAuthor = await User.findById(answer.author);
+      // await answerAuthor.updateForumStats('bestAnswers');
+      // await answerAuthor.addSubjectPoints(answer.question.category, 15);
     }
 
     await answer.populate([
@@ -297,6 +314,58 @@ const acceptAnswer = async (req, res) => {
   } catch (error) {
     console.error('Error in acceptAnswer:', error);
     res.status(500).json({ error: 'Failed to accept answer' });
+  }
+};
+
+// Update answer status (for tutors)
+const updateAnswerStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, tutorComment } = req.body;
+
+    // Validate status
+    const validStatuses = ['pending', 'correct', 'incorrect', 'needs_improvement'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const answer = await Answer.findById(id).populate('question');
+    if (!answer) {
+      return res.status(404).json({ error: 'Answer not found' });
+    }
+
+    // Check if user is tutor of the question or admin
+    if (answer.question.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this answer status' });
+    }
+
+    answer.status = status;
+    answer.tutorComment = tutorComment || '';
+    
+    // If status is correct, also mark as accepted
+    if (status === 'correct') {
+      answer.isAccepted = true;
+      answer.acceptedBy = req.user._id;
+      answer.acceptedAt = new Date();
+    }
+
+    await answer.save();
+    await answer.populate('author', 'username profile.firstName profile.lastName profile.avatar');
+    await answer.populate('acceptedBy', 'username profile.firstName profile.lastName');
+
+    // Emit real-time event
+    if (global.io) {
+      global.io.to(answer.author.toString()).emit('answerStatusUpdated', {
+        answer,
+        status,
+        tutorComment
+      });
+    }
+
+    res.json(answer);
+  } catch (error) {
+    console.error('Error in updateAnswerStatus:', error);
+    res.status(500).json({ error: 'Failed to update answer status' });
   }
 };
 
@@ -330,5 +399,6 @@ module.exports = {
   updateAnswer,
   deleteAnswer,
   acceptAnswer,
+  updateAnswerStatus,
   getAnswerStats
 };

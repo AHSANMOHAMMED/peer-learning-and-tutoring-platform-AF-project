@@ -33,12 +33,12 @@ const userBadgeSchema = new mongoose.Schema({
 });
 
 // Compound index to prevent duplicate badges
-userBadgeSchema.index({ user: 1, badge: 1 }, { unique: true });
+// userBadgeSchema.index({ user: 1, badge: 1 }, { unique: true });
 
 // Indexes for better query performance
-userBadgeSchema.index({ user: 1, earnedAt: -1 });
-userBadgeSchema.index({ badge: 1, earnedAt: -1 });
-userBadgeSchema.index({ isDisplayed: 1 });
+// userBadgeSchema.index({ user: 1, earnedAt: -1 });
+// userBadgeSchema.index({ badge: 1, earnedAt: -1 });
+// userBadgeSchema.index({ isDisplayed: 1 });
 
 // Static method to award badge to user
 userBadgeSchema.statics.awardBadge = async function(userId, badgeId, metadata = {}) {

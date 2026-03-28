@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Review } from '../models/Review';
 import { reviewService } from '../services/reviewService';
 
@@ -231,10 +231,10 @@ export function useReviewViewModel() {
     setState(reviewViewModel.getState());
   }, []);
 
-  useState(() => {
+  useEffect(() => {
     const unsubscribe = reviewViewModel.subscribe(updateState);
     return unsubscribe;
-  });
+  }, [updateState]);
 
   return {
     ...state,

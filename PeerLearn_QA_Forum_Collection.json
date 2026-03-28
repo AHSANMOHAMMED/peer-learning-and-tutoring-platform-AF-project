@@ -1,0 +1,676 @@
+{
+  "info": {
+    "_postman_id": "qa-forum-collection",
+    "name": "PeerLearn - Q&A Forum",
+    "description": "Complete Postman Collection for Q&A Forum APIs including Questions, Answers, Comments, Voting, and Leaderboards. Tests all CRUD operations and voting mechanisms.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Questions CRUD",
+      "item": [
+        {
+          "name": "1.1 POST - Create Question",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (!jwt) {",
+                  "  throw new Error('Missing jwtToken. Select environment and run Auth login/register first.');",
+                  "}",
+                  "pm.request.headers.upsert({",
+                  "  key: 'Authorization',",
+                  "  value: 'Bearer ' + jwt",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 Created', function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Question has required fields', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('_id');",
+                  "  pm.expect(jsonData).to.have.property('title');",
+                  "  pm.expect(jsonData).to.have.property('body');",
+                  "  pm.expect(jsonData).to.have.property('author');",
+                  "  pm.expect(jsonData).to.have.property('tags');",
+                  "  pm.expect(jsonData).to.have.property('createdAt');",
+                  "});",
+                  "pm.test('Extract question ID', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.environment.set('questionId', jsonData._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"How to solve quadratic equations?\",\n  \"content\": \"I'm struggling with the quadratic formula. Can someone explain step by step how to apply it? I need help understanding when to use which method.\",\n  \"subject\": \"Mathematics\",\n  \"tags\": [\"algebra\", \"equations\", \"help\"],\n  \"grade\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/questions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions"]
+            }
+          }
+        },
+        {
+          "name": "1.2 GET - Get All Questions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has questions array', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('questions');",
+                  "  pm.expect(jsonData.questions).to.be.an('array');",
+                  "});",
+                  "pm.test('Questions have required fields', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  if(jsonData.questions && jsonData.questions.length > 0) {",
+                  "    pm.expect(jsonData.questions[0]).to.have.property('_id');",
+                  "    pm.expect(jsonData.questions[0]).to.have.property('title');",
+                  "    pm.expect(jsonData.questions[0]).to.have.property('author');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/questions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions"]
+            }
+          }
+        },
+        {
+          "name": "1.3 GET - Get Question by ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Question has all details', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.question).to.have.property('_id');",
+                  "  pm.expect(jsonData.question).to.have.property('title');",
+                  "  pm.expect(jsonData.question).to.have.property('body');",
+                  "  pm.expect(jsonData.question).to.have.property('views');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/{{questionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "{{questionId}}"]
+            }
+          }
+        },
+        {
+          "name": "1.4 PUT - Update Question",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Question updated successfully', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.title).to.include('Updated');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated: How to solve quadratic equations?\",\n  \"content\": \"I'm struggling with the quadratic formula. Can someone explain step by step? UPDATED\",\n  \"tags\": [\"algebra\", \"equations\", \"help\", \"urgent\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/{{questionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "{{questionId}}"]
+            }
+          }
+        },
+        {
+          "name": "1.5 DELETE - Delete Question",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Question deleted successfully', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.message).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/{{questionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "{{questionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Answers & Comments",
+      "item": [
+        {
+          "name": "2.1 POST - Post Answer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 Created', function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Answer has required fields', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('_id');",
+                  "  pm.expect(jsonData).to.have.property('body');",
+                  "  pm.expect(jsonData).to.have.property('author');",
+                  "  pm.expect(jsonData).to.have.property('voteScore');",
+                  "});",
+                  "pm.test('Extract answer ID', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.environment.set('answerId', jsonData._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"The quadratic formula is x = (-b ± √(b²-4ac)) / 2a. First, identify your a, b, and c coefficients from the equation ax²+bx+c=0. Then substitute into the formula. For example, if you have x²+3x+2=0, then a=1, b=3, c=2.\",\n  \"codeExample\": \"x = (-3 ± √(9-8)) / 2 = (-3 ± 1) / 2\\nSolution: x = -1 or x = -2\",\n  \"isMarkedAsCorrect\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/{{questionId}}/answers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "{{questionId}}", "answers"]
+            }
+          }
+        },
+        {
+          "name": "2.2 GET - Get All Answers for Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has answers array', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('answers');",
+                  "  pm.expect(jsonData.answers).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/{{questionId}}/answers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "{{questionId}}", "answers"]
+            }
+          }
+        },
+        {
+          "name": "2.3 POST - Add Comment to Answer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 Created', function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Comment created successfully', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('_id');",
+                  "  pm.expect(jsonData).to.have.property('body');",
+                  "  pm.expect(jsonData).to.have.property('author');",
+                  "});",
+                  "pm.test('Extract comment ID', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.environment.set('commentId', jsonData._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Great explanation! This really helped me understand the ± part of the formula.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/answers/{{answerId}}/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "answers", "{{answerId}}", "comments"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Voting System",
+      "item": [
+        {
+          "name": "3.1 POST - Upvote Question",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Vote recorded successfully', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('voteCounts');",
+                  "  pm.expect(jsonData.voteCounts).to.have.property('upvotes');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"question\",\n  \"targetId\": \"{{questionId}}\",\n  \"voteType\": \"up\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/votes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "votes"]
+            }
+          }
+        },
+        {
+          "name": "3.2 POST - Upvote Answer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const jwt = pm.environment.get('jwtToken');",
+                  "if (jwt) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + jwt",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Vote counted', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('voteCounts');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"answer\",\n  \"targetId\": \"{{answerId}}\",\n  \"voteType\": \"up\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/votes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "votes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Leaderboards",
+      "item": [
+        {
+          "name": "4.1 GET - Top Question Answerers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK or 404 Not Found', function() {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Response has data', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.exist;",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leaderboard/top-answerers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leaderboard", "top-answerers"]
+            }
+          }
+        },
+        {
+          "name": "4.2 GET - Top Questions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 OK or 404 Not Found', function() {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Response has data', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.exist;",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leaderboard/trending-questions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leaderboard", "trending-questions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Negative Tests (Error Handling)",
+      "item": [
+        {
+          "name": "5.1 POST - Create Question Without Auth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', function() {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error message shown', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.error || jsonData.message).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Question\",\n  \"content\": \"This should fail\",\n  \"subject\": \"Mathematics\",\n  \"grade\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/questions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions"]
+            }
+          }
+        },
+        {
+          "name": "5.2 GET - Question Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 Not Found or 500', function() {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([404, 500]);",
+                  "});",
+                  "pm.test('Error message shown', function() {",
+                  "  const jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.error).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/invalid-question-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "invalid-question-id"]
+            }
+          }
+        },
+        {
+          "name": "5.3 POST - Answer Without Auth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', function() {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"This should fail\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/questions/{{questionId}}/answers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "questions", "{{questionId}}", "answers"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

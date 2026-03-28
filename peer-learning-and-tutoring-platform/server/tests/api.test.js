@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../index'); // Your Express app
+const { app } = require('../index'); // Your Express app
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const LectureCourse = require('../models/LectureCourse');
@@ -10,24 +10,25 @@ const TEST_DB_URI = process.env.TEST_MONGO_URI || 'mongodb://localhost:27017/pee
 
 // Test data
 const testUser = {
-  name: 'Test User',
+  username: 'testuser',
   email: 'test@example.com',
   password: 'password123',
   role: 'student',
   profile: {
-    grade: '10',
-    subjects: ['Mathematics', 'Science']
+    firstName: 'Test',
+    lastName: 'User',
+    grade: 10
   }
 };
 
 const testTutor = {
-  name: 'Test Tutor',
+  username: 'testtutor',
   email: 'tutor@example.com',
   password: 'password123',
   role: 'tutor',
   profile: {
-    expertise: ['Mathematics'],
-    grades: ['9', '10', '11']
+    firstName: 'Test',
+    lastName: 'Tutor'
   }
 };
 
@@ -58,7 +59,7 @@ describe('Authentication API', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user).toHaveProperty('_id');
+      expect(res.body.data.user).toHaveProperty('id');
       expect(res.body.data.user.email).toBe(testUser.email);
     });
 
@@ -129,7 +130,7 @@ describe('User API', () => {
       .post('/api/auth/register')
       .send(testUser);
     
-    userId = registerRes.body.data.user._id;
+    userId = registerRes.body.data.user.id;
     authToken = registerRes.body.data.token;
   });
 
@@ -155,7 +156,6 @@ describe('User API', () => {
   describe('PUT /api/users/profile', () => {
     it('should update user profile', async () => {
       const updateData = {
-        name: 'Updated Name',
         profile: {
           bio: 'Test bio'
         }
@@ -242,7 +242,7 @@ describe('Group Rooms API', () => {
       .send(testUser);
     
     authToken = res.body.data.token;
-    userId = res.body.data.user._id;
+    userId = res.body.data.user.id;
   });
 
   describe('POST /api/groups', () => {
@@ -380,6 +380,7 @@ describe('Feature Flags API', () => {
       .post('/api/auth/register')
       .send({
         ...testUser,
+        username: 'adminuser',
         email: 'admin@test.com',
         role: 'admin'
       });
@@ -390,6 +391,7 @@ describe('Feature Flags API', () => {
       .post('/api/auth/register')
       .send({
         ...testUser,
+        username: 'regularuser',
         email: 'user@test.com'
       });
     userToken = userRes.body.data.token;
@@ -434,6 +436,6 @@ describe('Health Check', () => {
       .get('/api/health');
 
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('healthy');
+    expect(res.body.status).toBe('OK');
   });
 });

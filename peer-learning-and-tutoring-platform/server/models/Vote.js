@@ -26,9 +26,9 @@ const voteSchema = new mongoose.Schema({
 });
 
 // Compound index to ensure one vote per user per target
-voteSchema.index({ targetType: 1, targetId: 1, user: 1 }, { unique: true });
-voteSchema.index({ targetType: 1, targetId: 1 });
-voteSchema.index({ user: 1 });
+// voteSchema.index({ targetType: 1, targetId: 1, user: 1 }, { unique: true });
+// voteSchema.index({ targetType: 1, targetId: 1 });
+// voteSchema.index({ user: 1 });
 
 // Static method to get user's vote on a specific target
 voteSchema.statics.getUserVote = async function(targetType, targetId, userId) {

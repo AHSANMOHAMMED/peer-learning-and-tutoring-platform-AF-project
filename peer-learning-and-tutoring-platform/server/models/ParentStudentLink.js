@@ -76,7 +76,7 @@ const parentStudentLinkSchema = new mongoose.Schema({
 });
 
 // Compound indexes
-parentStudentLinkSchema.index({ parent: 1, student: 1 }, { unique: true });
-parentStudentLinkSchema.index({ student: 1, status: 1 });
+// parentStudentLinkSchema.index({ parent: 1, student: 1 }, { unique: true });
+// parentStudentLinkSchema.index({ student: 1, status: 1 });
 
 module.exports = mongoose.model('ParentStudentLink', parentStudentLinkSchema);

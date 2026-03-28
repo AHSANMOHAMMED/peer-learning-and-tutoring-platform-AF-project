@@ -79,11 +79,11 @@ const groupRoomSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-groupRoomSchema.index({ isActive: 1, isPublic: 1 });
-groupRoomSchema.index({ subject: 1, grade: 1 });
-groupRoomSchema.index({ host: 1, isActive: 1 });
-groupRoomSchema.index({ 'participants.user': 1 });
-groupRoomSchema.index({ tags: 1 });
+// groupRoomSchema.index({ isActive: 1, isPublic: 1 });
+// groupRoomSchema.index({ subject: 1, grade: 1 });
+// groupRoomSchema.index({ host: 1, isActive: 1 });
+// groupRoomSchema.index({ 'participants.user': 1 });
+// groupRoomSchema.index({ tags: 1 });
 
 // Virtual for checking if room is full
 groupRoomSchema.virtual('isFull').get(function() {

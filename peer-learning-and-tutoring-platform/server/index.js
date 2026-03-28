@@ -6,8 +6,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const BadgeService = require('./services/badgeService');
 
-// Initialize database connection
-connectDB();
+// Initialize database connection (disabled)
+// connectDB();
 
 const app = express();
 const server = http.createServer(app);
@@ -304,11 +304,12 @@ server.listen(PORT, async () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔌 Socket.io server is running`);
   
-  // Initialize default badges
-  try {
-    await BadgeService.initializeDefaultBadges();
-    console.log('🏆 Default badges initialized successfully');
-  } catch (error) {
-    console.error('❌ Error initializing default badges:', error);
-  }
+  // Initialize default badges (disabled when database unavailable)
+  // try {
+  //   await BadgeService.initializeDefaultBadges();
+  //   console.log('🏆 Default badges initialized successfully');
+  // } catch (error) {
+  //   console.log('⚠️ Database not available - skipping badge initialization');
+  //   console.log('💡 To enable full functionality, please set up MongoDB');
+  // }
 });

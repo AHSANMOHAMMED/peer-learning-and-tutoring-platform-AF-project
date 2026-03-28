@@ -76,12 +76,12 @@ const questionSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-questionSchema.index({ author: 1, createdAt: -1 });
-questionSchema.index({ category: 1, createdAt: -1 });
-questionSchema.index({ tags: 1 });
-questionSchema.index({ upvotes: -1 });
-questionSchema.index({ views: -1 });
-questionSchema.index({ createdAt: -1 });
+// questionSchema.index({ author: 1, createdAt: -1 });
+// questionSchema.index({ category: 1, createdAt: -1 });
+// questionSchema.index({ tags: 1 });
+// questionSchema.index({ upvotes: -1 });
+// questionSchema.index({ views: -1 });
+// questionSchema.index({ createdAt: -1 });
 
 // Virtual for vote score
 questionSchema.virtual('voteScore').get(function() {

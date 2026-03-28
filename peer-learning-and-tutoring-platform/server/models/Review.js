@@ -105,9 +105,9 @@ const reviewSchema = new mongoose.Schema({
 });
 
 // Compound index to ensure one review per booking per reviewer
-reviewSchema.index({ bookingId: 1, reviewerId: 1 }, { unique: true });
-reviewSchema.index({ tutorId: 1, createdAt: -1 });
-reviewSchema.index({ isVisible: 1, tutorId: 1 });
+// reviewSchema.index({ bookingId: 1, reviewerId: 1 }, { unique: true });
+// reviewSchema.index({ tutorId: 1, createdAt: -1 });
+// reviewSchema.index({ isVisible: 1, tutorId: 1 });
 
 // Virtual for average of specific ratings
 reviewSchema.virtual('averageSpecificRatings').get(function() {

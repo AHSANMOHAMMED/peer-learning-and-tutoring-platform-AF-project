@@ -93,8 +93,8 @@ const featureFlagSchema = new mongoose.Schema({
 });
 
 // Index for faster lookups
-featureFlagSchema.index({ key: 1 });
-featureFlagSchema.index({ enabled: 1 });
+// featureFlagSchema.index({ key: 1 });
+// featureFlagSchema.index({ enabled: 1 });
 
 // Method to check if flag is enabled for a specific user
 featureFlagSchema.methods.isEnabledForUser = function(user) {

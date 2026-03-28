@@ -55,11 +55,11 @@ const answerSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-answerSchema.index({ question: 1, createdAt: 1 });
-answerSchema.index({ author: 1, createdAt: -1 });
-answerSchema.index({ isAccepted: 1 });
-answerSchema.index({ upvotes: -1 });
-answerSchema.index({ createdAt: -1 });
+// answerSchema.index({ question: 1, createdAt: 1 });
+// answerSchema.index({ author: 1, createdAt: -1 });
+// answerSchema.index({ isAccepted: 1 });
+// answerSchema.index({ upvotes: -1 });
+// answerSchema.index({ createdAt: -1 });
 
 // Virtual for vote score
 answerSchema.virtual('voteScore').get(function() {

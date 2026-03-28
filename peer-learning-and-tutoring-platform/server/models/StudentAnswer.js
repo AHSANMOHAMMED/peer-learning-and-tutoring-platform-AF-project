@@ -50,8 +50,8 @@ const studentAnswerSchema = new mongoose.Schema({
 });
 
 // Indexes
-studentAnswerSchema.index({ studentId: 1, submittedAt: -1 });
-studentAnswerSchema.index({ questionId: 1, isCorrect: 1 });
-studentAnswerSchema.index({ studentId: 1, questionId: 1 }, { unique: true });
+// studentAnswerSchema.index({ studentId: 1, submittedAt: -1 });
+// studentAnswerSchema.index({ questionId: 1, isCorrect: 1 });
+// studentAnswerSchema.index({ studentId: 1, questionId: 1 }, { unique: true });
 
 module.exports = mongoose.model('StudentAnswer', studentAnswerSchema);

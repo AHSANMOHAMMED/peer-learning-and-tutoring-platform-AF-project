@@ -146,9 +146,9 @@ const homeworkSessionSchema = new mongoose.Schema({
 });
 
 // Indexes for queries
-homeworkSessionSchema.index({ user: 1, status: 1 });
-homeworkSessionSchema.index({ user: 1, createdAt: -1 });
-homeworkSessionSchema.index({ subject: 1, grade: 1 });
+// homeworkSessionSchema.index({ user: 1, status: 1 });
+// homeworkSessionSchema.index({ user: 1, createdAt: -1 });
+// homeworkSessionSchema.index({ subject: 1, grade: 1 });
 
 // Virtual for session duration
 homeworkSessionSchema.virtual('duration').get(function() {

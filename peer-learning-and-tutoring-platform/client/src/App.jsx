@@ -37,7 +37,6 @@ import GroupStudyPage from './pages/GroupStudyPage'
 // NEW: Phase 2 - Lecture Courses & Advanced Session Room
 import LectureCatalogPage from './pages/LectureCatalogPage'
 import CourseDetailPage from './pages/CourseDetailPage'
-import SessionRoom from './pages/SessionRoom'
 
 // NEW: Dashboard Layout and Components
 import DashboardLayout from './components/Dashboard/DashboardLayout'

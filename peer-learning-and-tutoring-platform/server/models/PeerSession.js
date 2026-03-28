@@ -44,10 +44,10 @@ const peerSessionSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-peerSessionSchema.index({ status: 1, scheduledAt: 1 });
-peerSessionSchema.index({ subject: 1, grade: 1 });
-peerSessionSchema.index({ initiator: 1, status: 1 });
-peerSessionSchema.index({ 'participants.user': 1 });
+// peerSessionSchema.index({ status: 1, scheduledAt: 1 });
+// peerSessionSchema.index({ subject: 1, grade: 1 });
+// peerSessionSchema.index({ initiator: 1, status: 1 });
+// peerSessionSchema.index({ 'participants.user': 1 });
 
 // Virtual for checking if session is full
 peerSessionSchema.virtual('isFull').get(function() {

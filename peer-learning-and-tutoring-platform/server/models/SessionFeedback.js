@@ -155,11 +155,11 @@ const sessionFeedbackSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-sessionFeedbackSchema.index({ bookingId: 1, reviewerType: 1 });
-sessionFeedbackSchema.index({ revieweeId: 1, overallRating: -1 });
-sessionFeedbackSchema.index({ reviewerId: 1 });
-sessionFeedbackSchema.index({ createdAt: -1 });
-sessionFeedbackSchema.index({ isPublic: 1, isVerified: 1 });
+// sessionFeedbackSchema.index({ bookingId: 1, reviewerType: 1 });
+// sessionFeedbackSchema.index({ revieweeId: 1, overallRating: -1 });
+// sessionFeedbackSchema.index({ reviewerId: 1 });
+// sessionFeedbackSchema.index({ createdAt: -1 });
+// sessionFeedbackSchema.index({ isPublic: 1, isVerified: 1 });
 
 // Virtual for average category rating
 sessionFeedbackSchema.virtual('averageCategoryRating').get(function() {

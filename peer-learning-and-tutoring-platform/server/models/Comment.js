@@ -53,9 +53,9 @@ const commentSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-commentSchema.index({ targetType: 1, targetId: 1, createdAt: 1 });
-commentSchema.index({ author: 1, createdAt: -1 });
-commentSchema.index({ isDeleted: 1 });
+// commentSchema.index({ targetType: 1, targetId: 1, createdAt: 1 });
+// commentSchema.index({ author: 1, createdAt: -1 });
+// commentSchema.index({ isDeleted: 1 });
 
 // Virtual for vote score
 commentSchema.virtual('voteScore').get(function() {

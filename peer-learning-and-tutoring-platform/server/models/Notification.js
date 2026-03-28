@@ -84,10 +84,10 @@ const notificationSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
-notificationSchema.index({ userId: 1, type: 1 });
-notificationSchema.index({ createdAt: -1 });
-notificationSchema.index({ expiresAt: 1 });
+// notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+// notificationSchema.index({ userId: 1, type: 1 });
+// notificationSchema.index({ createdAt: -1 });
+// notificationSchema.index({ expiresAt: 1 });
 
 // Method to mark as read
 notificationSchema.methods.markAsRead = function() {

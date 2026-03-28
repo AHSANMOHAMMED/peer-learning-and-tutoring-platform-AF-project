@@ -69,10 +69,10 @@ const messageSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-messageSchema.index({ conversationId: 1, createdAt: -1 });
-messageSchema.index({ senderId: 1 });
-messageSchema.index({ receiverId: 1 });
-messageSchema.index({ isRead: 1 });
+// messageSchema.index({ conversationId: 1, createdAt: -1 });
+// messageSchema.index({ senderId: 1 });
+// messageSchema.index({ receiverId: 1 });
+// messageSchema.index({ isRead: 1 });
 
 const conversationSchema = new mongoose.Schema({
   participants: [{
@@ -131,9 +131,9 @@ const conversationSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-conversationSchema.index({ participants: 1 });
-conversationSchema.index({ bookingId: 1 });
-conversationSchema.index({ updatedAt: -1 });
+// conversationSchema.index({ participants: 1 });
+// conversationSchema.index({ bookingId: 1 });
+// conversationSchema.index({ updatedAt: -1 });
 
 // Method to update last message
 conversationSchema.methods.updateLastMessage = function(message) {

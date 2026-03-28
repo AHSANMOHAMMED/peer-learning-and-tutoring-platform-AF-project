@@ -15,8 +15,8 @@ const runMigrations = async () => {
     console.log('✅ Connected to MongoDB');
 
     // Run index creation script
-    const createIndexes = require('./db-indexes');
-    await createIndexes();
+    const { createAllIndexes } = require('./db-indexes');
+    await createAllIndexes();
     console.log('✅ Database indexes created');
 
     // Create initial admin user if not exists
@@ -28,12 +28,15 @@ const runMigrations = async () => {
       const hashedPassword = await bcrypt.hash('admin123', 12);
       
       await User.create({
+        username: 'admin',
         name: 'System Administrator',
         email: 'admin@peerlearn.com',
         password: hashedPassword,
         role: 'admin',
         profile: {
-          grade: 'admin',
+          firstName: 'System',
+          lastName: 'Administrator',
+          grade: 12,
           subjects: [],
           bio: 'System administrator account'
         },
@@ -67,12 +70,15 @@ const createSampleData = async () => {
   if (!tutorExists) {
     const hashedPassword = await bcrypt.hash('password123', 12);
     await User.create({
+      username: 'john_tutor',
       name: 'John Tutor',
       email: 'tutor@example.com',
       password: hashedPassword,
       role: 'tutor',
       profile: {
-        grade: '10',
+        firstName: 'John',
+        lastName: 'Tutor',
+        grade: 10,
         subjects: ['Mathematics', 'Physics'],
         bio: 'Experienced tutor in Math and Physics',
         hourlyRate: 25,
@@ -88,12 +94,15 @@ const createSampleData = async () => {
   if (!studentExists) {
     const hashedPassword = await bcrypt.hash('password123', 12);
     await User.create({
+      username: 'jane_student',
       name: 'Jane Student',
       email: 'student@example.com',
       password: hashedPassword,
       role: 'student',
       profile: {
-        grade: '10',
+        firstName: 'Jane',
+        lastName: 'Student',
+        grade: 10,
         subjects: ['Mathematics', 'Physics'],
         bio: 'High school student looking for help',
         learningStyle: 'visual'

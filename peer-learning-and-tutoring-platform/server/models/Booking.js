@@ -279,12 +279,12 @@ const bookingSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-bookingSchema.index({ studentId: 1, status: 1 });
-bookingSchema.index({ tutorId: 1, status: 1 });
-bookingSchema.index({ date: 1 });
-bookingSchema.index({ status: 1 });
-bookingSchema.index({ createdAt: -1 });
-bookingSchema.index({ 'payment.status': 1 });
+// bookingSchema.index({ studentId: 1, status: 1 });
+// bookingSchema.index({ tutorId: 1, status: 1 });
+// bookingSchema.index({ date: 1 });
+// bookingSchema.index({ status: 1 });
+// bookingSchema.index({ createdAt: -1 });
+// bookingSchema.index({ 'payment.status': 1 });
 
 // Virtual for checking if booking is upcoming
 bookingSchema.virtual('isUpcoming').get(function() {

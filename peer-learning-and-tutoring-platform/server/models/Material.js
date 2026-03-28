@@ -227,15 +227,15 @@ const materialSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-materialSchema.index({ subject: 1, grade: 1, status: 1 });
-materialSchema.index({ tags: 1 });
-materialSchema.index({ categories: 1 });
-materialSchema.index({ uploadedBy: 1, status: 1 });
-materialSchema.index({ 'rating.average': -1 });
-materialSchema.index({ downloadCount: -1 });
-materialSchema.index({ viewCount: -1 });
-materialSchema.index({ createdAt: -1 });
-materialSchema.index({ 'flags.isFlagged': 1 });
+// materialSchema.index({ subject: 1, grade: 1, status: 1 });
+// materialSchema.index({ tags: 1 });
+// materialSchema.index({ categories: 1 });
+// materialSchema.index({ uploadedBy: 1, status: 1 });
+// materialSchema.index({ 'rating.average': -1 });
+// materialSchema.index({ downloadCount: -1 });
+// materialSchema.index({ viewCount: -1 });
+// materialSchema.index({ createdAt: -1 });
+// materialSchema.index({ 'flags.isFlagged': 1 });
 
 // Virtual for file size in human readable format
 materialSchema.virtual('fileSizeFormatted').get(function() {

@@ -78,9 +78,9 @@ const moderationReportSchema = new mongoose.Schema({
 });
 
 // Indexes
-moderationReportSchema.index({ contentType: 1, contentId: 1 });
-moderationReportSchema.index({ reporter: 1 });
-moderationReportSchema.index({ status: 1 });
-moderationReportSchema.index({ createdAt: -1 });
+// moderationReportSchema.index({ contentType: 1, contentId: 1 });
+// moderationReportSchema.index({ reporter: 1 });
+// moderationReportSchema.index({ status: 1 });
+// moderationReportSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('ModerationReport', moderationReportSchema);

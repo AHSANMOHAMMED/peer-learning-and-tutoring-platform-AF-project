@@ -107,12 +107,12 @@ const nftCertificateSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Indexes
-nftCertificateSchema.index({ tokenId: 1 });
-nftCertificateSchema.index({ user: 1 });
-nftCertificateSchema.index({ course: 1 });
-nftCertificateSchema.index({ verificationCode: 1 });
-nftCertificateSchema.index({ 'blockchain.transactionHash': 1 });
+// Indexes are created by db-indexes script
+// // nftCertificateSchema.index({ tokenId: 1 });
+// // nftCertificateSchema.index({ user: 1 });
+// // nftCertificateSchema.index({ course: 1 });
+// // nftCertificateSchema.index({ verificationCode: 1 });
+// // nftCertificateSchema.index({ 'blockchain.transactionHash': 1 });
 
 // Virtual for certificate URL
 nftCertificateSchema.virtual('certificateUrl').get(function() {

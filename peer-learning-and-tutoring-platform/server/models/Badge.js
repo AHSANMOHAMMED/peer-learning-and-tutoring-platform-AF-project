@@ -69,9 +69,9 @@ const badgeSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-badgeSchema.index({ category: 1, isActive: 1 });
-badgeSchema.index({ rarity: 1, isActive: 1 });
-badgeSchema.index({ 'criteria.subject': 1, isActive: 1 });
+// badgeSchema.index({ category: 1, isActive: 1 });
+// badgeSchema.index({ rarity: 1, isActive: 1 });
+// badgeSchema.index({ 'criteria.subject': 1, isActive: 1 });
 
 // Static method to get badges by category
 badgeSchema.statics.getByCategory = function(category, options = {}) {

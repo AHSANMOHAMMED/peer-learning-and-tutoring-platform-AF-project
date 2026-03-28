@@ -173,11 +173,11 @@ const lectureCourseSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-lectureCourseSchema.index({ isActive: 1, isPublic: 1 });
-lectureCourseSchema.index({ subject: 1, grade: 1 });
-lectureCourseSchema.index({ instructor: 1 });
-lectureCourseSchema.index({ startDate: 1 });
-lectureCourseSchema.index({ tags: 1 });
+// lectureCourseSchema.index({ isActive: 1, isPublic: 1 });
+// lectureCourseSchema.index({ subject: 1, grade: 1 });
+// lectureCourseSchema.index({ instructor: 1 });
+// lectureCourseSchema.index({ startDate: 1 });
+// lectureCourseSchema.index({ tags: 1 });
 
 // Virtual for checking if course is full
 lectureCourseSchema.virtual('isFull').get(function() {

@@ -143,11 +143,11 @@ const reportSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-reportSchema.index({ reportedType: 1, reportedId: 1, status: 1 });
-reportSchema.index({ status: 1, priority: -1 });
-reportSchema.index({ assignedTo: 1, status: 1 });
-reportSchema.index({ createdAt: -1 });
-reportSchema.index({ 'escalation.level': -1, status: 1 });
+// reportSchema.index({ reportedType: 1, reportedId: 1, status: 1 });
+// reportSchema.index({ status: 1, priority: -1 });
+// reportSchema.index({ assignedTo: 1, status: 1 });
+// reportSchema.index({ createdAt: -1 });
+// reportSchema.index({ 'escalation.level': -1, status: 1 });
 
 // Virtual for time since creation
 reportSchema.virtual('timeSinceCreation').get(function() {

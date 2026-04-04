@@ -258,6 +258,9 @@ app.use('/api/breakout', require('./routes/breakout'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/qa', require('./routes/qa'));
 
+// Backward-compatibility alias for legacy forum endpoints
+app.use('/api/qa/questions', require('./routes/questions'));
+
 // NEW: Recommendation Engine
 app.use('/api/recommendations', require('./routes/recommendations'));
 

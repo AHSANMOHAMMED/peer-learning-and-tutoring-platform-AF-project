@@ -1,13 +1,19 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_SERVER_URL || 'http://localhost:5000',
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+if (import.meta.env.DEV) {
+  console.debug('API base URL:', API_BASE_URL);
+}
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -37,7 +43,7 @@ api.interceptors.response.use(
     
     // Handle network errors
     if (!error.response) {
-      error.message = 'Network error. Please check your connection.';
+      error.message = `Network error. Please check your connection or the API at ${API_BASE_URL}.`;
     }
     
     return Promise.reject(error);
@@ -151,87 +157,100 @@ export const qaApi = {
   // Questions
   async getQuestions(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return apiService.get(`/api/qa/questions?${queryString}`);
+    return apiService.get(`/api/questions${queryString ? `?${queryString}` : ''}`);
   },
 
   async getQuestionById(id) {
-    return apiService.get(`/api/qa/questions/${id}`);
+    return apiService.get(`/api/questions/${id}`);
   },
 
   async createQuestion(questionData) {
-    return apiService.post('/api/qa/questions', questionData);
+    return apiService.post('/api/questions', questionData);
   },
 
   async updateQuestion(id, questionData) {
-    return apiService.put(`/api/qa/questions/${id}`, questionData);
+    return apiService.put(`/api/questions/${id}`, questionData);
   },
 
   async deleteQuestion(id) {
-    return apiService.delete(`/api/qa/questions/${id}`);
+    return apiService.delete(`/api/questions/${id}`);
   },
 
   // Answers
   async getAnswersByQuestionId(questionId) {
-    return apiService.get(`/api/qa/answers/${questionId}`);
+    return apiService.get(`/api/answers/question/${questionId}`);
   },
 
   async createAnswer(answerData) {
-    return apiService.post('/api/qa/answers', answerData);
+    const { questionId, ...payload } = answerData || {};
+    if (!questionId) {
+      return {
+        success: false,
+        message: 'questionId is required to create an answer'
+      };
+    }
+    return apiService.post(`/api/answers/question/${questionId}`, payload);
   },
 
   async updateAnswer(id, answerData) {
-    return apiService.put(`/api/qa/answers/${id}`, answerData);
+    return apiService.put(`/api/answers/${id}`, answerData);
   },
 
   async deleteAnswer(id) {
-    return apiService.delete(`/api/qa/answers/${id}`);
+    return apiService.delete(`/api/answers/${id}`);
   },
 
   async acceptAnswer(id, questionId) {
-    return apiService.post(`/api/qa/answers/${id}/accept`, { questionId });
+    return {
+      success: false,
+      message: 'Accept answer endpoint is not available in current backend routes.'
+    };
   },
 
   // Voting
   async vote(targetType, targetId, value) {
-    return apiService.post('/api/qa/vote', { targetType, targetId, value });
+    return apiService.post('/api/votes', { targetType, targetId, value });
   },
 
   // Leaderboard
   async getLeaderboard(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return apiService.get(`/api/qa/leaderboard/overall?${queryString}`);
+    return apiService.get(`/api/gamification/leaderboard${queryString ? `?${queryString}` : ''}`);
   },
 
   async getCategoryLeaderboard(category, params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return apiService.get(`/api/qa/leaderboard/${category}?${queryString}`);
+    return apiService.get(`/api/gamification/leaderboard${queryString ? `?${queryString}` : ''}`);
   },
 
   async getUserRank(userId) {
-    return apiService.get(`/api/qa/leaderboard/user/${userId}`);
+    return apiService.get('/api/gamification/leaderboard/nearby');
   },
 
   // Notifications
   async getNotifications(unreadOnly = false) {
     const params = unreadOnly ? { unreadOnly: true } : {};
-    return apiService.get('/api/qa/notifications', { params });
+    return apiService.get('/api/notifications', { params });
   },
 
   async markNotificationAsRead(id) {
-    return apiService.put(`/api/qa/notifications/${id}/read`);
+    return apiService.put(`/api/notifications/${id}/read`);
   },
 
   async markAllNotificationsAsRead() {
-    return apiService.put('/api/qa/notifications/read-all');
+    return apiService.put('/api/notifications/read-all');
   },
 
   // User Points
   async getUserPoints(userId) {
-    return apiService.get(`/api/qa/users/${userId}/points`);
+    return apiService.get('/api/gamification/profile');
   },
 
   async getUserPointHistory(userId, limit = 10) {
-    return apiService.get(`/api/qa/users/${userId}/points/history?limit=${limit}`);
+    return {
+      success: false,
+      message: 'User point history endpoint is not available in current backend routes.'
+    };
   }
 };
 

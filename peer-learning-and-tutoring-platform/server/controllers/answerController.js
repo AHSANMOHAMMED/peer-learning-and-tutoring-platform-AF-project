@@ -79,6 +79,63 @@ const getAnswersByQuestion = async (req, res) => {
   }
 };
 
+// List answers across forum for moderation (admin/moderator)
+const listAnswersForModeration = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      status = 'all',
+      questionId,
+      search = ''
+    } = req.query;
+
+    const query = {};
+    if (status !== 'all') {
+      query.status = status;
+    }
+    if (questionId) {
+      query.question = questionId;
+    }
+    if (search) {
+      query.body = { $regex: search, $options: 'i' };
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [answers, total] = await Promise.all([
+      Answer.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('author', 'username role profile.firstName profile.lastName profile.avatar')
+        .populate('question', 'title subject grade isClosed')
+        .populate('acceptedBy', 'username profile.firstName profile.lastName'),
+      Answer.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        answers,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / parseInt(limit)),
+          count: total,
+          hasNext: parseInt(page) * parseInt(limit) < total,
+          hasPrev: parseInt(page) > 1
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in listAnswersForModeration:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch answers for moderation'
+    });
+  }
+};
+
 // Get single answer by ID
 const getAnswerById = async (req, res) => {
   try {
@@ -394,6 +451,7 @@ const getAnswerStats = async (req, res) => {
 
 module.exports = {
   getAnswersByQuestion,
+  listAnswersForModeration,
   getAnswerById,
   createAnswer,
   updateAnswer,

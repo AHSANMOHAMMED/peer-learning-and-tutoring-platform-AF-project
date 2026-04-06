@@ -40,6 +40,27 @@ const parentStudentLinkSchema = new mongoose.Schema({
   studentApprovedAt: {
     type: Date
   },
+
+  // Admin review metadata
+  adminApproved: {
+    type: Boolean,
+    default: false
+  },
+
+  adminReviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  adminReviewedAt: {
+    type: Date
+  },
+
+  adminReviewNote: {
+    type: String,
+    trim: true,
+    maxlength: 500
+  },
   
   // Permissions granted by student
   permissions: {

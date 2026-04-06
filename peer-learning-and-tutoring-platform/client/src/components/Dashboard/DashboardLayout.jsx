@@ -23,6 +23,8 @@ const DashboardLayout = () => {
         return 'from-blue-500 to-indigo-600';
       case 'tutor':
         return 'from-emerald-500 to-teal-600';
+      case 'parent':
+        return 'from-cyan-500 to-blue-600';
       case 'admin':
       case 'moderator':
         return 'from-slate-700 to-slate-900';

@@ -7,10 +7,15 @@ const { validationResult } = require('express-validator');
 
 // Sri Lankan subjects for Grades 6-13
 const SRI_LANKAN_SUBJECTS = {
-  core: ['Mathematics', 'English', 'Science', 'History', 'Geography', 'Civic Education', 'Health & Physical Education'],
-  religion: ['Buddhism', 'Islam', 'Saivaneri', 'Roman Catholicism', 'Christianity'],
+  core: ['Mathematics', 'English', 'English Language', 'Science', 'History', 'Geography', 'Civic Education', 'Health & Physical Education'],
+  religion: ['Buddhism', 'Islam', 'Hinduism', 'Saivaneri', 'Roman Catholicism', 'Christianity', 'Catholicism'],
   language: ['Sinhala', 'Tamil'],
-  elective: ['ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies']
+  elective: [
+    'ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies',
+    'Art', 'Dancing', 'Music', 'Drama & Theatre', 'Life Competencies',
+    'Life Competencies and Citizenship Education', 'Eastern Music', 'Western Music',
+    'Practical & Technical Skills'
+  ]
 };
 
 // Get all questions with pagination and filtering by grade and subject
@@ -24,7 +29,8 @@ const getQuestions = async (req, res) => {
       tags = '',
       sortBy = 'newest',
       search = '',
-      category = 'all'
+      category = 'all',
+      includeClosed = 'false'
     } = req.query;
 
     const options = {
@@ -32,6 +38,9 @@ const getQuestions = async (req, res) => {
       limit: parseInt(limit),
       sortBy
     };
+
+    const canSeeClosed = ['admin', 'moderator'].includes(req.user?.role);
+    const includeClosedForUser = includeClosed === 'true' && canSeeClosed;
 
     let questions;
 
@@ -45,14 +54,15 @@ const getQuestions = async (req, res) => {
       });
     } else if (subject === 'all' && grade === 'all') {
       // Get all questions
-      questions = await Question.find({ isClosed: false })
+      const baseQuery = includeClosedForUser ? {} : { isClosed: false };
+      questions = await Question.find(baseQuery)
         .sort({ createdAt: -1 })
         .skip((parseInt(page) - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     } else {
       // Filter by grade and/or subject
-      const query = { isClosed: false };
+      const query = includeClosedForUser ? {} : { isClosed: false };
       if (subject !== 'all') {
         query.subject = subject;
       }
@@ -89,9 +99,11 @@ const getQuestions = async (req, res) => {
         .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     }
 
-    const total = await Question.countDocuments(
-      search ? {} : { isClosed: false, ...(category !== 'all' && { category }) }
-    );
+    const totalFilter = search
+      ? (includeClosedForUser ? {} : { isClosed: false })
+      : { ...(includeClosedForUser ? {} : { isClosed: false }), ...(category !== 'all' && { category }) };
+
+    const total = await Question.countDocuments(totalFilter);
 
     res.json({
       questions,
@@ -149,7 +161,20 @@ const createQuestion = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, content, tags, subject, grade } = req.body;
+    const {
+      title,
+      content,
+      body,
+      tags,
+      subject,
+      grade,
+      type,
+      difficulty,
+      points,
+      options,
+      correctAnswer,
+      explanation,
+    } = req.body;
     
     // Validate subject exists in Sri Lankan curriculum
     const allSubjects = [...SRI_LANKAN_SUBJECTS.core, ...SRI_LANKAN_SUBJECTS.religion, ...SRI_LANKAN_SUBJECTS.language, ...SRI_LANKAN_SUBJECTS.elective];
@@ -164,11 +189,17 @@ const createQuestion = async (req, res) => {
     
     const question = new Question({
       title,
-      body: content, // Map content to body field
+      body: body || content,
       tags: tags || [],
       subject,
       grade,
-      author: req.user._id
+      author: req.user._id,
+      type: type || 'structured',
+      difficulty: difficulty || 'Easy',
+      points: Number(points || 5),
+      options: Array.isArray(options) ? options : [],
+      correctAnswer: correctAnswer || '',
+      explanation: explanation || '',
     });
     
     await question.save();
@@ -206,7 +237,7 @@ const createQuestion = async (req, res) => {
 const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, body, tags, subject, grade } = req.body;
+    const { title, content, body, tags, subject, grade, type, difficulty, points, options, correctAnswer, explanation } = req.body;
     
     const question = await Question.findById(id);
     if (!question) {
@@ -238,6 +269,12 @@ const updateQuestion = async (req, res) => {
     if (tags) question.tags = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim());
     if (subject) question.subject = subject;
     if (grade) question.grade = parseInt(grade);
+    if (type) question.type = type;
+    if (difficulty) question.difficulty = difficulty;
+    if (points != null) question.points = Number(points);
+    if (options) question.options = Array.isArray(options) ? options : [];
+    if (correctAnswer != null) question.correctAnswer = correctAnswer;
+    if (explanation != null) question.explanation = explanation;
     
     await question.save();
     

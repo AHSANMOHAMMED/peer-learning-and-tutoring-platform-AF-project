@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
+import ParentQAForum from '../components/Parent/ParentQAForum';
 
 const ParentDashboard = () => {
   const [students, setStudents] = useState([]);
@@ -14,11 +15,24 @@ const ParentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
   const [progress, setProgress] = useState(null);
   const [schedule, setSchedule] = useState(null);
+  const [grades, setGrades] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkEmail, setLinkEmail] = useState('');
+
+  const getStudentDisplayName = (studentObj) => {
+    if (!studentObj) return 'Student';
+    return (
+      studentObj.name ||
+      `${studentObj?.profile?.firstName || ''} ${studentObj?.profile?.lastName || ''}`.trim() ||
+      studentObj.username ||
+      'Student'
+    );
+  };
+
+  const getStudentInitial = (studentObj) => getStudentDisplayName(studentObj).charAt(0).toUpperCase();
 
   useEffect(() => {
     fetchStudents();
@@ -27,7 +41,10 @@ const ParentDashboard = () => {
 
   useEffect(() => {
     if (selectedStudent) {
-      fetchStudentDetails(selectedStudent.student.id);
+      const studentId = selectedStudent?.student?._id || selectedStudent?.student?.id;
+      if (studentId) {
+        fetchStudentDetails(studentId);
+      }
     }
   }, [selectedStudent, activeTab]);
 
@@ -60,7 +77,7 @@ const ParentDashboard = () => {
 
   const fetchStudentDetails = async (studentId) => {
     try {
-      if (activeTab === 'overview') {
+      if (activeTab === 'overview' || activeTab === 'qa-forum') {
         const response = await api.get(`/api/parent/student/${studentId}/summary`);
         if (response.data.success) {
           setStudentData(response.data.data);
@@ -74,6 +91,16 @@ const ParentDashboard = () => {
         const response = await api.get(`/api/parent/student/${studentId}/schedule?days=14`);
         if (response.data.success) {
           setSchedule(response.data.data);
+        }
+      } else if (activeTab === 'grades') {
+        const summaryResponse = await api.get(`/api/parent/student/${studentId}/summary`);
+        if (summaryResponse.data.success) {
+          setStudentData(summaryResponse.data.data);
+        }
+
+        const response = await api.get(`/api/parent/student/${studentId}/grades`);
+        if (response.data.success) {
+          setGrades(response.data.data.grades || []);
         }
       }
     } catch (error) {
@@ -89,7 +116,7 @@ const ParentDashboard = () => {
       });
 
       if (response.data.success) {
-        toast.success('Link request sent to student!');
+        toast.success('Link request sent to admin for approval.');
         setShowLinkModal(false);
         setLinkEmail('');
         fetchStudents();
@@ -120,14 +147,22 @@ const ParentDashboard = () => {
                 <p className="text-gray-600">Monitor your child's learning journey</p>
               </div>
             </div>
-            
-            <button
-              onClick={() => setShowLinkModal(true)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Link Student
-            </button>
+
+            <div className="flex items-center gap-3">
+              <a
+                href="/browse-tutors"
+                className="flex items-center px-4 py-2 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50"
+              >
+                Contact Tutors
+              </a>
+              <button
+                onClick={() => setShowLinkModal(true)}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Link Student
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -165,11 +200,13 @@ const ParentDashboard = () => {
                       }`}
                     >
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                        {student.student.name.charAt(0)}
+                        {getStudentInitial(student.student)}
                       </div>
                       <div className="text-left">
-                        <p className="font-medium">{student.student.name}</p>
-                        <p className="text-sm text-gray-500">Grade {student.student.grade}</p>
+                        <p className="font-medium">{getStudentDisplayName(student.student)}</p>
+                        <p className="text-sm text-gray-500">
+                          Grade {student.student?.grade ?? student.student?.profile?.grade ?? 'N/A'}
+                        </p>
                       </div>
                     </button>
                   ))}
@@ -210,10 +247,10 @@ const ParentDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4">
-                        {studentData.student.name.charAt(0)}
+                        {getStudentInitial(studentData.student)}
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold">{studentData.student.name}</h2>
+                        <h2 className="text-2xl font-bold">{getStudentDisplayName(studentData.student)}</h2>
                         <p className="text-gray-600">Grade {studentData.student.grade}</p>
                       </div>
                     </div>
@@ -255,22 +292,52 @@ const ParentDashboard = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Q&A Performance */}
+                  {studentData.qaPerformance && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{studentData.qaPerformance.attempts}</p>
+                        <p className="text-sm text-gray-500">Q&A Attempts</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{studentData.qaPerformance.totalMarks}</p>
+                        <p className="text-sm text-gray-500">Marks</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{studentData.qaPerformance.totalPoints}</p>
+                        <p className="text-sm text-gray-500">Total Score</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-blue-600">
+                          {studentData.qaPerformance.scorePercentage.toFixed(1)}%
+                        </p>
+                        <p className="text-sm text-gray-500">Performance</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Tabs */}
                 <div className="bg-white rounded-xl shadow-sm mb-6">
                   <div className="flex border-b">
-                    {['overview', 'progress', 'schedule', 'grades'].map((tab) => (
+                    {[
+                      { id: 'overview', label: 'Overview' },
+                      { id: 'progress', label: 'Progress' },
+                      { id: 'schedule', label: 'Schedule' },
+                      { id: 'grades', label: 'Grades' },
+                      { id: 'qa-forum', label: 'QA Forum' },
+                    ].map((tab) => (
                       <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
                         className={`flex-1 px-6 py-4 text-sm font-medium capitalize transition-colors ${
-                          activeTab === tab
+                          activeTab === tab.id
                             ? 'text-blue-600 border-b-2 border-blue-600'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
-                        {tab}
+                        {tab.label}
                       </button>
                     ))}
                   </div>
@@ -425,6 +492,64 @@ const ParentDashboard = () => {
                         )}
                       </div>
                     )}
+
+                    {activeTab === 'grades' && (
+                      <div className="space-y-6">
+                        {grades.length > 0 ? (
+                          <div className="space-y-3">
+                            {grades.map((gradeItem) => (
+                              <div
+                                key={gradeItem.courseId}
+                                className="p-4 border rounded-lg flex items-center justify-between"
+                              >
+                                <div>
+                                  <p className="font-semibold">{gradeItem.courseTitle}</p>
+                                  <p className="text-sm text-gray-500">{gradeItem.subject}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold">{gradeItem.grade ?? 'N/A'}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Attendance: {gradeItem.attendanceRate ?? 0}%
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">No completed course grades yet</p>
+                        )}
+
+                        {studentData?.qaPerformance?.subjectPerformance?.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-lg mb-3">Q&A Subject Performance</h3>
+                            <div className="space-y-3">
+                              {studentData.qaPerformance.subjectPerformance.map((item) => (
+                                <div
+                                  key={item.subject}
+                                  className="p-4 bg-gray-50 rounded-lg flex items-center justify-between"
+                                >
+                                  <div>
+                                    <p className="font-medium">{item.subject}</p>
+                                    <p className="text-sm text-gray-500">Attempts: {item.attempts}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-semibold">{item.marks}/{item.points}</p>
+                                    <p className="text-sm text-blue-600">{item.scorePercentage}%</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeTab === 'qa-forum' && (
+                      <ParentQAForum
+                        qaPerformance={studentData?.qaPerformance}
+                        studentGrade={studentData?.student?.grade}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -439,7 +564,7 @@ const ParentDashboard = () => {
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4">Link to Student</h2>
             <p className="text-gray-600 mb-4">
-              Enter your child's email address. They will receive a request to approve the link.
+              Enter your child's email address. An admin will review and approve your request before access is granted.
             </p>
             <input
               type="email"

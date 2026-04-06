@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
+import { qaForumSupportedGrades } from '../data/qaData';
 
 const RegisterView = () => {
   const navigate = useNavigate();
-  const { register, isLoading, error, clearError } = useAuthViewModel();
+  const { register, isLoading, error, clearError, getDashboardRoute } = useAuthViewModel();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -19,6 +20,18 @@ const RegisterView = () => {
       phone: ''
     }
   });
+
+  useEffect(() => {
+    if (formData.role === 'tutor' && !formData.profile.grade) {
+      setFormData((prev) => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          grade: '8'
+        }
+      }));
+    }
+  }, [formData.role, formData.profile.grade]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,10 +77,14 @@ const RegisterView = () => {
     }
     
     const { confirmPassword, ...registrationData } = formData;
+    if (registrationData.profile?.grade === '') {
+      delete registrationData.profile.grade;
+    }
     const result = await register(registrationData);
+    console.log('RegisterView: Registration result:', result);
     
     if (result.success) {
-      navigate('/dashboard');
+      navigate(getDashboardRoute(), { replace: true });
     }
   };
 
@@ -187,13 +204,14 @@ const RegisterView = () => {
                 <option value="student">Student</option>
                 <option value="tutor">Tutor</option>
                 <option value="parent">Parent</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
 
-            {formData.role === 'student' && (
+            {(formData.role === 'student' || formData.role === 'tutor' || formData.role === 'parent') && (
               <div>
                 <label htmlFor="grade" className="block text-sm font-medium text-gray-700">
-                  Grade
+                  {formData.role === 'tutor' ? 'Assigned Grade' : formData.role === 'parent' ? 'Child Grade' : 'Grade'}
                 </label>
                 <select
                   id="grade"
@@ -203,40 +221,49 @@ const RegisterView = () => {
                   onChange={handleChange}
                 >
                   <option value="">Select Grade</option>
-                  {[6, 7, 8, 9, 10, 11, 12, 13].map(grade => (
+                  {qaForumSupportedGrades.map(grade => (
                     <option key={grade} value={grade}>Grade {grade}</option>
                   ))}
                 </select>
+                {formData.role === 'tutor' && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Tutors can currently be assigned to Grades 6, 8, or 9 for the Q&A workflow.
+                  </p>
+                )}
               </div>
             )}
 
-            <div>
-              <label htmlFor="school" className="block text-sm font-medium text-gray-700">
-                School (Optional)
-              </label>
-              <input
-                id="school"
-                name="profile.school"
-                type="text"
-                className="input-field mt-1"
-                value={formData.profile.school}
-                onChange={handleChange}
-              />
-            </div>
+            {formData.role !== 'admin' && (
+              <>
+                <div>
+                  <label htmlFor="school" className="block text-sm font-medium text-gray-700">
+                    School (Optional)
+                  </label>
+                  <input
+                    id="school"
+                    name="profile.school"
+                    type="text"
+                    className="input-field mt-1"
+                    value={formData.profile.school}
+                    onChange={handleChange}
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number (Optional)
-              </label>
-              <input
-                id="phone"
-                name="profile.phone"
-                type="tel"
-                className="input-field mt-1"
-                value={formData.profile.phone}
-                onChange={handleChange}
-              />
-            </div>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                    Phone Number (Optional)
+                  </label>
+                  <input
+                    id="phone"
+                    name="profile.phone"
+                    type="tel"
+                    className="input-field mt-1"
+                    value={formData.profile.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>

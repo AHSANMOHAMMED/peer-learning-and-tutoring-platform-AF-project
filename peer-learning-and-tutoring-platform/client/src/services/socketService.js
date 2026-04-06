@@ -1,5 +1,7 @@
 import { io } from 'socket.io-client';
 
+const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+
 class SocketService {
   constructor() {
     this.socket = null;
@@ -11,7 +13,7 @@ class SocketService {
       return this.socket;
     }
 
-    this.socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
+    this.socket = io(SOCKET_SERVER_URL, {
       auth: {
         token
       }

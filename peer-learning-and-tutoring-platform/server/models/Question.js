@@ -22,10 +22,13 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      'Mathematics', 'English', 'Science', 'History', 'Geography', 'Civic Education', 
-      'Health & Physical Education', 'Buddhism', 'Islam', 'Saivaneri', 
-      'Roman Catholicism', 'Christianity', 'Sinhala', 'Tamil', 
-      'ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies'
+      'Mathematics', 'English', 'English Language', 'Science', 'History', 'Geography', 'Civic Education',
+      'Health & Physical Education', 'Buddhism', 'Islam', 'Hinduism', 'Saivaneri',
+      'Roman Catholicism', 'Christianity', 'Catholicism', 'Sinhala', 'Tamil',
+      'ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies',
+      'Art', 'Dancing', 'Music', 'Drama & Theatre', 'Life Competencies',
+      'Life Competencies and Citizenship Education', 'Eastern Music', 'Western Music',
+      'Practical & Technical Skills'
     ]
   },
   grade: {
@@ -70,6 +73,36 @@ const questionSchema = new mongoose.Schema({
   closedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  type: {
+    type: String,
+    enum: ['mcq', 'structured', 'essay'],
+    default: 'structured'
+  },
+  difficulty: {
+    type: String,
+    enum: ['Easy', 'Medium', 'Hard'],
+    default: 'Easy'
+  },
+  points: {
+    type: Number,
+    default: 5,
+    min: 0
+  },
+  options: [{
+    type: String,
+    trim: true,
+    maxlength: 300
+  }],
+  correctAnswer: {
+    type: String,
+    trim: true,
+    maxlength: 10000
+  },
+  explanation: {
+    type: String,
+    trim: true,
+    maxlength: 10000
   }
 }, {
   timestamps: true

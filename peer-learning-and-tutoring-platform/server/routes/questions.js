@@ -1,19 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const questionController = require('../controllers/questionController');
-const { body } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const Question = require('../models/Question');
 
 // Public routes
-router.get('/', async (req, res) => {
-  try {
-    const questions = await Question.find().limit(10);
-    res.json(questions);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch questions' });
-  }
-});
+router.get('/', questionController.getQuestions);
 
 router.get('/stats', async (req, res) => {
   try {
@@ -28,17 +20,7 @@ router.get('/subjects', (req, res) => {
   res.json({ subjects: ['Mathematics', 'Science', 'History', 'Geography', 'English'] });
 });
 
-router.get('/:id', async (req, res) => {
-  try {
-    const question = await Question.findById(req.params.id);
-    if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
-    }
-    res.json(question);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch question' });
-  }
-});
+router.get('/:id', questionController.getQuestionById);
 
 // Protected routes
 router.post('/', authenticate, questionController.createQuestion);

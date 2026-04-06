@@ -9,7 +9,7 @@ const reportSchema = new mongoose.Schema({
   },
   reportedType: {
     type: String,
-    enum: ['user', 'material', 'session', 'review', 'message'],
+    enum: ['user', 'material', 'session', 'review', 'message', 'question', 'answer'],
     required: true,
     index: true
   },
@@ -266,8 +266,11 @@ reportSchema.methods.addReporterFeedback = function(satisfied, feedback) {
 // Static method to get reports by status
 reportSchema.statics.getByStatus = async function(status, options = {}) {
   const { page = 1, limit = 20, assignedTo } = options;
-  
-  const query = { status };
+
+  const query = {};
+  if (status) {
+    query.status = status;
+  }
   if (assignedTo) {
     query.assignedTo = assignedTo;
   }

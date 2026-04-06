@@ -259,6 +259,41 @@ const HowItWorks = () => {
   );
 };
 
+const QASection = () => {
+  return (
+    <section className="py-24 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr] items-center">
+          <div>
+            <span className="text-blue-600 font-semibold text-sm uppercase tracking-wider">Q&A Practice</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mt-3 mb-6">A student-friendly quiz experience for Grades 6–11</h2>
+            <p className="text-xl text-slate-600 max-w-2xl leading-relaxed mb-8">
+              Choose your grade and subject, then answer practice questions with instant results. Only the grade selected during signup is active for each student.
+            </p>
+            <Link to="/qa/grades" className="inline-flex items-center rounded-2xl bg-blue-600 px-6 py-4 text-white font-semibold hover:bg-blue-700 transition-colors">
+              Go to Q&A Forum
+            </Link>
+          </div>
+          <div className="grid gap-4">
+            <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-3">Grade cards</h3>
+              <p className="text-slate-600">Only your signed-up grade is active and ready to use.</p>
+            </div>
+            <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-3">Subject choice</h3>
+              <p className="text-slate-600">Pick the right subject for your grade in a clean card layout.</p>
+            </div>
+            <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-3">Instant feedback</h3>
+              <p className="text-slate-600">Correct answers earn points; incorrect answers show the right solution and explanation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 // Features Section
 const FeaturesSection = () => {
   const features = [
@@ -426,6 +461,7 @@ const Home = () => {
       <HeroSection />
       <StatsSection />
       <HowItWorks />
+      <QASection />
       <FeaturesSection />
       <TestimonialsSection />
       <CTASection />

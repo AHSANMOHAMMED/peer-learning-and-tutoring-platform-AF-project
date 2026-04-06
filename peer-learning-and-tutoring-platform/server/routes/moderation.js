@@ -11,7 +11,7 @@ router.post(
   '/reports',
   authenticate,
   [
-    body('reportedType').isIn(['user', 'material', 'session', 'review', 'message']).withMessage('Invalid reported type'),
+    body('reportedType').isIn(['user', 'material', 'session', 'review', 'message', 'question', 'answer']).withMessage('Invalid reported type'),
     body('reportedId').isMongoId().withMessage('Invalid reported ID'),
     body('reason').isIn(['inappropriate', 'spam', 'harassment', 'copyright', 'fake', 'misinformation', 'other']).withMessage('Invalid reason'),
     body('description').trim().isLength({ min: 1, max: 1000 }).withMessage('Description must be 1-1000 characters'),
@@ -53,7 +53,7 @@ router.put(
   authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
-    body('assignedTo').isMongoId().withMessage('Invalid assignedTo ID')
+    body('moderatorId').isMongoId().withMessage('Invalid moderator ID')
   ],
   validate,
   moderationController.assignReport
@@ -65,8 +65,8 @@ router.put(
   authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
-    body('action').isIn(['warn', 'suspend', 'ban', 'remove_content', 'no_action']).withMessage('Invalid action'),
-    body('reason').optional().trim().isLength({ max: 1000 }).withMessage('Reason must be less than 1000 characters')
+    body('action').isIn(['no_action', 'warning', 'content_removed', 'user_suspended', 'user_banned', 'content_flagged']).withMessage('Invalid action'),
+    body('notes').optional().trim().isLength({ max: 2000 }).withMessage('Notes must be less than 2000 characters')
   ],
   validate,
   moderationController.resolveReport
@@ -78,7 +78,7 @@ router.put(
   authenticate,
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
-    body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
+    body('notes').trim().isLength({ min: 1, max: 2000 }).withMessage('Notes must be 1-2000 characters')
   ],
   validate,
   moderationController.dismissReport

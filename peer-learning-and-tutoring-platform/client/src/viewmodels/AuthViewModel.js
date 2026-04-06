@@ -106,8 +106,9 @@ export class AuthViewModel {
         this.setUser(user);
         return { success: true, data: response.data };
       } else {
-        this.setError(response.message || 'Registration failed');
-        return { success: false, message: response.message };
+        const errorMessage = response.errors?.[0]?.message || response.message || 'Registration failed';
+        this.setError(errorMessage);
+        return { success: false, message: errorMessage, errors: response.errors };
       }
     } catch (error) {
       this.setError(error.message || 'Registration failed');
@@ -191,10 +192,11 @@ export class AuthViewModel {
     if (!this.user) return '/login';
     
     const roleRoutes = {
-      admin: '/admin/dashboard',
-      tutor: '/tutor/dashboard',
-      parent: '/parent/dashboard',
-      student: '/student/dashboard'
+      admin: '/dashboard',
+      moderator: '/dashboard',
+      tutor: '/dashboard/tutor/qa/overview',
+      parent: '/dashboard',
+      student: '/dashboard'
     };
     
     return roleRoutes[this.user.role] || '/dashboard';

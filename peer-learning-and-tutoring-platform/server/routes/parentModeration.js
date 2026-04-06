@@ -254,17 +254,56 @@ router.post('/parent/link-student', [
 });
 
 /**
- * @route   POST /api/parent/respond-link/:linkId
- * @desc    Student responds to parent link request
- * @access  Private
+ * @route   GET /api/parent/admin/link-requests
+ * @desc    Get pending parent-student link requests (Admin)
+ * @access  Private (Admin)
  */
-router.post('/parent/respond-link/:linkId', [
+router.get('/parent/admin/link-requests', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admin can access parent link requests'
+      });
+    }
+
+    const requests = await ParentDashboardService.getPendingLinkRequestsForAdmin();
+
+    res.json({
+      success: true,
+      message: 'Pending parent link requests retrieved',
+      data: { requests }
+    });
+  } catch (error) {
+    console.error('Error getting pending parent link requests:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to retrieve pending requests',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   POST /api/parent/admin/review-link/:linkId
+ * @desc    Admin approves/rejects parent link request
+ * @access  Private (Admin)
+ */
+router.post('/parent/admin/review-link/:linkId', [
   authenticate,
   param('linkId').isMongoId(),
   body('approve').isBoolean(),
+  body('reviewNote').optional().isString().trim().isLength({ max: 500 }),
   body('permissions').optional().isObject()
 ], async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admin can review parent link requests'
+      });
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -275,26 +314,26 @@ router.post('/parent/respond-link/:linkId', [
     }
 
     const { linkId } = req.params;
-    const { approve, permissions } = req.body;
+    const { approve, reviewNote, permissions } = req.body;
 
-    const result = await ParentDashboardService.respondToLinkRequest(
+    const result = await ParentDashboardService.reviewLinkRequestByAdmin(
       linkId,
       req.user._id,
       approve,
+      reviewNote,
       permissions
     );
 
     res.json({
       success: true,
-      message: approve ? 'Link approved' : 'Link declined',
+      message: approve ? 'Link approved by admin' : 'Link rejected by admin',
       data: result
     });
-
   } catch (error) {
-    console.error('Error responding to link:', error);
+    console.error('Error reviewing parent link request:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to respond',
+      message: error.message || 'Failed to review link request',
       error: error.message
     });
   }

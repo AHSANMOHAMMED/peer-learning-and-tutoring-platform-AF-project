@@ -1,5 +1,7 @@
 ﻿export const grades = [6, 7, 8, 9, 10, 11];
 
+export const qaForumSupportedGrades = [6, 8, 9];
+
 export const gradeLabels = {
   6: 'Grade 6',
   7: 'Grade 7',
@@ -26,6 +28,227 @@ export const savePreferredMedium = (medium) => {
   }
 };
 
+const qaUiText = {
+  English: {
+    mediumSelection: {
+      preferredExamMedium: 'Preferred exam medium',
+      chooseLearningMedium: 'Choose your learning medium',
+      description: 'Pick the language that helps you feel most comfortable while practicing. You can change this anytime before starting a new topic.',
+      mediumBadge: 'Medium',
+      selected: 'Selected',
+      currentPreferredMedium: 'Current preferred medium',
+      continueToGradeSelection: 'Continue to grade selection',
+      cardDescription: (medium) => `Practice questions with ${medium} as your preferred medium.`
+    },
+    gradeSelection: {
+      chooseYourGrade: 'Choose Your Grade',
+      forumInfo: 'QA forum is currently enabled for Grades 6, 8, and 9. Only your registered grade is active.',
+      preferredMedium: 'Preferred medium',
+      pleaseLogin: 'Please log in to open your grade.',
+      loginNow: 'Log in now',
+      yourGrade: 'Your Grade',
+      locked: 'Locked',
+      gradeCardDescription: (grade) => `Good for grade ${grade} learners with clear subject practice and friendly review.`,
+      yourAssignedGrade: 'Your assigned grade',
+      yourAssignedGradeDesc: (grade) => `Grade ${grade || 'not set yet'} is the grade you can use in the Q&A Forum.`,
+      profileHint: 'If your grade is not set correctly, update your profile from the dashboard.',
+      tutorAssignedGrade: 'Tutor assigned grade',
+      tutorAssignedGradeDesc: (grade) => `Grade ${grade || 'not set yet'} is unlocked for your tutor Q&A workflow.`,
+      tutorHint: 'If your grade is missing, update your profile or ask admin to assign Grade 6, 8, or 9.'
+    },
+    subjectSelection: {
+      chooseSubject: 'Choose a Subject',
+      subjectsForGrade: (grade) => `Subjects for Grade ${grade}`,
+      backToGrades: 'Back to grades',
+      accessUnavailable: 'Access unavailable',
+      accessByGrade: (grade) => `You can only open subjects for the grade selected during signup. Please log in with a student account for Grade ${grade}.`,
+      accessUnsupported: 'This QA forum currently supports Grades 6, 8, and 9 only.',
+      login: 'Log in',
+      chooseYourGrade: 'Choose your grade',
+      practiceQuestions: (grade, subject) => `Practice questions for Grade ${grade} in ${subject}.`
+    },
+    history: {
+      activityHistoryTag: 'Q&A activity history',
+      yourPracticeHistory: 'Your practice history',
+      historyDescription: 'Review your recent question attempts, filter by difficulty or type, and keep track of progress over time.',
+      preferredMedium: 'Preferred medium',
+      changeMedium: 'Change medium',
+      stats: 'Stats',
+      totalAttempts: 'Total attempts',
+      correctAttempts: 'Correct attempts',
+      mostRecent: 'Most recent',
+      noActivityYet: 'No activity yet',
+      quickActions: 'Quick actions',
+      continuePractice: 'Continue practice',
+      searchPlaceholder: 'Search subject or question...',
+      allDifficulties: 'All difficulties',
+      allQuestionTypes: 'All question types',
+      structuredEssay: 'Structured / essay',
+      sortByNewest: 'Sort by newest',
+      sortByDifficulty: 'Sort by difficulty',
+      sortByPoints: 'Sort by points',
+      noActivityFound: 'No activity found yet.',
+      noActivityHint: 'Start answering questions to build your practice history.',
+      difficulty: 'Difficulty',
+      type: 'Type',
+      points: 'Points',
+      score: 'Score',
+      grade: 'Grade',
+      pleaseLogin: 'Please log in',
+      loginRequired: 'You must sign in as a student to view your Q&A activity history.',
+      login: 'Log in',
+      mcq: 'MCQ',
+      structured: 'Structured'
+    }
+  },
+  Sinhala: {
+    mediumSelection: {
+      preferredExamMedium: 'ප්‍රියතම විභාග මාධ්‍යය',
+      chooseLearningMedium: 'ඔබගේ ඉගෙනුම් මාධ්‍යය තෝරන්න',
+      description: 'පුහුණුවේදී ඔබට වඩාත් පහසු භාෂාව තෝරන්න. නව මාතෘකාවක් ආරම්භ කිරීමට පෙර මෙය ඕනෑම වේලාවක වෙනස් කළ හැකිය.',
+      mediumBadge: 'මාධ්‍යය',
+      selected: 'තෝරා ඇත',
+      currentPreferredMedium: 'වත්මන් ප්‍රියතම මාධ්‍යය',
+      continueToGradeSelection: 'ශ්‍රේණි තේරීමට ඉදිරියට යන්න',
+      cardDescription: (medium) => `${medium} මාධ්‍යයෙන් පුහුණු ප්‍රශ්න.`
+    },
+    gradeSelection: {
+      chooseYourGrade: 'ඔබගේ ශ්‍රේණිය තෝරන්න',
+      forumInfo: 'QA සංසදය දැනට ක්‍රියාත්මක වන්නේ 6, 8 සහ 9 ශ්‍රේණි සඳහා පමණි. ඔබ ලියාපදිංචි කළ ශ්‍රේණිය පමණක් සක්‍රීය වේ.',
+      preferredMedium: 'ප්‍රියතම මාධ්‍යය',
+      pleaseLogin: 'ඔබගේ ශ්‍රේණිය විවෘත කිරීමට පිවිසෙන්න.',
+      loginNow: 'දැන් පිවිසෙන්න',
+      yourGrade: 'ඔබගේ ශ්‍රේණිය',
+      locked: 'අගුළු දමා ඇත',
+      gradeCardDescription: (grade) => `${grade} ශ්‍රේණියේ සිසුන් සඳහා සුදුසු පුහුණු ප්‍රශ්න.`,
+      yourAssignedGrade: 'ඔබට පවරා ඇති ශ්‍රේණිය',
+      yourAssignedGradeDesc: (grade) => `Q&A සංසදය භාවිතා කිරීමට ඔබගේ ශ්‍රේණිය ${grade || 'තවම සකසා නැත'} වේ.`,
+      profileHint: 'ඔබගේ ශ්‍රේණිය වැරදි නම් dashboard තුළ profile යාවත්කාලීන කරන්න.',
+      tutorAssignedGrade: 'ටියුටර්ට පවරා ඇති ශ්‍රේණිය',
+      tutorAssignedGradeDesc: (grade) => `ටියුටර් Q&A සඳහා විවෘත ශ්‍රේණිය ${grade || 'තවම සකසා නැත'} වේ.`,
+      tutorHint: 'ශ්‍රේණිය නොපෙන්වයි නම් profile යාවත්කාලීන කරන්න හෝ admin අමතන්න.'
+    },
+    subjectSelection: {
+      chooseSubject: 'විෂයයක් තෝරන්න',
+      subjectsForGrade: (grade) => `${grade} ශ්‍රේණිය සඳහා විෂයයන්`,
+      backToGrades: 'ශ්‍රේණි වෙත ආපසු',
+      accessUnavailable: 'ප්‍රවේශය නොමැත',
+      accessByGrade: (grade) => `ලියාපදිංචියදී තෝරාගත් ${grade} ශ්‍රේණියට පමණක් ප්‍රවේශ විය හැක.`,
+      accessUnsupported: 'මෙම QA සංසදය දැනට සහාය දක්වන්නේ 6, 8 සහ 9 ශ්‍රේණි සඳහා පමණි.',
+      login: 'පිවිසෙන්න',
+      chooseYourGrade: 'ඔබගේ ශ්‍රේණිය තෝරන්න',
+      practiceQuestions: (grade, subject) => `${grade} ශ්‍රේණිය සඳහා ${subject} විෂයේ පුහුණු ප්‍රශ්න.`
+    },
+    history: {
+      activityHistoryTag: 'Q&A ක්‍රියාකාරී ඉතිහාසය',
+      yourPracticeHistory: 'ඔබගේ පුහුණු ඉතිහාසය',
+      historyDescription: 'ඔබගේ මෑත උත්සාහයන් සමාලෝචනය කර, අපහසුතාව හෝ වර්ග අනුව පෙරහන් කර ප්‍රගතිය නිරීක්ෂණය කරන්න.',
+      preferredMedium: 'ප්‍රියතම මාධ්‍යය',
+      changeMedium: 'මාධ්‍යය වෙනස් කරන්න',
+      stats: 'සංඛ්‍යාලේඛන',
+      totalAttempts: 'මුළු උත්සාහයන්',
+      correctAttempts: 'නිවැරදි උත්සාහයන්',
+      mostRecent: 'අවසන් වරට',
+      noActivityYet: 'තවම ක්‍රියාකාරකම් නොමැත',
+      quickActions: 'ඉක්මන් ක්‍රියා',
+      continuePractice: 'පුහුණුව දිගටම',
+      searchPlaceholder: 'විෂයය හෝ ප්‍රශ්නය සොයන්න...',
+      allDifficulties: 'සියලු අපහසුතා',
+      allQuestionTypes: 'සියලු ප්‍රශ්න වර්ග',
+      structuredEssay: 'ව්‍යුහගත / රචනා',
+      sortByNewest: 'අලුත්ම අනුව',
+      sortByDifficulty: 'අපහසුතාව අනුව',
+      sortByPoints: 'ලකුණු අනුව',
+      noActivityFound: 'තවම ක්‍රියාකාරී ඉතිහාසයක් නැත.',
+      noActivityHint: 'ඉතිහාසය සෑදීමට ප්‍රශ්න උත්සාහ කරන්න.',
+      difficulty: 'අපහසුතාව',
+      type: 'වර්ගය',
+      points: 'ලකුණු',
+      score: 'ප්‍රතිඵලය',
+      grade: 'ශ්‍රේණිය',
+      pleaseLogin: 'කරුණාකර පිවිසෙන්න',
+      loginRequired: 'ඔබගේ Q&A ඉතිහාසය බැලීමට ශිෂ්‍ය ගිණුමකින් පිවිසිය යුතුය.',
+      login: 'පිවිසෙන්න',
+      mcq: 'බහු තේරීම්',
+      structured: 'ව්‍යුහගත'
+    }
+  },
+  Tamil: {
+    mediumSelection: {
+      preferredExamMedium: 'விருப்பத் தேர்வு மூலம்',
+      chooseLearningMedium: 'உங்கள் கற்றல் மொழியைத் தேர்வுசெய்க',
+      description: 'பயிற்சியின் போது உங்களுக்கு வசதியான மொழியைத் தேர்வு செய்யுங்கள். புதிய தலைப்பைத் தொடங்கும் முன் இதை எப்போதும் மாற்றலாம்.',
+      mediumBadge: 'மூலம்',
+      selected: 'தேர்வு செய்யப்பட்டது',
+      currentPreferredMedium: 'தற்போதைய விருப்ப மூலம்',
+      continueToGradeSelection: 'வகுப்பு தேர்வுக்கு தொடர்க',
+      cardDescription: (medium) => `${medium} மூலம் பயிற்சி கேள்விகள்.`
+    },
+    gradeSelection: {
+      chooseYourGrade: 'உங்கள் வகுப்பைத் தேர்வுசெய்க',
+      forumInfo: 'QA தளம் தற்போது 6, 8, 9 வகுப்புகளுக்கு மட்டும் செயலில் உள்ளது. நீங்கள் பதிவு செய்த வகுப்பு மட்டும் திறந்திருக்கும்.',
+      preferredMedium: 'விருப்ப மூலம்',
+      pleaseLogin: 'உங்கள் வகுப்பை திறக்க உள்நுழையவும்.',
+      loginNow: 'இப்போது உள்நுழை',
+      yourGrade: 'உங்கள் வகுப்பு',
+      locked: 'பூட்டப்பட்டது',
+      gradeCardDescription: (grade) => `${grade} ஆம் வகுப்பு மாணவர்களுக்கு ஏற்ற பயிற்சி கேள்விகள்.`,
+      yourAssignedGrade: 'உங்களுக்கு ஒதுக்கப்பட்ட வகுப்பு',
+      yourAssignedGradeDesc: (grade) => `Q&A தளத்தில் பயன்படுத்தும் வகுப்பு ${grade || 'இன்னும் அமைக்கப்படவில்லை'}.`,
+      profileHint: 'வகுப்பு தவறாக இருந்தால் dashboard-ல் profile புதுப்பிக்கவும்.',
+      tutorAssignedGrade: 'Tutor-க்கு ஒதுக்கப்பட்ட வகுப்பு',
+      tutorAssignedGradeDesc: (grade) => `Tutor Q&A வேலைப்போக்கிற்கான வகுப்பு ${grade || 'இன்னும் அமைக்கப்படவில்லை'}.`,
+      tutorHint: 'வகுப்பு காணப்படாவிட்டால் profile புதுப்பிக்கவும் அல்லது admin-ஐ தொடர்புகொள்ளவும்.'
+    },
+    subjectSelection: {
+      chooseSubject: 'ஒரு பாடத்தைத் தேர்வு செய்க',
+      subjectsForGrade: (grade) => `${grade} ஆம் வகுப்புக்கான பாடங்கள்`,
+      backToGrades: 'வகுப்புகளுக்கு திரும்பு',
+      accessUnavailable: 'அணுகல் இல்லை',
+      accessByGrade: (grade) => `பதிவு செய்த ${grade} ஆம் வகுப்புக்கே அணுகலாம்.`,
+      accessUnsupported: 'இந்த QA தளம் தற்போது 6, 8, 9 வகுப்புகளுக்கு மட்டும் ஆதரவு அளிக்கிறது.',
+      login: 'உள்நுழை',
+      chooseYourGrade: 'உங்கள் வகுப்பைத் தேர்வுசெய்க',
+      practiceQuestions: (grade, subject) => `${grade} ஆம் வகுப்பிற்கு ${subject} பாடப் பயிற்சி கேள்விகள்.`
+    },
+    history: {
+      activityHistoryTag: 'Q&A செயல்பாட்டு வரலாறு',
+      yourPracticeHistory: 'உங்கள் பயிற்சி வரலாறு',
+      historyDescription: 'சமீபத்திய முயற்சிகளைப் பாருங்கள், சிரம நிலை/வகை படி வடிகட்டி முன்னேற்றத்தை கண்காணிக்கவும்.',
+      preferredMedium: 'விருப்ப மூலம்',
+      changeMedium: 'மூலத்தை மாற்று',
+      stats: 'புள்ளிவிவரங்கள்',
+      totalAttempts: 'மொத்த முயற்சிகள்',
+      correctAttempts: 'சரியான முயற்சிகள்',
+      mostRecent: 'சமீபத்தியது',
+      noActivityYet: 'இன்னும் செயல்பாடு இல்லை',
+      quickActions: 'விரைவு செயல்கள்',
+      continuePractice: 'பயிற்சியை தொடர்க',
+      searchPlaceholder: 'பாடம் அல்லது கேள்வி தேடுங்கள்...',
+      allDifficulties: 'அனைத்து சிரம நிலைகள்',
+      allQuestionTypes: 'அனைத்து கேள்வி வகைகள்',
+      structuredEssay: 'கட்டமைக்கப்பட்ட / கட்டுரை',
+      sortByNewest: 'புதியவை முதலில்',
+      sortByDifficulty: 'சிரம நிலைப்படி',
+      sortByPoints: 'மதிப்பெண் படி',
+      noActivityFound: 'இன்னும் முயற்சி வரலாறு இல்லை.',
+      noActivityHint: 'வரலாறு உருவாக கேள்விகளை முயற்சி செய்யுங்கள்.',
+      difficulty: 'சிரம நிலை',
+      type: 'வகை',
+      points: 'மதிப்பெண்',
+      score: 'மதிப்பீடு',
+      grade: 'வகுப்பு',
+      pleaseLogin: 'தயவு செய்து உள்நுழையவும்',
+      loginRequired: 'Q&A வரலாறைப் பார்க்க மாணவர் கணக்கில் உள்நுழைய வேண்டும்.',
+      login: 'உள்நுழை',
+      mcq: 'பல்தேர்வு',
+      structured: 'கட்டமைக்கப்பட்டது'
+    }
+  }
+};
+
+export const getQAUiText = (medium) => qaUiText[medium] || qaUiText.English;
+
 const getQAHistoryKey = (userId) => `peerlearn-qa-history:${userId}`;
 
 export const loadQAHistory = (userId) => {
@@ -44,6 +267,67 @@ export const saveQAAttempt = (userId, attempt) => {
   const history = [attempt, ...existing].slice(0, 100);
   window.localStorage.setItem(getQAHistoryKey(userId), JSON.stringify(history));
   return history;
+};
+
+const customQuestionsStorageKey = 'peerlearn-qa-custom-questions';
+
+export const loadCustomQuestions = () => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(customQuestionsStorageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveCustomQuestions = (questions) => {
+  if (typeof window === 'undefined') return [];
+  const safeQuestions = Array.isArray(questions) ? questions : [];
+  window.localStorage.setItem(customQuestionsStorageKey, JSON.stringify(safeQuestions));
+  return safeQuestions;
+};
+
+export const upsertCustomQuestion = (question) => {
+  if (!question?.id) return loadCustomQuestions();
+  const existing = loadCustomQuestions();
+  const updated = [question, ...existing.filter((item) => item.id !== question.id)];
+  return saveCustomQuestions(updated);
+};
+
+export const deleteCustomQuestionById = (questionId) => {
+  if (!questionId) return loadCustomQuestions();
+  const existing = loadCustomQuestions();
+  const updated = existing.filter((item) => item.id !== questionId);
+  return saveCustomQuestions(updated);
+};
+
+export const getCombinedQuestionBank = () => {
+  const customQuestions = loadCustomQuestions();
+  const overriddenIds = new Set(customQuestions.map((q) => q.id));
+  return [...customQuestions, ...questionBank.filter((q) => !overriddenIds.has(q.id))];
+};
+
+const qaSubmissionsStorageKey = 'peerlearn-qa-submissions';
+
+export const loadQASubmissions = () => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(qaSubmissionsStorageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveQASubmission = (submission) => {
+  if (typeof window === 'undefined' || !submission) return [];
+  const existing = loadQASubmissions();
+  const next = [submission, ...existing].slice(0, 300);
+  window.localStorage.setItem(qaSubmissionsStorageKey, JSON.stringify(next));
+  return next;
 };
 
 export const subjectsByGrade = {
@@ -159,19 +443,54 @@ export const getLocalizedSubjectName = (subject, medium) => {
   return translations?.[medium] || subject;
 };
 
+export const isTamilSubjectName = (subject) => {
+  const value = String(subject || '').trim().toLowerCase();
+  return value === 'tamil' || value.includes('tamil') || value.includes('தமிழ்') || value.includes('තමි');
+};
+
+export const isEnglishSubjectName = (subject) => {
+  const value = String(subject || '').trim().toLowerCase();
+  return value === 'english' || value.includes('english') || value.includes('ඉංග්‍රීසි') || value.includes('ஆங்கில');
+};
+
+export const getEffectiveQuestionMedium = (subject, preferredMedium) => {
+  if (isTamilSubjectName(subject)) return 'Tamil';
+  if (isEnglishSubjectName(subject)) return 'English';
+  return preferredMedium;
+};
+
+const localizeOptionValue = (value, medium) => {
+  if (typeof value !== 'string') return value;
+
+  return getLocalizedSubjectName(value, medium);
+};
+
+export const getLocalizedDifficultyLabel = (difficulty, medium) => {
+  const key = String(difficulty || '').trim();
+  if (!key) return key;
+
+  if (medium === 'Sinhala') {
+    if (key === 'Easy') return 'පහසු';
+    if (key === 'Medium') return 'මධ්‍යම';
+    if (key === 'Hard') return 'අපහසු';
+    if (key === 'Expert') return 'උසස්';
+  }
+
+  if (medium === 'Tamil') {
+    if (key === 'Easy') return 'எளிது';
+    if (key === 'Medium') return 'நடுத்தரம்';
+    if (key === 'Hard') return 'கடினம்';
+    if (key === 'Expert') return 'மேம்பட்ட';
+  }
+
+  return key;
+};
+
 export const getLocalizedQuestion = (question, medium) => {
   if (!question) return question;
-  const sinhalaExcludedSubjects = ['Tamil', 'English', 'English Language'];
-  const isSinhalaPreferred = medium === 'Sinhala';
-  const shouldUseSinhala = isSinhalaPreferred && !sinhalaExcludedSubjects.includes(question.subject);
-  const shouldUseTamilForTamilSubject = medium === 'English' && question.subject === 'Tamil';
-  const effectiveMedium = shouldUseSinhala || question.subject === 'Sinhala'
-    ? 'Sinhala'
-    : shouldUseTamilForTamilSubject
-    ? 'Tamil'
-    : medium;
+  const effectiveMedium = getEffectiveQuestionMedium(question.subject, medium);
   const translation = question.translations?.[effectiveMedium];
-  return translation
+  const baseQuestion = translation
     ? {
         ...question,
         title: translation.title || question.title,
@@ -180,7 +499,22 @@ export const getLocalizedQuestion = (question, medium) => {
         correctAnswer: translation.correctAnswer || question.correctAnswer,
         explanation: translation.explanation || question.explanation
       }
-    : question;
+    : { ...question };
+
+  const localizedOptions = Array.isArray(baseQuestion.options)
+    ? baseQuestion.options.map((option) => localizeOptionValue(option, effectiveMedium))
+    : baseQuestion.options;
+
+  const localizedCorrectAnswer = typeof baseQuestion.correctAnswer === 'string'
+    ? localizeOptionValue(baseQuestion.correctAnswer, effectiveMedium)
+    : baseQuestion.correctAnswer;
+
+  return {
+    ...baseQuestion,
+    difficulty: getLocalizedDifficultyLabel(baseQuestion.difficulty, effectiveMedium),
+    options: localizedOptions,
+    correctAnswer: localizedCorrectAnswer
+  };
 };
 
 const slugify = (subject) => subject.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');

@@ -8,13 +8,28 @@ import LoginView from './views/LoginView'
 import RegisterView from './views/RegisterView'
 import ForgotPasswordView from './views/ForgotPasswordView'
 import StudentDashboard from './views/StudentDashboard'
-import TutorDashboard from './views/TutorDashboard'
 import BrowseTutors from './views/BrowseTutors'
 import SessionRoom from './components/SessionRoom'
 import ResourceLibrary from './components/ResourceLibrary'
 import AdminDashboard from './views/AdminDashboard_new'
 import ModeratorDashboard from './components/ModeratorDashboard'
 import UserManagementView from './views/UserManagementView'
+import QAForumHome from './pages/qa/QAForumHome'
+import GradeSelectionPage from './pages/qa/GradeSelectionPage'
+import SubjectSelectionPage from './pages/qa/SubjectSelectionPage'
+import QuestionBankPage from './pages/qa/QuestionBankPage'
+import AttemptQuestionPage from './pages/qa/AttemptQuestionPage'
+import MediumSelectionPage from './pages/qa/MediumSelectionPage'
+import QAHistoryPage from './pages/qa/QAHistoryPage'
+import TutorQAForumPage from './views/TutorQAForumPage'
+import TutorGradeSelectionPage from './pages/qa/TutorGradeSelectionPage'
+import TutorSubjectSelectionPage from './pages/qa/TutorSubjectSelectionPage'
+import TutorQuestionManagerPage from './pages/qa/TutorQuestionManagerPage'
+import TutorCreateQuestionPage from './pages/qa/TutorCreateQuestionPage'
+import TutorQAForumHome from './pages/qa/TutorQAForumHome'
+import TutorQAOverviewPage from './pages/qa/TutorQAOverviewPage'
+import TutorStudentReportsPage from './pages/qa/TutorStudentReportsPage'
+import AdminQAModerationPage from './pages/qa/AdminQAModerationPage'
 
 // NEW: MVC Views - Materials
 import UploadMaterial from './views/Materials/UploadMaterial'
@@ -45,6 +60,8 @@ import TutorApprovalQueue from './views/Admin/TutorApprovalQueue'
 import ReportsModeration from './components/Admin/ReportsModeration'
 import AnalyticsOverview from './components/Admin/AnalyticsOverview'
 import UserManagement from './components/Admin/UserManagement'
+import ParentLinkRequests from './components/Admin/ParentLinkRequests'
+import AdminQAOverview from './components/Admin/AdminQAOverview'
 
 // Unauthorized Page
 const UnauthorizedPage = () => (
@@ -184,6 +201,15 @@ function App() {
               {/* Tutor Routes */}
               <Route path="tutor/sessions" element={<MySessions />} />
               <Route path="tutor/requests" element={<MySessions />} />
+              <Route path="tutor/questions" element={<TutorQAForumPage />} />
+              <Route path="tutor/qa" element={<TutorGradeSelectionPage />} />
+              <Route path="tutor/qa/overview" element={<TutorQAOverviewPage />} />
+              <Route path="tutor/qa/reports" element={<TutorStudentReportsPage />} />
+              <Route path="tutor/qa/forum" element={<TutorQAForumHome />} />
+              <Route path="tutor/qa/:grade/subjects" element={<TutorSubjectSelectionPage />} />
+              <Route path="tutor/qa/:grade/subjects/:subject" element={<TutorQuestionManagerPage />} />
+              <Route path="tutor/qa/:grade/subjects/:subject/create" element={<TutorCreateQuestionPage />} />
+              <Route path="tutor/qa/:grade/subjects/:subject/edit" element={<TutorCreateQuestionPage />} />
               <Route path="tutor/availability" element={<DashboardHome />} />
               <Route path="tutor/earnings" element={<DashboardHome />} />
               <Route path="tutor/reviews" element={<DashboardHome />} />
@@ -261,6 +287,30 @@ function App() {
                 } 
               />
               <Route 
+                path="admin/parent-links" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <ParentLinkRequests />
+                  </RoleProtectedRoute>
+                } 
+              />
+              <Route 
+                path="admin/qa-overview" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin', 'moderator']}>
+                    <AdminQAOverview />
+                  </RoleProtectedRoute>
+                } 
+              />
+              <Route
+                path="admin/qa-moderation"
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin', 'moderator']}>
+                    <AdminQAModerationPage />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route 
                 path="admin/moderation" 
                 element={
                   <RoleProtectedRoute allowedRoles={['admin', 'moderator']}>
@@ -335,6 +385,13 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/qa" element={<QAForumHome />} />
+            <Route path="/qa/medium" element={<MediumSelectionPage />} />
+            <Route path="/qa/history" element={<QAHistoryPage />} />
+            <Route path="/qa/grades" element={<GradeSelectionPage />} />
+            <Route path="/qa/grades/:grade/subjects" element={<SubjectSelectionPage />} />
+            <Route path="/qa/grades/:grade/subjects/:subject/questions" element={<QuestionBankPage />} />
+            <Route path="/qa/attempt/:questionId" element={<AttemptQuestionPage />} />
             
             {/* Legacy Routes - Redirect to new dashboard */}
             <Route path="/student/dashboard" element={<Navigate to="/dashboard" />} />

@@ -3,6 +3,8 @@ const ModeratorAction = require('../models/ModeratorAction');
 const User = require('../models/User');
 const Material = require('../models/Material');
 const Booking = require('../models/Booking');
+const Question = require('../models/Question');
+const Answer = require('../models/Answer');
 const { emitNotification } = require('../services/notificationService');
 
 // Submit a report
@@ -22,6 +24,12 @@ exports.submitReport = async (req, res) => {
         break;
       case 'session':
         reportedItem = await Booking.findById(reportedId);
+        break;
+      case 'question':
+        reportedItem = await Question.findById(reportedId);
+        break;
+      case 'answer':
+        reportedItem = await Answer.findById(reportedId);
         break;
       default:
         return res.status(400).json({
@@ -126,7 +134,9 @@ exports.getReports = async (req, res) => {
       });
     }
 
-    const result = await Report.getByStatus(status, {
+    const normalizedStatus = status === 'all' ? undefined : status;
+
+    const result = await Report.getByStatus(normalizedStatus, {
       page: parseInt(page),
       limit: parseInt(limit),
       assignedTo: assignedTo || undefined
@@ -184,6 +194,15 @@ exports.getReportById = async (req, res) => {
         break;
       case 'session':
         reportedItem = await Booking.findById(report.reportedId, 'subject date startTime endTime status studentId tutorId');
+        break;
+      case 'question':
+        reportedItem = await Question.findById(report.reportedId, 'title body subject grade author createdAt')
+          .populate('author', 'username profile.firstName profile.lastName role');
+        break;
+      case 'answer':
+        reportedItem = await Answer.findById(report.reportedId, 'body question author status isAccepted createdAt')
+          .populate('author', 'username profile.firstName profile.lastName role')
+          .populate('question', 'title subject grade');
         break;
     }
 
@@ -270,9 +289,18 @@ exports.resolveReport = async (req, res) => {
     }
 
     // Create moderator action
+    const actionTypeMap = {
+      no_action: 'note_only',
+      warning: 'warning',
+      content_removed: 'delete_content',
+      user_suspended: 'suspend',
+      user_banned: 'ban',
+      content_flagged: 'flag_content'
+    };
+
     const moderatorAction = new ModeratorAction({
       moderatorId: userId,
-      actionType: action === 'no_action' ? 'note_only' : action,
+      actionType: actionTypeMap[action] || 'note_only',
       targetId: report.reportedId,
       targetType: report.reportedType,
       reason: report.reason,
@@ -607,6 +635,10 @@ async function takeModerationAction(report, action, moderatorId, notes) {
     case 'content_removed':
       if (report.reportedType === 'material') {
         await Material.findByIdAndUpdate(report.reportedId, { status: 'rejected' });
+      } else if (report.reportedType === 'question') {
+        await Question.findByIdAndDelete(report.reportedId);
+      } else if (report.reportedType === 'answer') {
+        await Answer.findByIdAndDelete(report.reportedId);
       }
       break;
     

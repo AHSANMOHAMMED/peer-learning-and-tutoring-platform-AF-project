@@ -40,7 +40,7 @@ const registerValidation = [
     .withMessage('Last name is required')
     .trim(),
   body('profile.grade')
-    .optional()
+    .optional({ checkFalsy: true })
     .isInt({ min: 6, max: 13 })
     .withMessage('Grade must be between 6 and 13')
 ];

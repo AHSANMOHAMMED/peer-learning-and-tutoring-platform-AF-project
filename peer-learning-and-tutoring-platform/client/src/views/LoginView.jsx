@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authViewModel } from '../viewmodels/AuthViewModel';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
 
 const LoginView = () => {
   const navigate = useNavigate();
-  const { isLoading, error, clearError } = useAuthViewModel();
+  const { login, isLoading, error, clearError, getDashboardRoute } = useAuthViewModel();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -24,15 +23,12 @@ const LoginView = () => {
     e.preventDefault();
     console.log('LoginView: Submitting login form');
     
-    const result = await authViewModel.login(formData);
+    const result = await login(formData);
     console.log('LoginView: Login result:', result);
     
     if (result.success) {
-      console.log('LoginView: Login successful, waiting before navigation');
-      // Wait for auth state to update
-      await new Promise(resolve => setTimeout(resolve, 500));
-      console.log('LoginView: Navigating to dashboard');
-      navigate('/dashboard');
+      console.log('LoginView: Login successful, navigating to dashboard route');
+      navigate(getDashboardRoute(), { replace: true });
     }
   };
 

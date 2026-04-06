@@ -5,6 +5,7 @@ const PeerSession = require('../models/PeerSession');
 const HomeworkSession = require('../models/HomeworkSession');
 const UserGamification = require('../models/UserGamification');
 const Notification = require('../models/Notification');
+const QASubmission = require('../models/QASubmission');
 
 class ParentDashboardService {
   constructor() {
@@ -37,7 +38,7 @@ class ParentDashboardService {
           throw new Error('You are already linked to this student');
         }
         if (existingLink.status === 'pending') {
-          throw new Error('Link request is already pending student approval');
+          throw new Error('Link request is already pending admin approval');
         }
       }
 
@@ -59,16 +60,23 @@ class ParentDashboardService {
         status: 'pending'
       });
 
-      // Notify student
-      await Notification.create({
-        recipient: student._id,
-        type: 'social',
-        title: 'Parent Link Request',
-        message: `A parent wants to link to your account for monitoring. Please review and approve.`,
-        priority: 'normal',
-        actionUrl: '/dashboard/settings/parents',
-        channels: ['inApp', 'email']
-      });
+      // Notify admins for manual approval
+      const admins = await User.find({ role: 'admin', isActive: true }).select('_id');
+      if (admins.length > 0) {
+        const notifications = admins.map((admin) => ({
+          userId: admin._id,
+          type: 'system',
+          title: 'Parent-Student Link Request',
+          message: `Parent requested to link with student ${student.name} (${student.email}).`,
+          priority: 'normal',
+          actionUrl: '/dashboard/admin/parent-links',
+          channels: {
+            inApp: true,
+            email: true
+          }
+        }));
+        await Notification.insertMany(notifications);
+      }
 
       return {
         link,
@@ -87,13 +95,12 @@ class ParentDashboardService {
   }
 
   /**
-   * Student approves/rejects parent link
+   * Admin approves/rejects parent link
    */
-  async respondToLinkRequest(linkId, studentId, approve, customPermissions = null) {
+  async reviewLinkRequestByAdmin(linkId, adminId, approve, reviewNote = '', customPermissions = null) {
     try {
       const link = await ParentStudentLink.findOne({
         _id: linkId,
-        student: studentId,
         status: 'pending'
       });
 
@@ -101,8 +108,20 @@ class ParentDashboardService {
         throw new Error('Link request not found');
       }
 
+      const adminUser = await User.findOne({ _id: adminId, role: 'admin', isActive: true });
+      if (!adminUser) {
+        throw new Error('Only admin can review parent link requests');
+      }
+
+      const cleanReviewNote = typeof reviewNote === 'string' ? reviewNote.trim() : '';
+
+      link.adminReviewedBy = adminId;
+      link.adminReviewedAt = new Date();
+      link.adminReviewNote = cleanReviewNote;
+
       if (approve) {
         link.status = 'active';
+        link.adminApproved = true;
         link.studentApproved = true;
         link.studentApprovedAt = new Date();
         link.activatedAt = new Date();
@@ -114,30 +133,81 @@ class ParentDashboardService {
 
         await link.save();
 
-        // Notify parent
-        const parent = await User.findById(link.parent);
+        // Notify parent and student
         await Notification.create({
-          recipient: link.parent,
-          type: 'social',
-          title: 'Student Link Approved',
-          message: 'Your link request has been approved. You can now monitor student progress.',
+          userId: link.parent,
+          type: 'system',
+          title: 'Parent Link Approved',
+          message: 'Your request was approved by admin. You can now monitor student progress.',
           priority: 'normal',
-          actionUrl: '/dashboard/parent',
-          channels: ['inApp', 'email']
+          actionUrl: '/dashboard',
+          channels: {
+            inApp: true,
+            email: true
+          }
+        });
+
+        await Notification.create({
+          userId: link.student,
+          type: 'system',
+          title: 'Parent Monitoring Enabled',
+          message: 'Admin approved a parent link request for your account.',
+          priority: 'normal',
+          actionUrl: '/dashboard',
+          channels: {
+            inApp: true
+          }
         });
 
         return { approved: true, link };
       } else {
         link.status = 'revoked';
+        link.adminApproved = false;
         link.revokedAt = new Date();
-        link.revokeReason = 'Student declined';
+        link.revokeReason = cleanReviewNote || 'Declined by admin';
         await link.save();
+
+        await Notification.create({
+          userId: link.parent,
+          type: 'system',
+          title: 'Parent Link Request Declined',
+          message: cleanReviewNote || 'Your parent-student link request was declined by admin.',
+          priority: 'normal',
+          actionUrl: '/dashboard',
+          channels: {
+            inApp: true
+          }
+        });
 
         return { approved: false, link };
       }
 
     } catch (error) {
-      console.error('Error responding to link request:', error);
+      console.error('Error reviewing parent link request:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get pending link requests for admin review
+   */
+  async getPendingLinkRequestsForAdmin() {
+    try {
+      const requests = await ParentStudentLink.find({ status: 'pending' })
+        .populate('parent', 'name email username')
+        .populate('student', 'name email username profile.grade')
+        .sort({ createdAt: -1 });
+
+      return requests.map((request) => ({
+        id: request._id,
+        parent: request.parent,
+        student: request.student,
+        relationship: request.relationship,
+        status: request.status,
+        requestedAt: request.createdAt
+      }));
+    } catch (error) {
+      console.error('Error getting pending parent link requests:', error);
       throw error;
     }
   }
@@ -150,11 +220,14 @@ class ParentDashboardService {
       const links = await ParentStudentLink.find({
         parent: parentId,
         status: 'active'
-      }).populate('student', 'name email profile.grade profile.avatar');
+      }).populate('student', 'username email profile.firstName profile.lastName profile.grade profile.avatar');
 
       return links.map(link => ({
         linkId: link._id,
-        student: link.student,
+        student: {
+          ...link.student.toObject(),
+          name: `${link.student?.profile?.firstName || ''} ${link.student?.profile?.lastName || ''}`.trim() || link.student?.username || 'Student'
+        },
         relationship: link.relationship,
         permissions: link.permissions,
         linkedAt: link.activatedAt
@@ -182,7 +255,7 @@ class ParentDashboardService {
         throw new Error('No access to this student\'s data');
       }
 
-      const student = await User.findById(studentId).select('name profile');
+      const student = await User.findById(studentId).select('username profile');
       
       // Get gamification data
       const gamification = await UserGamification.findOne({ user: studentId })
@@ -220,10 +293,48 @@ class ParentDashboardService {
         .limit(5)
         .select('subject completedAt rating');
 
+      // Get Q&A performance summary (marks/score)
+      const qaSubmissions = await QASubmission.find({ studentId })
+        .sort({ submittedAt: -1 })
+        .select('subject marks points submittedAt')
+        .lean();
+
+      const qaTotals = qaSubmissions.reduce(
+        (acc, submission) => {
+          const marks = Number(submission.marks || 0);
+          const points = Number(submission.points || 0);
+          const safePoints = points > 0 ? points : marks;
+
+          acc.attempts += 1;
+          acc.totalMarks += marks;
+          acc.totalPoints += safePoints;
+
+          const key = submission.subject || 'General';
+          if (!acc.subjects[key]) {
+            acc.subjects[key] = { attempts: 0, marks: 0, points: 0 };
+          }
+
+          acc.subjects[key].attempts += 1;
+          acc.subjects[key].marks += marks;
+          acc.subjects[key].points += safePoints;
+
+          return acc;
+        },
+        { attempts: 0, totalMarks: 0, totalPoints: 0, subjects: {} }
+      );
+
+      const subjectPerformance = Object.entries(qaTotals.subjects).map(([subject, stats]) => ({
+        subject,
+        attempts: stats.attempts,
+        marks: stats.marks,
+        points: stats.points,
+        scorePercentage: stats.points > 0 ? Number(((stats.marks / stats.points) * 100).toFixed(1)) : 0,
+      }));
+
       return {
         student: {
           id: student._id,
-          name: student.name,
+          name: `${student?.profile?.firstName || ''} ${student?.profile?.lastName || ''}`.trim() || student?.username || 'Student',
           grade: student.profile?.grade
         },
         gamification: gamification ? {
@@ -235,6 +346,16 @@ class ParentDashboardService {
         } : null,
         courses: courseData,
         recentActivity: recentSessions,
+        qaPerformance: {
+          attempts: qaTotals.attempts,
+          totalMarks: qaTotals.totalMarks,
+          totalPoints: qaTotals.totalPoints,
+          scorePercentage: qaTotals.totalPoints > 0
+            ? Number(((qaTotals.totalMarks / qaTotals.totalPoints) * 100).toFixed(1))
+            : 0,
+          subjectPerformance,
+          latestSubmissionAt: qaSubmissions[0]?.submittedAt || null,
+        },
         permissions: link.permissions
       };
 
@@ -546,14 +667,17 @@ class ParentDashboardService {
       // Notify other party
       const notifyUserId = isParent ? link.student : link.parent;
       await Notification.create({
-        recipient: notifyUserId,
-        type: 'social',
+        userId: notifyUserId,
+        type: 'system',
         title: 'Parent Link Removed',
         message: isParent 
           ? 'Your parent has removed the monitoring link.'
           : 'The student has removed your monitoring access.',
         priority: 'normal',
-        channels: ['inApp', 'email']
+        channels: {
+          inApp: true,
+          email: true
+        }
       });
 
       return { removed: true };

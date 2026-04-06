@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate, authorize } = require('../middleware/auth');
+const answerController = require('../controllers/answerController');
 const Answer = require('../models/Answer');
 const Question = require('../models/Question');
+
+// Moderation route (admin/moderator)
+router.get('/moderation/all', authenticate, authorize('admin', 'moderator'), answerController.listAnswersForModeration);
 
 // Public routes
 router.get('/question/:questionId', async (req, res) => {
@@ -36,7 +41,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Protected routes (temporarily without auth for testing)
-router.post('/question/:questionId', async (req, res) => {
+router.post('/question/:questionId', authenticate, async (req, res) => {
   try {
     const { questionId } = req.params;
     const { body } = req.body;
@@ -50,7 +55,7 @@ router.post('/question/:questionId', async (req, res) => {
     const answer = new Answer({
       body,
       question: questionId,
-      author: '507f1f77bcf86cd799439012' // Mock user ID
+      author: req.user._id
     });
 
     await answer.save();
@@ -60,7 +65,7 @@ router.post('/question/:questionId', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, async (req, res) => {
   try {
     const answer = await Answer.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!answer) {
@@ -72,7 +77,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const answer = await Answer.findByIdAndDelete(req.params.id);
     if (!answer) {

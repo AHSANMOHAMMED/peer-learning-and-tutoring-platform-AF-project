@@ -15,6 +15,7 @@ import {
   FiBarChart2,
   FiAlertTriangle,
   FiCheckSquare,
+  FiMessageSquare,
   FiX,
   FiLogOut
 } from 'react-icons/fi';
@@ -41,6 +42,7 @@ const Sidebar = ({ isOpen, onClose, user, themeGradient }) => {
     const student = [
       { path: '/dashboard/student/bookings', icon: FiCalendar, label: 'My Bookings' },
       { path: '/dashboard/student/tutors', icon: FiSearch, label: 'Recommended Tutors' },
+      { path: '/qa', icon: FiMessageSquare, label: 'Q&A Forum' },
       { path: '/dashboard/student/progress', icon: FiAward, label: 'Progress' },
       { path: '/dashboard/student/calendar', icon: FiClock, label: 'Calendar' },
     ];
@@ -48,17 +50,30 @@ const Sidebar = ({ isOpen, onClose, user, themeGradient }) => {
     const tutor = [
       { path: '/dashboard/tutor/sessions', icon: FiCalendar, label: 'My Sessions' },
       { path: '/dashboard/tutor/requests', icon: FiClock, label: 'Requests' },
+      { path: '/dashboard/tutor/qa/overview', icon: FiMessageSquare, label: 'Q&A Forum' },
       { path: '/dashboard/tutor/availability', icon: FiCalendar, label: 'Availability' },
       { path: '/dashboard/tutor/earnings', icon: FiDollarSign, label: 'Earnings' },
       { path: '/dashboard/tutor/reviews', icon: FiStar, label: 'Reviews' },
     ];
 
+    const parent = [
+      { path: '/dashboard', icon: FiUsers, label: 'My Children' },
+      { path: '/browse-tutors', icon: FiMessageSquare, label: 'Contact Tutors' },
+      { path: '/profile', icon: FiUser, label: 'Profile' },
+    ];
+
     const admin = [
       { path: '/dashboard/admin/analytics', icon: FiBarChart2, label: 'Analytics' },
+      { path: '/dashboard/admin/qa-overview', icon: FiMessageSquare, label: 'QA Overview' },
+      { path: '/dashboard/admin/qa-moderation', icon: FiShield, label: 'QA Moderation' },
       { path: '/dashboard/admin/tutor-approvals', icon: FiCheckSquare, label: 'Tutor Approvals' },
       { path: '/dashboard/admin/reports', icon: FiAlertTriangle, label: 'Reports' },
       { path: '/dashboard/admin/users', icon: FiUsers, label: 'User Management' },
       { path: '/dashboard/admin/moderation', icon: FiShield, label: 'Moderation' },
+    ];
+
+    const adminOnly = [
+      { path: '/dashboard/admin/parent-links', icon: FiUsers, label: 'Parent Link Requests' },
     ];
 
     if (!user) return common;
@@ -68,7 +83,10 @@ const Sidebar = ({ isOpen, onClose, user, themeGradient }) => {
         return [...common, ...student];
       case 'tutor':
         return [...common, ...tutor];
+      case 'parent':
+        return parent;
       case 'admin':
+        return [...common, ...admin, ...adminOnly];
       case 'moderator':
         return [...common, ...admin];
       default:

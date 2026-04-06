@@ -10,13 +10,15 @@ import {
   FiDollarSign,
   FiStar,
   FiArrowRight,
-  FiPlus
+  FiPlus,
+  FiMessageSquare
 } from 'react-icons/fi';
 import { useAuthViewModel } from '../../viewmodels/AuthViewModel';
 import { useDashboardController } from '../../controllers/useDashboardController';
 import { useStudentController } from '../../controllers/useStudentController';
 import { useTutorController } from '../../controllers/useTutorController';
 import { useAdminController } from '../../controllers/useAdminController';
+import ParentDashboard from '../../pages/ParentDashboard';
 import StatCard from './StatCard';
 import SessionCard from './SessionCard';
 import TutorCard from './TutorCard';
@@ -24,7 +26,7 @@ import ProgressRing from './ProgressRing';
 
 /**
  * DashboardHome - Role-aware dashboard home view
- * Renders different content based on user role (Student/Tutor/Admin)
+ * Renders different content based on user role (Student/Tutor/Parent/Admin)
  * 
  * MVC Pattern: View (Pure UI - All logic in Controllers)
  */
@@ -45,6 +47,7 @@ const DashboardHome = () => {
     switch (user?.role) {
       case 'student': return { gradient: 'from-blue-500 to-indigo-600', color: 'blue' };
       case 'tutor': return { gradient: 'from-emerald-500 to-teal-600', color: 'emerald' };
+      case 'parent': return { gradient: 'from-cyan-500 to-blue-600', color: 'cyan' };
       case 'admin':
       case 'moderator': return { gradient: 'from-slate-700 to-slate-900', color: 'slate' };
       default: return { gradient: 'from-blue-500 to-indigo-600', color: 'blue' };
@@ -264,6 +267,13 @@ const DashboardHome = () => {
             <FiClock className="mr-2" />
             Set Availability
           </Link>
+          <Link 
+            to="/dashboard/tutor/qa/overview"
+            className="inline-flex items-center px-6 py-3 bg-white/20 text-white rounded-lg font-semibold hover:bg-white/30 transition-colors border border-white/40"
+          >
+            <FiMessageSquare className="mr-2" />
+            Q&amp;A Forum
+          </Link>
         </div>
       </div>
 
@@ -333,6 +343,25 @@ const DashboardHome = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
+          {/* Q&A Forum Card */}
+          <Link
+            to="/dashboard/tutor/qa/overview"
+            className="block bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-6 text-white hover:shadow-xl transition-shadow"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <FiMessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <FiArrowRight className="w-5 h-5 text-blue-200" />
+            </div>
+            <h3 className="text-lg font-bold mb-1">Q&amp;A Forum</h3>
+            <p className="text-blue-200 text-sm">Manage questions, grade student answers &amp; track performance.</p>
+            <div className="mt-4 pt-4 border-t border-white/20 flex gap-4 text-xs text-blue-200">
+              <span>✏️ Create questions</span>
+              <span>📊 Student reports</span>
+            </div>
+          </Link>
+
           {/* Recent Reviews */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Reviews</h2>
@@ -540,6 +569,8 @@ const DashboardHome = () => {
       return renderStudentDashboard();
     case 'tutor':
       return renderTutorDashboard();
+    case 'parent':
+      return <ParentDashboard />;
     case 'admin':
     case 'moderator':
       return renderAdminDashboard();

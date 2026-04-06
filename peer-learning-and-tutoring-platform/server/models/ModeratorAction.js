@@ -35,7 +35,7 @@ const moderatorActionSchema = new mongoose.Schema({
   },
   targetType: {
     type: String,
-    enum: ['user', 'material', 'session', 'review', 'message', 'report'],
+    enum: ['user', 'material', 'session', 'review', 'message', 'report', 'question', 'answer'],
     required: true,
     index: true
   },

@@ -1,0 +1,19 @@
+
+> peerlearn-server@1.0.0 dev
+> nodemon index.js
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node index.js`[39m
+(node:18896) [MONGOOSE] Warning: `isNew` is a reserved schema pathname and may break some functionality. You are allowed to use it, but use at your own risk. To disable this warning pass `suppressReservedKeysWarning` as a schema option.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Server running on port 5000
+📚 PeerLearn API is ready
+🔗 Health check: http://localhost:5000/api/health
+🔌 Socket.io server is running
+✅ MongoDB Connected: localhost
+Default badges initialized successfully
+🏆 Default badges initialized successfully
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m

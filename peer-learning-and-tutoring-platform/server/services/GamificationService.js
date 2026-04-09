@@ -13,6 +13,7 @@ class GamificationService {
       courseEnroll: 20,
       courseComplete: 200,
       homeworkHelp: 30,
+      correctAnswer: 25,
       streakBonus: 10, // per day of streak
       ratingReceived: 15,
       helpfulFeedback: 25,

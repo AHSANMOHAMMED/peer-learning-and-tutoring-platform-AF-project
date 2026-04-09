@@ -323,6 +323,104 @@ const pointsByType = {
   essay: 15
 };
 
+const tamilSubjectName = {
+  Tamil: 'தமிழ்',
+  Sinhala: 'சிங்களம்',
+  'English Language': 'ஆங்கில மொழி',
+  Mathematics: 'கணிதம்',
+  Science: 'அறிவியல்',
+  History: 'வரலாறு',
+  Islam: 'இஸ்லாம் மதம்',
+  Geography: 'புவியியல்',
+  'Life Competencies and Citizenship Education': 'வாழ்க்கைத் திறன்கள் மற்றும் குடியுரிமைக் கல்வி',
+  ICT: 'தகவல் தொடர்பாடல் தொழில்நுட்பம்',
+  'Health & Physical Education': 'சுகாதாரம் மற்றும் உடற்கல்வி',
+  Art: 'ஓவியம்',
+  Dancing: 'நடனம்',
+  Music: 'இசை',
+  'Drama & Theatre': 'நாடகம் மற்றும் அரங்கக்கலை'
+};
+
+const sinhalaSubjectName = {
+  Tamil: 'දෙමළ',
+  Sinhala: 'සිංහල',
+  'English Language': 'ඉංග්‍රීසි භාෂාව',
+  Mathematics: 'ගණිතය',
+  Science: 'විද්‍යාව',
+  History: 'ඉතිහාසය',
+  Islam: 'ඉස්ලාම් ආගම',
+  Geography: 'භූගෝල විද්‍යාව',
+  'Life Competencies and Citizenship Education': 'ජීවන කුසලතා සහ පුරවැසි අධ්‍යාපනය',
+  ICT: 'තොරතුරු හා සන්නිවේදන තාක්ෂණය',
+  'Health & Physical Education': 'සෞඛ්‍ය සහ ශාරීරික අධ්‍යාපනය',
+  Art: 'කලා',
+  Dancing: 'නර්තනය',
+  Music: 'සංගීතය',
+  'Drama & Theatre': 'නාට්‍ය හා රංග කලාව'
+};
+
+function getLocalizedSubjectName(subject, medium) {
+  if (medium === 'Tamil') return tamilSubjectName[subject] || subject;
+  if (medium === 'Sinhala') return sinhalaSubjectName[subject] || subject;
+  return subject;
+}
+
+function getLocalizedTemplate(set, medium, type) {
+  if (medium === 'English') {
+    return set[type];
+  }
+
+  const subjectLabel = getLocalizedSubjectName(set.subject, medium);
+
+  if (medium === 'Tamil') {
+    if (type === 'mcq') {
+      return {
+        body: `${subjectLabel} பாடத்திற்கான சரியான விடையைத் தேர்ந்தெடுக்கவும்.`,
+        options: ['விருப்பம் 1', 'விருப்பம் 2', 'விருப்பம் 3', 'விருப்பம் 4'],
+        correctAnswer: 'விருப்பம் 1',
+        explanation: `${subjectLabel} பாடத்தின் அடிப்படை கருத்தை அடிப்படையாகக் கொண்ட பல்தேர்வு வினா.`
+      };
+    }
+
+    if (type === 'structured') {
+      return {
+        body: `${subjectLabel} பாடத்தில் உள்ள ஒரு முக்கிய கருத்தை உங்கள் சொற்களில் விளக்கவும்.`,
+        correctAnswer: `சரியான பதில் ${subjectLabel} பாடத்தின் முக்கிய கருத்தை தெளிவாகவும் தொடர்புடைய எடுத்துக்காட்டுடன் விளக்க வேண்டும்.`,
+        explanation: 'கருத்து தெளிவு, பொருத்தம் மற்றும் மொழித் துல்லியம் அடிப்படையில் மதிப்பிடவும்.'
+      };
+    }
+
+    return {
+      body: `${subjectLabel} பாடத்தின் முக்கியத்துவத்தை விளக்கும் சிறு கட்டுரை எழுதுக.`,
+      correctAnswer: `நல்ல கட்டுரை ${subjectLabel} பாடத்தின் பயன்பாடு, வாழ்க்கைத் தொடர்பு மற்றும் கற்றலின் மதிப்பை உள்ளடக்க வேண்டும்.`,
+      explanation: 'அமைப்பு, உள்ளடக்கத்தின் தொடர்பு மற்றும் மொழிநடை அடிப்படையில் மதிப்பிடவும்.'
+    };
+  }
+
+  if (type === 'mcq') {
+    return {
+      body: `${subjectLabel} විෂයට අදාළ නිවැරදි පිළිතුර තෝරන්න.`,
+      options: ['විකල්පය 1', 'විකල්පය 2', 'විකල්පය 3', 'විකල්පය 4'],
+      correctAnswer: 'විකල්පය 1',
+      explanation: `${subjectLabel} විෂයේ මූලික සංකල්පය මත පදනම් වූ බහුවරණ ප්‍රශ්නයකි.`
+    };
+  }
+
+  if (type === 'structured') {
+    return {
+      body: `${subjectLabel} විෂයේ එක් ප්‍රධාන සංකල්පයක් ඔබේ වචනවලින් පැහැදිලි කරන්න.`,
+      correctAnswer: `නිවැරදි පිළිතුරේ ${subjectLabel} විෂයේ සංකල්පය පැහැදිලිව සහ උදාහරණයක් සමඟ දක්විය යුතුය.`,
+      explanation: 'සංකල්ප පැහැදිලි බව, අදාළත්වය සහ භාෂා නිවැරදිභාවය අනුව ඇගයීම කළ යුතුය.'
+    };
+  }
+
+  return {
+    body: `${subjectLabel} විෂයේ වැදගත්කම පැහැදිලි කරමින් කෙටි රචනයක් ලියන්න.`,
+    correctAnswer: `හොඳ රචනයක ${subjectLabel} විෂයේ භාවිතය, දෛනික ජීවිතයට ඇති සම්බන්ධය සහ ඉගෙනීමේ වටිනාකම ඇතුළත් විය යුතුය.`,
+    explanation: 'ව්‍යුහය, අන්තර්ගතය සහ අදහස් පැහැදිලිව ඉදිරිපත් කිරීම අනුව ඇගයීම කළ යුතුය.'
+  };
+}
+
 async function getSeedAuthor() {
   let author = await User.findOne({ role: 'admin', isActive: true });
   if (!author) {
@@ -348,7 +446,7 @@ async function getSeedAuthor() {
 }
 
 function buildQuestionPayload(set, medium, type) {
-  const template = set[type];
+  const template = getLocalizedTemplate(set, medium, type);
   const title = `[Grade 8][${medium}][${set.prefix}][${type.toUpperCase()}][${seedTag}]`;
 
   return {

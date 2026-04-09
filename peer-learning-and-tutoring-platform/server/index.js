@@ -191,6 +191,24 @@ app.all('/api/health', (req, res) => {
   });
 });
 
+// Root/API info routes for quick browser verification
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'PeerLearn backend is running',
+    docsHint: 'Use /api/health for health status',
+    health: '/api/health'
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    success: true,
+    message: 'PeerLearn API base endpoint',
+    health: '/api/health'
+  });
+});
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));

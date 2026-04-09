@@ -34,6 +34,7 @@ const Sidebar = ({ isOpen, onClose, user, themeGradient }) => {
   const getNavigationLinks = () => {
     const common = [
       { path: '/dashboard', icon: FiHome, label: 'Home' },
+      { path: '/dashboard/leaderboard', icon: FiAward, label: 'Leaderboard' },
       { path: '/resources', icon: FiBook, label: 'Study Materials' },
       { path: '/browse-tutors', icon: FiSearch, label: 'Search Tutors' },
       { path: '/profile', icon: FiUser, label: 'Profile' },

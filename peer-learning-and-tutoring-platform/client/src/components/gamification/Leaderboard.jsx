@@ -1,82 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Medal, Award, TrendingUp, Users, Calendar, Filter } from 'lucide-react';
-import axios from 'axios';
+import { Trophy, Medal, TrendingUp, Users, Calendar } from 'lucide-react';
+import { apiService } from '../../services/api';
 
 const Leaderboard = () => {
-  const [activeTab, setActiveTab] = useState('overall');
-  const [period, setPeriod] = useState('all');
-  const [subject, setSubject] = useState('all');
+  const [activeTab, setActiveTab] = useState('global');
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-
-  const subjects = [
-    { value: 'all', label: 'All Subjects' },
-    { value: 'Mathematics', label: 'Mathematics' },
-    { value: 'Science', label: 'Science' },
-    { value: 'English', label: 'English' },
-    { value: 'History', label: 'History' },
-    { value: 'Geography', label: 'Geography' },
-    { value: 'Computer Science', label: 'Computer Science' },
-    { value: 'Physics', label: 'Physics' },
-    { value: 'Chemistry', label: 'Chemistry' },
-    { value: 'Biology', label: 'Biology' }
-  ];
+  const [limit, setLimit] = useState(20);
 
   const tabs = [
-    { id: 'overall', label: 'Overall', icon: Trophy },
-    { id: 'subject', label: 'By Subject', icon: Medal },
-    { id: 'badges', label: 'Badges', icon: Award },
-    { id: 'questions', label: 'Questions', icon: TrendingUp },
-    { id: 'answers', label: 'Answers', icon: Users }
-  ];
-
-  const periods = [
-    { value: 'all', label: 'All Time' },
-    { value: 'week', label: 'This Week' },
-    { value: 'month', label: 'This Month' },
-    { value: 'year', label: 'This Year' }
+    { id: 'global', label: 'All Time', icon: Trophy },
+    { id: 'weekly', label: 'This Week', icon: TrendingUp },
+    { id: 'monthly', label: 'This Month', icon: Calendar },
+    { id: 'streaks', label: 'Top Streaks', icon: Medal }
   ];
 
   useEffect(() => {
     fetchLeaderboard();
-    fetchStats();
-  }, [activeTab, period, subject]);
+  }, [activeTab, limit]);
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      let url = '/api/leaderboard';
-      
-      if (activeTab === 'subject' && subject !== 'all') {
-        url += `/subject/${subject}`;
-      } else if (activeTab === 'badges') {
-        url += '/badges';
-      } else if (activeTab === 'questions') {
-        url += '/questions';
-      } else if (activeTab === 'answers') {
-        url += '/answers';
-      }
-
       const params = new URLSearchParams();
-      if (period !== 'all') params.append('period', period);
-      params.append('limit', 20);
+      params.append('type', activeTab);
+      params.append('limit', String(limit));
 
-      const response = await axios.get(`${url}?${params}`);
-      setLeaderboard(response.data);
+      const response = await apiService.get(`/api/gamification/leaderboard?${params}`);
+      const rows = response?.data?.leaderboard || [];
+      setLeaderboard(rows);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
+      setLeaderboard([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get('/api/leaderboard/stats');
-      setStats(response.data);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 
@@ -109,9 +66,7 @@ const Leaderboard = () => {
           <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No data available</h3>
           <p className="text-gray-600">
-            {activeTab === 'subject' && subject !== 'all' 
-              ? 'No activity in this subject yet'
-              : 'No activity in this time period'}
+            No leaderboard data available yet for this view.
           </p>
         </div>
       );
@@ -136,60 +91,31 @@ const Leaderboard = () => {
               </div>
               <div>
                 <div className="font-medium text-gray-900">
-                  {entry.user?.firstName && entry.user?.lastName
-                    ? `${entry.user.firstName} ${entry.user.lastName}`
-                    : entry.user?.username || 'Unknown User'}
+                  {entry.user?.name || entry.user?.username || 'Unknown User'}
                 </div>
-                <div className="text-sm text-gray-500">@{entry.user?.username}</div>
+                <div className="text-sm text-gray-500">
+                  Level {entry.level?.current || 1}
+                </div>
               </div>
             </div>
 
             {/* Score/Stats */}
             <div className="text-right">
-              {activeTab === 'overall' && (
+              {activeTab !== 'streaks' && (
                 <>
                   <div className="font-semibold text-lg text-gray-900">
-                    {entry.totalPoints || entry.points}
+                    {entry.points?.lifetime || 0}
                   </div>
                   <div className="text-sm text-gray-500">points</div>
                 </>
               )}
-              
-              {activeTab === 'subject' && (
+
+              {activeTab === 'streaks' && (
                 <>
                   <div className="font-semibold text-lg text-gray-900">
-                    {entry.subjectPoints}
+                    {entry.longestStreak || 0}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {subject} points
-                  </div>
-                </>
-              )}
-              
-              {activeTab === 'badges' && (
-                <>
-                  <div className="font-semibold text-lg text-gray-900">
-                    {entry.totalBadges}
-                  </div>
-                  <div className="text-sm text-gray-500">badges</div>
-                </>
-              )}
-              
-              {activeTab === 'questions' && (
-                <>
-                  <div className="font-semibold text-lg text-gray-900">
-                    {entry.stats?.voteScore || 0}
-                  </div>
-                  <div className="text-sm text-gray-500">votes</div>
-                </>
-              )}
-              
-              {activeTab === 'answers' && (
-                <>
-                  <div className="font-semibold text-lg text-gray-900">
-                    {entry.stats?.voteScore || 0}
-                  </div>
-                  <div className="text-sm text-gray-500">votes</div>
+                  <div className="text-sm text-gray-500">days streak</div>
                 </>
               )}
             </div>
@@ -206,51 +132,6 @@ const Leaderboard = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Leaderboard</h1>
         <p className="text-gray-600">Top contributors and achievements</p>
       </div>
-
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalUsers}</div>
-                <div className="text-sm text-gray-500">Total Users</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <Trophy className="h-8 w-8 text-green-600" />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.activeUsers}</div>
-                <div className="text-sm text-gray-500">Active Users</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <Award className="h-8 w-8 text-purple-600" />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalBadgesAwarded}</div>
-                <div className="text-sm text-gray-500">Badges Awarded</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-orange-600" />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalPointsAwarded}</div>
-                <div className="text-sm text-gray-500">Points Awarded</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Controls */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
@@ -278,39 +159,20 @@ const Leaderboard = () => {
 
           {/* Filters */}
           <div className="flex gap-4 ml-auto">
-            {/* Period Filter */}
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
               <select
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
+                value={limit}
+                onChange={(e) => setLimit(Number(e.target.value))}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                {periods.map(p => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
+                {[10, 20, 50, 100].map(size => (
+                  <option key={size} value={size}>
+                    Top {size}
                   </option>
                 ))}
               </select>
             </div>
-
-            {/* Subject Filter (for subject tab) */}
-            {activeTab === 'subject' && (
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  {subjects.map(s => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
         </div>
       </div>

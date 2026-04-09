@@ -125,6 +125,8 @@ const AttemptQuestionPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
   const [showSubmitPopup, setShowSubmitPopup] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [question, setQuestion] = useState(null);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(true);
   const preferredMedium = loadPreferredMedium();
@@ -159,9 +161,12 @@ const AttemptQuestionPage = () => {
     () => getLocalizedDifficultyLabel(question?.difficulty, pageMedium),
     [question?.difficulty, pageMedium]
   );
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!answer.trim()) return;
+    if (!answer.trim() || isSubmitting) return;
+
+    setSubmitError('');
+    setIsSubmitting(true);
 
     let correct = false;
     if (localizedQuestion?.type === 'mcq') {
@@ -171,29 +176,16 @@ const AttemptQuestionPage = () => {
       setIsCorrect(null);
     }
 
-    setSubmitted(true);
-    setShowSubmitPopup(true);
-
     if (question) {
       const earnedMarks = question.type === 'mcq' && correct ? question.points : 0;
-      saveQAAttempt(userId, {
-        id: `${question.id}-${Date.now()}`,
-        questionId: question.id,
-        questionTitle: localizedQuestion.title,
-        grade: question.grade,
-        subject: question.subject,
-        difficulty: question.difficulty,
-        type: question.type,
-        points: question.points,
-        earned: earnedMarks,
-        outcome: question.type === 'mcq' ? (correct ? 'Correct' : 'Incorrect') : 'Submitted',
-        completedAt: new Date().toISOString(),
-        medium: pageMedium,
-      });
+      const safeQuestionTitle =
+        localizedQuestion.title?.trim() ||
+        localizedQuestion.body?.trim()?.slice(0, 120) ||
+        `Question ${question.id}`;
 
-      qaForumService.submitStudentAnswer({
+      const response = await qaForumService.submitStudentAnswer({
         questionId: question.id,
-        questionTitle: localizedQuestion.title,
+        questionTitle: safeQuestionTitle,
         grade: question.grade,
         subject: question.subject,
         type: question.type,
@@ -205,7 +197,35 @@ const AttemptQuestionPage = () => {
           : 'Pending tutor review',
         submittedAt: new Date().toISOString(),
       });
+
+      if (!response?.success) {
+        setSubmitError(response?.message || 'Failed to save answer to database.');
+        setSubmitted(false);
+        setShowSubmitPopup(false);
+        setIsSubmitting(false);
+        return;
+      }
+
+      saveQAAttempt(userId, {
+        id: `${question.id}-${Date.now()}`,
+        questionId: question.id,
+        questionTitle: safeQuestionTitle,
+        grade: question.grade,
+        subject: question.subject,
+        difficulty: question.difficulty,
+        type: question.type,
+        points: question.points,
+        earned: earnedMarks,
+        outcome: question.type === 'mcq' ? (correct ? 'Correct' : 'Incorrect') : 'Submitted',
+        completedAt: new Date().toISOString(),
+        medium: pageMedium,
+      });
+
+      setSubmitted(true);
+      setShowSubmitPopup(true);
     }
+
+    setIsSubmitting(false);
   };
 
   useEffect(() => {
@@ -310,10 +330,14 @@ const AttemptQuestionPage = () => {
           <button
             type="submit"
             className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-white font-semibold hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!answer.trim()}
+            disabled={!answer.trim() || isSubmitting}
           >
-            {uiText.submitAnswer}
+            {isSubmitting ? 'Submitting...' : uiText.submitAnswer}
           </button>
+
+          {submitError && (
+            <p className="text-sm text-red-600 font-medium">{submitError}</p>
+          )}
         </form>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

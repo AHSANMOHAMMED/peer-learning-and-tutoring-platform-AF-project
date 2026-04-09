@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/auth');
 const QASubmission = require('../models/QASubmission');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
+const GamificationService = require('../services/GamificationService');
 
 const router = express.Router();
 
@@ -43,6 +44,25 @@ router.post(
         });
       }
 
+      const questionPoints = Number(req.body.points || 0);
+      const earnedMarks = Number(req.body.marks || 0);
+      const isCorrectSubmission = questionPoints > 0 && earnedMarks >= questionPoints;
+
+      // Prevent gaming: reward leaderboard points only once per student per question
+      let alreadyRewardedCorrect = false;
+      if (isCorrectSubmission) {
+        alreadyRewardedCorrect = Boolean(
+          await QASubmission.findOne({
+            questionId: req.body.questionId,
+            studentId: req.user._id,
+            points: { $gt: 0 },
+            $expr: { $gte: ['$marks', '$points'] },
+          })
+            .select('_id')
+            .lean()
+        );
+      }
+
       const submission = await QASubmission.create({
         questionId: req.body.questionId,
         studentId: req.user._id,
@@ -62,9 +82,25 @@ router.post(
         submittedAt: req.body.submittedAt ? new Date(req.body.submittedAt) : new Date(),
       });
 
+      let leaderboardRewarded = false;
+      if (isCorrectSubmission && !alreadyRewardedCorrect) {
+        try {
+          const difficultyMultiplier = Math.max(1, questionPoints / 5);
+          await GamificationService.awardPoints(req.user._id, 'correctAnswer', difficultyMultiplier);
+          leaderboardRewarded = true;
+        } catch (rewardError) {
+          // Keep submission successful even if leaderboard update fails.
+          console.error('Error awarding leaderboard points for QA submission:', rewardError);
+        }
+      }
+
       return res.status(201).json({
         success: true,
-        data: submission,
+        data: {
+          submission,
+          leaderboardRewarded,
+          alreadyRewardedCorrect,
+        },
       });
     } catch (error) {
       console.error('Error creating QA submission:', error);

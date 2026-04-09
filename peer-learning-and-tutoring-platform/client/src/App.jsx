@@ -62,6 +62,7 @@ import AnalyticsOverview from './components/Admin/AnalyticsOverview'
 import UserManagement from './components/Admin/UserManagement'
 import ParentLinkRequests from './components/Admin/ParentLinkRequests'
 import AdminQAOverview from './components/Admin/AdminQAOverview'
+import Leaderboard from './components/gamification/Leaderboard'
 
 // Unauthorized Page
 const UnauthorizedPage = () => (
@@ -196,6 +197,7 @@ function App() {
               <Route path="student/sessions" element={<MySessions />} />
               <Route path="student/materials" element={<MaterialList />} />
               <Route path="student/progress" element={<DashboardHome />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="student/calendar" element={<DashboardHome />} />
               
               {/* Tutor Routes */}
@@ -366,6 +368,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MaterialDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/leaderboard" 
+              element={
+                <ProtectedRoute>
+                  <Leaderboard />
                 </ProtectedRoute>
               } 
             />

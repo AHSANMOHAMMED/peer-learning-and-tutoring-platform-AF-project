@@ -25,12 +25,6 @@ const QAForumHome = () => {
               >
                 Enter Q&A Forum
               </Link>
-              <Link
-                to="/register"
-                className="inline-flex items-center justify-center rounded-xl border border-white/80 text-white px-6 py-3 font-semibold hover:bg-white/10 transition-colors"
-              >
-                Sign up as student
-              </Link>
             {isAuthenticated && isStudent && (
               <Link
                 to="/qa/history"

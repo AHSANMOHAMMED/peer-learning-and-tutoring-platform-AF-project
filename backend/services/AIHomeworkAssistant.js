@@ -12,7 +12,7 @@ class AIHomeworkAssistant {
     
     // Subject-specific system prompts (Optimized for Sri Lankan National Syllabus)
     this.subjectPrompts = {
-      mathematics: `You are an expert mathematics tutor for Sri Lankan students (Grade 6-13, including O/L and A/L Combined Maths). 
+      mathematics: `You are an expert mathematics tutor for Sri Lankan students (Grade 6-13, including O/L and A/L Combined Mathematics). 
         Help students understand concepts step-by-step. 
         Don't just give answers - guide them through the problem-solving process.
         Use clear explanations, visual descriptions when helpful, and check for understanding.
@@ -29,7 +29,7 @@ class AIHomeworkAssistant {
         Use molecular visualization descriptions when helpful.
         Explain safety considerations and connect concepts to everyday life in Sri Lanka.`,
       
-      biology: `You are an expert biology tutor for Sri Lankan A/L students. 
+      biological_sciences: `You are an expert biological sciences tutor for Sri Lankan A/L students. 
         Explain biological processes, anatomy, and biodiversity (including local flora and fauna) clearly.
         Use analogies to explain complex systems.`,
       
@@ -91,7 +91,7 @@ class AIHomeworkAssistant {
         - Science Units: Karbanika Rasayanaya (Organic Chemistry basics), Vidyut Chumbakathvaya (Electromagnetism), Parisarika Jeeva Vidyawa (Environmental Bio).`,
         
       '12': `CURRICULUM CONSTRAINTS (GRADE 12/13 - A/L):
-        - Combined Maths: Calculus (Kalanaya), Statics (Sthithika Vidyawa), Dynamics (Chalaka Vidyawa).
+        - Combined Mathematics: Calculus (Kalanaya), Statics (Sthithika Vidyawa), Dynamics (Chalaka Vidyawa).
         - Physics/Bio/Chem: Advanced terminology as per Sri Lankan National Syllabus.
         - Focus on deep conceptual derivation and exam techniques.`
     };
@@ -231,7 +231,7 @@ class AIHomeworkAssistant {
    */
   async generateWelcomeMessage(subject, topic, grade) {
     const prompts = {
-      mathematics: `Hi! I'm your AI Math tutor. I can help you with ${topic || 'any math topic'} at grade ${grade} level. 
+        mathematics: `Hi! I'm your AI Math tutor. I can help you with ${topic || 'any math topic'} (Combined Mathematics/General) at grade ${grade} level. 
         What specific problem or concept would you like help with? 
         Remember, I'll guide you through the solution rather than just giving you the answer.`,
       
@@ -361,7 +361,9 @@ class AIHomeworkAssistant {
    */
   async callGemini(systemPrompt, messages) {
     try {
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.geminiKey}`;
+      // Use standard gemini-1.5-flash model which is stable in v1beta
+      const modelName = 'gemini-1.5-flash';
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.geminiKey}`;
       
       // Map history to Gemini format (supporting Multimodal)
       const contents = messages.map(msg => {
@@ -375,18 +377,24 @@ class AIHomeworkAssistant {
           textContent = msg.content;
         }
 
+        // If it's the first message, prepend system instructions for context
         if (msg.role === 'user' && messages.indexOf(msg) === 0) {
-           textContent = `System Instructions: ${systemPrompt}\n\nStudent Query: ${textContent}`;
+           textContent = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\nSTUDENT QUERY:\n${textContent}`;
         }
         parts.push({ text: textContent });
 
         // Add image part if exists in content object or directly
         const imageData = msg.image || (typeof msg.content === 'object' && msg.content !== null ? msg.content.image : null);
         if (imageData) {
+          // Verify base64 data doesn't include prefix if already separate
+          const base64Data = imageData.data.includes('base64,') 
+            ? imageData.data.split('base64,')[1] 
+            : imageData.data;
+
           parts.push({
             inline_data: {
               mime_type: imageData.mimeType || 'image/jpeg',
-              data: imageData.data // Base64
+              data: base64Data
             }
           });
         }
@@ -402,6 +410,8 @@ class AIHomeworkAssistant {
         generationConfig: {
           temperature: this.temperature,
           maxOutputTokens: this.maxTokens,
+          topP: 0.95,
+          topK: 40
         }
       });
 
@@ -411,7 +421,7 @@ class AIHomeworkAssistant {
       
       throw new Error('Unexpected Gemini API response format');
     } catch (error) {
-      console.error('Gemini API Error:', error.response?.data || error.message);
+      console.error('Gemini API Error details:', error.response?.data || error.message);
       throw error;
     }
   }
@@ -458,7 +468,7 @@ class AIHomeworkAssistant {
     if (query.match(/math|solve|calculate|equation/)) subject = 'mathematics';
     else if (query.match(/physic|force|energy|motion/)) subject = 'physics';
     else if (query.match(/chem|molecule|atom|reaction/)) subject = 'chemistry';
-    else if (query.match(/bio|cell|organ|plant|animal/)) subject = 'biology';
+    else if (query.match(/bio|cell|organ|plant|animal/)) subject = 'biological_sciences';
 
     const fallbacks = {
       mathematics: "I'm currently in high-stability mode. To solve this math problem, try identifying your 'known' variables vs 'unknowns' first. Are you using the quadratic formula or basic algebra here? Let's check the first step together.",

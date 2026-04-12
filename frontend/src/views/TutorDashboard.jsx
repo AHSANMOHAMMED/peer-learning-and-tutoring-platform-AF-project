@@ -9,7 +9,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';
 import { useBookings } from '../controllers/useBookings';
 import { useTutors } from '../controllers/useTutors';
-import { homeworkApi } from '../services/api';
+import api, { homeworkApi } from '../services/api';
 import { toast } from 'react-hot-toast';
 
 const TutorDashboard = () => {
@@ -20,6 +20,8 @@ const TutorDashboard = () => {
 
   const { tutors, fetchTutors, getTutorByUserId, loading: tutorLoading } = useTutors();
   const [tutorProfile, setTutorProfile] = useState(null);
+  const [unansweredQuestions, setUnansweredQuestions] = useState([]);
+  const [loadingQA, setLoadingQA] = useState(false);
   const [pendingHomework, setPendingHomework] = useState([]);
   const [gradingId, setGradingId] = useState(null);
   const [gradeData, setGradeData] = useState({ marks: '', feedback: '' });
@@ -31,8 +33,21 @@ const TutorDashboard = () => {
       getTutorByUserId(user._id)
         .then(data => setTutorProfile(data))
         .catch(err => console.log("Tutor profile not yet created"));
+      fetchUnansweredQuestions();
     }
   }, [fetchBookings, getTutorByUserId, user?._id]);
+
+  const fetchUnansweredQuestions = async () => {
+    try {
+      setLoadingQA(true);
+      const res = await api.get('/questions?unanswered=true&limit=5');
+      setUnansweredQuestions(res.data.questions || res.data || []);
+    } catch (err) {
+      console.error('QA fetch error:', err);
+    } finally {
+      setLoadingQA(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'Homework') fetchPendingHomework();
@@ -66,7 +81,7 @@ const TutorDashboard = () => {
   // Derived Stats
   const activeSessions = bookings.filter(b => b.status === 'in_progress' || (b.status === 'scheduled' && isFuture(new Date(b.date)))).length;
   const pendingReschedules = bookings.filter(b => b.status === 'cancelled' || b.status === 'pending').length;
-  const completedSessions = bookings.filter(b => b.status === 'completed' || isPast(new Date(b.date))).length;
+  const completedSessions = bookings.filter(b => b.status === 'completed' || (b.status !== 'cancelled' && isPast(new Date(b.date)))).length;
   const totalEarnings = bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.price || 0), 0);
 
   const tabs = ['Calendar', 'Upcoming', 'Homework', 'Reschedule', 'Completed'];
@@ -160,30 +175,66 @@ const TutorDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
            
            <div className="p-6 rounded-2xl bg-[#fadcf1] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">{activeSessions || 3}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Active session</p>
+              <h3 className="text-4xl font-bold text-slate-800 mb-2">{activeSessions}</h3>
+              <p className="text-[15px] font-medium text-slate-700">Active sessions</p>
               <CalendarIcon size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
            </div>
 
            <div className="p-6 rounded-2xl bg-[#cbf2fc] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">{pendingReschedules || 2}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Pending Reschedules</p>
-              <Clock size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
+              <h3 className="text-4xl font-bold text-slate-800 mb-2">${totalEarnings}</h3>
+              <p className="text-[15px] font-medium text-slate-700">Total Earnings</p>
+              <DollarSign size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
            </div>
 
            <div className="p-6 rounded-2xl bg-[#d4cffc] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">1</h3>
-              <p className="text-[15px] font-medium text-slate-700">Teacher Issues</p>
-              <AlertTriangle size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
+              <h3 className="text-4xl font-bold text-slate-800 mb-2">{unansweredQuestions.length}</h3>
+              <p className="text-[15px] font-medium text-slate-700">Unanswered Q&A</p>
+              <MessageCircle size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
            </div>
 
            <div className="p-6 rounded-2xl bg-[#ffccf9] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-black text-slate-800 mb-2">{tutors?.length || 0}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Available Teachers</p>
-              <Users size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
+              <h3 className="text-4xl font-black text-slate-800 mb-2">{pendingHomework.length}</h3>
+              <p className="text-[15px] font-medium text-slate-700">Pending Grading</p>
+              <FileText size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
            </div>
 
         </div>
+
+        {/* Unresolved Questions Feed */}
+        {unansweredQuestions.length > 0 && (
+           <div className="mb-10 bg-slate-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors" />
+              <div className="relative z-10">
+                 <div className="flex justify-between items-center mb-6">
+                    <div>
+                       <h2 className="text-2xl font-bold mb-1 flex items-center gap-3">
+                          <MessageCircle size={28} className="text-[#00a8cc]" />
+                          Unresolved Inquiries
+                       </h2>
+                       <p className="text-slate-400 text-sm">Students are waiting for your expert guidance in these topics.</p>
+                    </div>
+                    <button onClick={() => navigate('/tutor/qa')} className="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all uppercase tracking-widest border border-white/10">View Forum</button>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {unansweredQuestions.slice(0, 3).map((q, idx) => (
+                       <div key={q._id || idx} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all cursor-pointer group/q" onClick={() => navigate('/tutor/qa')}>
+                          <div className="flex justify-between items-start mb-3">
+                             <span className="text-[10px] font-bold text-[#00a8cc] px-2 py-1 bg-[#00a8cc]/10 rounded-md uppercase">{q.subject}</span>
+                             <span className="text-[10px] text-slate-500 font-medium">Grade {q.grade}</span>
+                          </div>
+                          <h4 className="font-bold text-sm mb-2 line-clamp-1 group-hover/q:text-[#00a8cc] transition-colors">{q.title}</h4>
+                          <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">{q.body}</p>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
+                             <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[8px]">{q.author?.username?.[0] || 'S'}</div>
+                             {q.author?.username || 'Student'} &bull; {new Date(q.createdAt).toLocaleDateString()}
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex items-center gap-8 border-b border-slate-200 mb-8 pt-2">

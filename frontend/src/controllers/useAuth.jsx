@@ -98,6 +98,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    setLoading(true);
+    try {
+      const { data } = await api.put('/auth/change-password', { currentPassword, newPassword });
+      return data;
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Password change failed';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sendOTP = async (email, purpose = 'login') => {
     setLoading(true);
     setError(null);
@@ -141,6 +155,7 @@ export const AuthProvider = ({ children }) => {
       register, 
       logout, 
       updateProfile, 
+      changePassword,
       sendOTP, 
       verifyOTP, 
       refreshUser: fetchProfile 

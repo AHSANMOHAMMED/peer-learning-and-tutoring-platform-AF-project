@@ -26,6 +26,101 @@ class AIService {
   }
 
   /**
+   * Generate general AI chat response
+   * @param {String} message - User message
+   * @param {Array} history - Message history
+   * @param {Object} options - Additional options (subject, grade)
+   * @returns {Object} AI response
+   */
+  async generateChatResponse(message, history = [], options = {}) {
+    try {
+      if (this.googleAIKey) {
+        return await this.chatWithGoogle(message, history, options);
+      } else if (this.openAIKey) {
+        return await this.chatWithOpenAI(message, history, options);
+      } else {
+        return {
+          content: "[STABILITY MODE] I'm ready to assist you. Ask me any question!",
+          role: 'assistant'
+        };
+      }
+    } catch (error) {
+      console.error('Chat generation error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Chat using Google Gemini
+   */
+  async chatWithGoogle(message, history, options) {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.googleAIKey}`;
+    
+    const contents = history.map(h => ({
+      role: h.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: h.content }]
+    }));
+
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
+    });
+
+    const systemInstruction = `You are an expert educational mentor for Sri Lankan students. 
+    Subject: ${options.subject || 'General'}
+    Grade: ${options.grade || 'N/A'}`;
+
+    const response = await axios.post(geminiUrl, {
+      contents,
+      system_instruction: {
+        parts: [{ text: systemInstruction }]
+      },
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1000
+      }
+    });
+
+    return {
+      content: response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '',
+      role: 'assistant'
+    };
+  }
+
+  /**
+   * Chat using OpenAI GPT
+   */
+  async chatWithOpenAI(message, history, options) {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: this.providers.openai.chat,
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert educational mentor for Sri Lankan students. Subject: ${options.subject || 'General'}. Grade: ${options.grade || 'N/A'}`
+          },
+          ...history.map(h => ({ role: h.role, content: h.content })),
+          { role: 'user', content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.openAIKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return {
+      content: response.data.choices[0].message.content,
+      role: 'assistant'
+    };
+  }
+
+  /**
    * Transcribe audio/video recording using AI
    * @param {String} recordingUrl - URL to recording file
    * @param {String} provider - AI provider ('openai', 'google')

@@ -21,6 +21,7 @@ import AIHomeworkChat from './views/AIHomeworkChat';
 import GamificationDashboard from './views/GamificationDashboard';
 import CourseMarketplace from './views/CourseMarketplace';
 import ParentDashboard from './views/ParentDashboard';
+import ParentLinkManager from './views/ParentLinkManager';
 import CertificatesPage from './views/CertificatesPage';
 import VirtualClassroom from './views/VirtualClassroom';
 import StudyPlanner from './views/StudyPlanner';
@@ -101,6 +102,7 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><UserManagement /></ProtectedRoute>} />
           <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminApprovals /></ProtectedRoute>} />
+          <Route path="/admin/parent-links" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><ParentLinkManager /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute allowedRoles={['admin', 'moderator', 'superadmin']}><ModerationHub /></ProtectedRoute>} />
           <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><SuperAdminDashboard /></ProtectedRoute>} />

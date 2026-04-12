@@ -38,7 +38,17 @@ const ProfileSetup = () => {
     'Moneragala', 'Ratnapura', 'Kegalle'
   ];
 
-  const STREAMS = ['Combined Maths', 'Biology', 'Commerce', 'Arts', 'Tech', 'O/L', 'Other'];
+  const STREAMS = [
+    'Combined Mathematics', 
+    'Biological Sciences', 
+    'Commercial Stream', 
+    'Physical Sciences', 
+    'Arts Stream', 
+    'Technology Stream', 
+    'O/L General',
+    'London A/L', 
+    'Other'
+  ];
   const GRADES = ['6', '7', '8', '9', '10', '11', '12', '13'];
 
   // Check if profile is already complete

@@ -3,6 +3,8 @@ const Booking = require('../models/Booking');
 const Report = require('../models/Report');
 const Material = require('../models/Material');
 const Tutor = require('../models/Tutor');
+const Notification = require('../models/Notification');
+const EmailService = require('../services/emailService');
 
 // Get aggregated statistics for admin dashboard
 const getDashboardStatistics = async (req, res) => {
@@ -211,7 +213,7 @@ const approveTutor = async (req, res) => {
     const { id } = req.params;
     const { notes } = req.body;
     
-    const tutor = await Tutor.findById(id);
+    const tutor = await Tutor.findById(id).populate('userId');
     if (!tutor) {
       return res.status(404).json({
         success: false,
@@ -227,7 +229,27 @@ const approveTutor = async (req, res) => {
     await tutor.save();
     
     // Update user role to tutor
-    await User.findByIdAndUpdate(tutor.userId, { role: 'tutor' });
+    const user = await User.findByIdAndUpdate(tutor.userId, { role: 'tutor' }, { new: true });
+    
+    // Send Notifications
+    try {
+      if (user) {
+        // In-app Notification
+        await Notification.create({
+          userId: user._id,
+          title: 'Tutor Application Approved',
+          message: 'Congratulations! Your application to become a tutor has been approved. You can now access the Tutor Workspace.',
+          type: 'success',
+          link: '/tutor-dashboard'
+        });
+
+        // Email Notification
+        await EmailService.sendTutorApprovedEmail(user.email, user.username);
+      }
+    } catch (notifyError) {
+      console.error('Error sending tutor approval notifications:', notifyError);
+      // Non-blocking: we still return success for the database update
+    }
     
     res.json({
       success: true,
@@ -250,7 +272,7 @@ const rejectTutor = async (req, res) => {
     const { id } = req.params;
     const { reason, notes } = req.body;
     
-    const tutor = await Tutor.findById(id);
+    const tutor = await Tutor.findById(id).populate('userId');
     if (!tutor) {
       return res.status(404).json({
         success: false,
@@ -265,6 +287,26 @@ const rejectTutor = async (req, res) => {
     tutor.rejectionNotes = notes;
     
     await tutor.save();
+
+    // Send Notifications
+    try {
+      const user = tutor.userId;
+      if (user) {
+        // In-app Notification
+        await Notification.create({
+          userId: user._id,
+          title: 'Tutor Application Update',
+          message: `Your tutor application has been reviewed. Status: Rejected. Reason: ${reason}`,
+          type: 'error',
+          link: '/profile/setup'
+        });
+
+        // Email Notification
+        await EmailService.sendTutorRejectedEmail(user.email, user.username, reason);
+      }
+    } catch (notifyError) {
+      console.error('Error sending tutor rejection notifications:', notifyError);
+    }
     
     res.json({
       success: true,

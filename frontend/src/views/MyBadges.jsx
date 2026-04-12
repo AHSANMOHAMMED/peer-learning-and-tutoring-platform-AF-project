@@ -40,8 +40,8 @@ const MyBadges = () => {
   ];
 
   const badges = [
-    { id: 1, title: 'Calculus Conquerors α', desc: 'Authorized 10 Combined Maths synchronizations node matrix  sector.', earned: true, icon: Target, date: 'Oct 12' },
-    { id: 2, title: 'Biology Ace IX', desc: 'Achieved 100% fidelity on 3 practice nodes strictly across national hub.', earned: true, icon: ShieldCheck, date: 'Oct 08' },
+    { id: 1, title: 'Calculus Conquerors α', desc: 'Authorized 10 Combined Mathematics synchronizations node matrix sector.', earned: true, icon: Target, date: 'Oct 12' },
+    { id: 2, title: 'Biological Ace IX', desc: 'Achieved 100% fidelity on 3 Biological Sciences practice nodes strictly across national hub.', earned: true, icon: ShieldCheck, date: 'Oct 08' },
     { id: 3, title: 'Early Bird TX', desc: 'Engaged a session during 06:00 Hub synchronization window .', earned: true, icon: TrendingUp, date: 'Sep 24' },
     { id: 4, title: 'Collaborator β', desc: 'Participated in 5 group study missions legacy sync nominal.', earned: false, icon: Award, date: 'LOCKED' },
     { id: 5, title: 'Top Scholar SAFE', desc: 'Reached Mastery Level 50 nominal threshold strictly.', earned: false, icon: Trophy, date: 'LOCKED' },

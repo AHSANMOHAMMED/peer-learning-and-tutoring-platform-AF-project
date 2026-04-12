@@ -1,23 +1,35 @@
 import React, { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Briefcase, Video, Clock, MessageSquare, CircleDollarSign, Calendar as CalendarIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Users, Briefcase, Video, Clock, MessageSquare, 
+  CircleDollarSign, Calendar as CalendarIcon, 
+  ShieldCheck, AlertTriangle, Settings, ChevronRight 
+} from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import Layout from '../components/Layout';
 import { useTutors } from '../controllers/useTutors';
 import { useReports } from '../controllers/useReports';
 import { useAnalytics } from '../controllers/useAnalytics';
+import { useParentLinks } from '../controllers/useParentLinks';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { tutors, fetchTutors } = useTutors();
-  const { fetchReports } = useReports();
+  const { reports, fetchReports } = useReports();
   const { analytics, fetchAnalytics } = useAnalytics();
+  const { linkRequests, fetchLinkRequests } = useParentLinks();
 
   useEffect(() => {
     fetchTutors();
     fetchReports();
     fetchAnalytics();
-  }, [fetchTutors, fetchReports, fetchAnalytics]);
+    fetchLinkRequests();
+  }, [fetchTutors, fetchReports, fetchAnalytics, fetchLinkRequests]);
+
+  const pendingTutorsCount = tutors.filter(t => t.verificationStatus === 'pending').length;
+  const pendingReportsCount = reports.filter(r => r.status === 'pending' || r.status === 'open').length;
 
   const stats = {
     students: analytics?.summary?.totalUsers || 1200,
@@ -125,7 +137,91 @@ const AdminDashboard = () => {
 
         </div>
 
+        {/* Operations Center */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 mt-8">
+           <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors" />
+              <div className="relative z-10">
+                 <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
+                    <ShieldCheck size={28} className="text-[#00a8cc]" />
+                    Operations Center
+                 </h2>
+                 <p className="text-slate-400 text-sm mb-8">Maintain platform integrity by reviewing pending applications and reports.</p>
+                 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => navigate('/admin/approvals')}>
+                       <div className="flex justify-between items-start mb-4">
+                          <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl">
+                             <Briefcase size={20} />
+                          </div>
+                          <span className="text-xs font-bold text-indigo-400 px-2 py-1 bg-indigo-500/10 rounded-md">ACTION REQUIRED</span>
+                       </div>
+                       <h3 className="text-2xl font-bold mb-1">{pendingTutorsCount}</h3>
+                       <p className="text-slate-400 text-sm">Tutor applications awaiting verification</p>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => navigate('/moderation')}>
+                       <div className="flex justify-between items-start mb-4">
+                          <div className="p-3 bg-rose-500/20 text-rose-400 rounded-xl">
+                             <AlertTriangle size={20} />
+                          </div>
+                          <span className="text-xs font-bold text-rose-400 px-2 py-1 bg-rose-500/10 rounded-md">URGENT</span>
+                       </div>
+                       <h3 className="text-2xl font-bold mb-1">{pendingReportsCount}</h3>
+                       <p className="text-slate-400 text-sm">Unresolved platform reports</p>
+                    </div>
+
+                    {linkRequests.length > 0 && (
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => navigate('/admin/parent-links')}>
+                         <div className="flex justify-between items-start mb-4">
+                            <div className="p-3 bg-amber-500/20 text-amber-400 rounded-xl">
+                               <ShieldCheck size={20} />
+                            </div>
+                            <span className="text-xs font-bold text-amber-400 px-2 py-1 bg-amber-500/10 rounded-md">NEW</span>
+                         </div>
+                         <h3 className="text-2xl font-bold mb-1">{linkRequests.length}</h3>
+                         <p className="text-slate-400 text-sm">Parent-Student link requests</p>
+                      </div>
+                    )}
+                  </div>
+              </div>
+           </div>
+
+           <div className="bg-white rounded-3xl p-8 shadow-soft border border-slate-100 flex flex-col justify-between">
+              <div>
+                 <h3 className="text-lg font-bold text-slate-800 mb-6 uppercase tracking-wider">Quick Actions</h3>
+                 <div className="space-y-3">
+                    <button onClick={() => navigate('/admin/users')} className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-[#e8f6fa] rounded-2xl transition-colors group">
+                       <div className="flex items-center gap-3">
+                          <Users size={18} className="text-slate-400 group-hover:text-[#00a8cc]" />
+                          <span className="text-sm font-bold text-slate-700">Manage Users</span>
+                       </div>
+                       <ChevronRight size={16} className="text-slate-300" />
+                    </button>
+                    <button onClick={() => navigate('/bookings')} className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-[#e8f6fa] rounded-2xl transition-colors group">
+                       <div className="flex items-center gap-3">
+                          <CalendarIcon size={18} className="text-slate-400 group-hover:text-[#00a8cc]" />
+                          <span className="text-sm font-bold text-slate-700">Review Sessions</span>
+                       </div>
+                       <ChevronRight size={16} className="text-slate-300" />
+                    </button>
+                    <button onClick={() => navigate('/admin/settings')} className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-[#e8f6fa] rounded-2xl transition-colors group">
+                       <div className="flex items-center gap-3">
+                          <Settings size={18} className="text-slate-400 group-hover:text-[#00a8cc]" />
+                          <span className="text-sm font-bold text-slate-700">Platform Settings</span>
+                       </div>
+                       <ChevronRight size={16} className="text-slate-300" />
+                    </button>
+                 </div>
+              </div>
+              <div className="mt-8 p-4 bg-[#f8f9fc] rounded-2xl border border-slate-100 italic text-[11px] text-slate-400">
+                 System Version 4.2 Stable. Last sync: {new Date().toLocaleTimeString()}
+              </div>
+           </div>
+        </div>
+
         {/* Charts Region */}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
            
            {/* Sessions Chart */}

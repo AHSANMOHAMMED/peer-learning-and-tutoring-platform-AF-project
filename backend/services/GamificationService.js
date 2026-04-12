@@ -341,7 +341,6 @@ class GamificationService {
    * Get leaderboard data
    */
   async getLeaderboard(type = 'global', limit = 100, subject = null) {
-    let query = {};
     let sortField = 'points.lifetime';
     
     if (type === 'weekly') {
@@ -352,20 +351,68 @@ class GamificationService {
       sortField = 'streaks.longest';
     }
     
-    const leaderboard = await UserGamification.find(query)
-      .sort({ [sortField]: -1 })
-      .limit(limit)
-      .populate('user', 'name profile.avatar')
-      .select('user points level badges streaks stats');
+    // Use aggregation to support subject (stream) filtering
+    const pipeline = [];
+
+    // Filter by subject if provided
+    if (subject && subject !== 'Global') {
+      pipeline.push({
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails'
+        }
+      });
+      pipeline.push({ $unwind: '$userDetails' });
+      pipeline.push({ $match: { 'userDetails.stream': subject } });
+    }
+
+    pipeline.push({ $sort: { [sortField]: -1 } });
+    pipeline.push({ $limit: limit });
+
+    // Populate user if not already looked up
+    if (!subject || subject === 'Global') {
+      pipeline.push({
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userDetails'
+        }
+      });
+      pipeline.push({ $unwind: '$userDetails' });
+    }
+
+    pipeline.push({
+      $project: {
+        _id: 1,
+        points: 1,
+        level: 1,
+        badges: 1,
+        streaks: 1,
+        stats: 1,
+        user: {
+          _id: '$userDetails._id',
+          username: '$userDetails.username',
+          name: '$userDetails.name',
+          profile: '$userDetails.profile',
+          district: '$userDetails.district',
+          stream: '$userDetails.stream'
+        }
+      }
+    });
+
+    const leaderboard = await UserGamification.aggregate(pipeline);
     
     return leaderboard.map((entry, index) => ({
       rank: index + 1,
       user: entry.user,
       points: entry.points,
       level: entry.level,
-      badgeCount: entry.badges.length,
-      currentStreak: entry.streaks.current,
-      longestStreak: entry.streaks.longest
+      badgeCount: entry.badges?.length || 0,
+      currentStreak: entry.streaks?.current || 0,
+      longestStreak: entry.streaks?.longest || 0
     }));
   }
 
@@ -455,6 +502,46 @@ class GamificationService {
         isCurrentUser: u.user._id.toString() === userId.toString()
       }))
     };
+  }
+
+  /**
+   * Get total points per district (Regional Leaderboard)
+   */
+  async getDistrictLeaderboard() {
+    try {
+      return await UserGamification.aggregate([
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userDetails'
+          }
+        },
+        { $unwind: '$userDetails' },
+        {
+          $group: {
+            _id: '$userDetails.district',
+            totalPoints: { $sum: '$points.lifetime' },
+            userCount: { $sum: 1 },
+            avgPoints: { $avg: '$points.lifetime' }
+          }
+        },
+        { $sort: { totalPoints: -1 } },
+        {
+          $project: {
+            district: '$_id',
+            totalPoints: 1,
+            userCount: 1,
+            avgPoints: 1,
+            _id: 0
+          }
+        }
+      ]);
+    } catch (error) {
+      console.error('Error getting district leaderboard:', error);
+      throw error;
+    }
   }
 
   /**

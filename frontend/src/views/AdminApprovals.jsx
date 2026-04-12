@@ -42,14 +42,14 @@ import { cn } from '../utils/cn';
 
 const AdminApprovals = () => {
   const { t } = useTranslation();
-  const { tutors, fetchTutors, moderateTutor } = useTutors();
+  const { tutors, fetchAllTutors, moderateTutor } = useTutors();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTutor, setSelectedTutor] = useState(null);
   const [showAuditSpecs, setShowAuditSpecs] = useState(false);
 
   useEffect(() => {
-    fetchTutors();
-  }, [fetchTutors]);
+    fetchAllTutors();
+  }, [fetchAllTutors]);
 
   const pendingTutors = tutors.filter(t => 
     t.verificationStatus === 'pending' || t.verificationStatus === 'rejected'

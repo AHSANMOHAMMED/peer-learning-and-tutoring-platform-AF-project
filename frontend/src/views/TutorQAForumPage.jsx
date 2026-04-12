@@ -27,28 +27,26 @@ const TutorQAForumPage = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('/api/questions');
-        if (response.ok) {
-          const data = await response.json();
-          const questionArray = data.questions || [];
-          // Normalize backend data to match UI expectations
-          const formatted = questionArray.map(q => ({
-             id: q._id,
-             student: q.author?.username || q.author || 'Unknown Student',
-             grade: q.grade || 'General',
-             subject: q.subject || 'General',
-             title: q.title || 'Untitled Inquiry',
-             body: q.body || q.content || 'No content provided.',
-             status: q.answers?.length > 0 ? 'Answered' : 'Unanswered',
-             askedOn: new Date(q.createdAt).toLocaleDateString(),
-             tutorAnswer: q.answers?.[0]?.content || '',
-             marks: q.marks || null,
-             feedback: q.feedback || '',
-             urgency: q.urgency || 'Normal'
-          }));
-          setQuestions(formatted);
-          if (formatted.length > 0) setSelectedId(formatted[0].id);
-        }
+        setLoading(true);
+        const res = await api.get('/questions');
+        const questionArray = res.data.questions || res.data || [];
+        // Normalize backend data to match UI expectations
+        const formatted = questionArray.map(q => ({
+           id: q._id,
+           student: q.author?.username || (typeof q.author === 'string' ? q.author : 'Unknown Student'),
+           grade: q.grade || 'General',
+           subject: q.subject || 'General',
+           title: q.title || 'Untitled Inquiry',
+           body: q.body || q.content || 'No content provided.',
+           status: q.answerCount > 0 || q.hasAcceptedAnswer ? 'Answered' : 'Unanswered',
+           askedOn: new Date(q.createdAt).toLocaleDateString(),
+           tutorAnswer: q.correctAnswer || '',
+           marks: q.points || null,
+           feedback: q.explanation || '',
+           urgency: q.difficulty === 'Hard' ? 'High' : 'Normal'
+        }));
+        setQuestions(formatted);
+        if (formatted.length > 0) setSelectedId(formatted[0].id);
       } catch (error) {
         console.error("Failed to fetch QA Questions", error);
         toast.error("Could not load Q&A forum.");
@@ -86,18 +84,34 @@ const TutorQAForumPage = () => {
   }, [questions, subjectFilter, statusFilter]);
 
   const handleSaveAnswer = async () => {
-    if (!answerDraft.trim()) return;
+    if (!answerDraft.trim() || !selectedId) return;
     try {
-      setQuestions(prev => prev.map(q => q.id === selectedId ? {
-        ...q,
-        tutorAnswer: answerDraft,
-        feedback: feedbackDraft,
-        marks: Number(marksDraft),
-        status: 'Answered'
-      } : q));
-      toast.success('Your response has been published to the student.');
+      setLoading(true);
+      const res = await api.post(`/answers/question/${selectedId}`, {
+        body: answerDraft,
+        marks: marksDraft ? Number(marksDraft) : undefined,
+        tutorComment: feedbackDraft
+      });
+
+      if (res.data) {
+        // Update local state to show the answer immediately
+        setQuestions(prev => prev.map(q => q.id === selectedId ? {
+          ...q,
+          tutorAnswer: answerDraft,
+          feedback: feedbackDraft,
+          marks: Number(marksDraft),
+          status: 'Answered'
+        } : q));
+        toast.success('Your response has been published to the student.');
+        setAnswerDraft('');
+        setMarksDraft('');
+        setFeedbackDraft('');
+      }
     } catch (e) {
-      toast.error('Failed to post answer.');
+      console.error('Answer submission error:', e);
+      toast.error(e.response?.data?.error || 'Failed to post answer.');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -29,7 +29,18 @@ const TutorBrowsing = () => {
     fetchTutors();
   }, [fetchTutors]);
 
-  const STREAMS = ['All Streams', 'Combined Maths', 'Biology', 'Commerce', 'Arts', 'Tech', 'O/L', 'Other'];
+  const STREAMS = [
+    'All Streams', 
+    'Combined Mathematics', 
+    'Biological Sciences', 
+    'Commercial Stream', 
+    'Physical Sciences', 
+    'Arts Stream', 
+    'Technology Stream', 
+    'O/L General',
+    'London A/L', 
+    'Other'
+  ];
 
   const filteredTutors = tutors.filter((tutor) => {
     const subjects = tutor.subjects || [];

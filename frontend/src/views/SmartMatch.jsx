@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, PlayCircle, Trophy, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, PlayCircle, Trophy, Sparkles, AlertCircle, RefreshCw, ChevronRight } from 'lucide-react';
 
 import Layout from '../components/Layout';
 import { useAI } from '../controllers/useAI';
 
 const MathPracticeCards = [
-  { title: "Addition & Subtraction", questions: 120, time: "40 min", color: "bg-[#00a8cc]" },
-  { title: "Calculus I", questions: 85, time: "60 min", color: "bg-[#f57c00]" },
-  { title: "Multiplication & Division", questions: 150, time: "45 min", color: "bg-[#e53935]" },
-  { title: "Linear Algebra", questions: 60, time: "50 min", color: "bg-[#43a047]" }
+  { title: "Combined Mathematics", questions: 120, time: "40 min", color: "bg-[#00a8cc]" },
+  { title: "Biological Sciences", questions: 85, time: "60 min", color: "bg-[#f57c00]" },
+  { title: "Physics Mastery", questions: 150, time: "45 min", color: "bg-[#e53935]" },
+  { title: "ICT Fundamentals", questions: 60, time: "50 min", color: "bg-[#43a047]" }
 ];
 
 const LeaderboardData = [

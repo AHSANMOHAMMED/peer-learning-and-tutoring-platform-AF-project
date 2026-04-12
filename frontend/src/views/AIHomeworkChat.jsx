@@ -41,10 +41,10 @@ const AIHomeworkChat = () => {
       ];
     }
     return [
-      { id: 'mathematics', name: 'Math', icon: '🔢', color: 'bg-blue-100 text-blue-600' },
-      { id: 'physics', name: 'Physics', icon: '⚛️', color: 'bg-purple-100 text-purple-600' },
-      { id: 'chemistry', name: 'Chem', icon: '⚗️', color: 'bg-emerald-100 text-emerald-600' },
-      { id: 'biology', name: 'Bio', icon: '🧬', color: 'bg-rose-100 text-rose-600' },
+      { id: 'mathematics', name: 'Combined Mathematics', icon: '🔢', color: 'bg-blue-100 text-blue-600' },
+      { id: 'physics', name: 'Physical Sciences', icon: '⚛️', color: 'bg-purple-100 text-purple-600' },
+      { id: 'biology', name: 'Biological Sciences', icon: '🧬', color: 'bg-rose-100 text-rose-600' },
+      { id: 'commerce', name: 'Commercial Stream', icon: '💼', color: 'bg-emerald-100 text-emerald-600' },
       { id: 'english', name: 'English', icon: '📚', color: 'bg-orange-100 text-orange-600' },
     ];
   };

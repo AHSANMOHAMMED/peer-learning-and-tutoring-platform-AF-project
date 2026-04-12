@@ -7,9 +7,18 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const path = require('path');
-
 // Load environment variables
 dotenv.config();
+
+// Configuration for AI Homework Multimodal support
+// Note: Increased payload limits to 50MB to support large base64 data.
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
+const passport = require('./config/passport');
+
+// Suppress Mongoose reserved key warnings (harmless isNew warning)
+process.noDeprecation = true;
 
 // Connect to MongoDB
 const connectDB = require('./config/db');
@@ -25,14 +34,19 @@ const io = new Server(server, {
 });
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
+app.use(passport.initialize());
+
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { explorer: true }));
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -46,6 +60,18 @@ app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/moderation', require('./routes/moderation'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/system', require('./routes/system'));
+app.use('/api/timetable', require('./routes/timetable'));
+app.use('/api/homework', require('./routes/homework'));
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'UP', 
+    timestamp: new Date(),
+    mongo: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED'
+  });
+});
 
 // Forum and Gamification Routes
 app.use('/api/questions', require('./routes/questions'));
@@ -68,7 +94,7 @@ app.use('/api/certificates', require('./routes/certificates'));
 app.use('/api/ai-homework', require('./routes/aiHomework'));
 app.use('/api/gamification', require('./routes/gamification'));
 app.use('/api/marketplace', require('./routes/marketplace'));
-app.use('/api/parent', require('./routes/parentModeration'));
+app.use('/api', require('./routes/parentModeration'));
 app.use('/api/personalization', require('./routes/personalization'));
 app.use('/api/schools', require('./routes/schools'));
 app.use('/api/video', require('./routes/video'));
@@ -200,5 +226,18 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// Global Error Handlers to prevent ghosting or silent failures
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('😱 UNHANDLED REJECTION AT:', promise, 'REASON:', reason);
+  // Optional: Graceful shutdown if error is critical
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('‼️ UNCAUGHT EXCEPTION:', error.message);
+  console.error(error.stack);
+  // Exit gracefully to let nodemon restart
+  process.exit(1);
 });
 

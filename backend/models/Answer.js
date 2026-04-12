@@ -107,7 +107,7 @@ answerSchema.methods.updateCommentCount = async function() {
 };
 
 // Pre-save middleware to handle acceptance logic
-answerSchema.pre('save', async function(next) {
+answerSchema.pre('save', async function() {
   if (this.isModified('isAccepted') && this.isAccepted) {
     // Unaccept all other answers for this question
     await this.constructor.updateMany(
@@ -142,8 +142,6 @@ answerSchema.pre('save', async function(next) {
       hasAcceptedAnswer: !!otherAccepted
     });
   }
-  
-  next();
 });
 
 // Post-save middleware to update question's answer count

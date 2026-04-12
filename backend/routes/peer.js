@@ -7,6 +7,43 @@ const { authenticate } = require('../middleware/auth');
 const { body, validationResult, query } = require('express-validator');
 
 /**
+ * @route   POST /api/peer/match
+ * @desc    Quick AI-driven peer matching (Neural Synchronizer)
+ * @access  Private
+ */
+router.post('/match', authenticate, async (req, res) => {
+  try {
+    const { stream } = req.body;
+    
+    // Convert stream to subject/grade context
+    const matches = await MatchingService.findPeerMatches({
+      userId: req.user._id,
+      subject: stream || 'Combined Maths',
+      grade: req.user.profile?.grade || 'Grade 12',
+      topic: 'General Discussion',
+      scheduledAt: new Date(),
+      duration: 60
+    });
+
+    res.json({
+      success: true,
+      message: 'Neural resonance matches found',
+      data: matches.map(m => ({
+        id: m.user._id,
+        name: m.user.name || m.user.username,
+        univ: m.user.profile?.education || 'National Academy',
+        rating: m.reputation?.averageRating || 4.9,
+        location: m.user.profile?.location || 'Western Province',
+        subjects: m.user.profile?.subjects || []
+      }))
+    });
+  } catch (error) {
+    console.error('Error in quick match:', error);
+    res.status(500).json({ success: false, message: 'Matching engine failure' });
+  }
+});
+
+/**
  * @route   POST /api/peer/request-help
  * @desc    Request peer help and get potential matches
  * @access  Private

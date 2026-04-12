@@ -2,10 +2,13 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = Platform.select({
-  ios: 'http://localhost:5000/api',
-  android: 'http://10.0.2.2:5000/api',
-  default: 'http://localhost:5000/api'
+// For testing on real devices, replace 'localhost' with your machine's local IP (e.g., 192.168.x.x)
+// For Android Emulators, 10.0.2.2 points to the host machine's localhost.
+const DEFAULT_IP = '10.0.2.2'; // Change this to your local IP if testing on real device
+const API_URL = process.env.EXPO_PUBLIC_API_URL || Platform.select({
+  ios: `http://localhost:5001/api`,
+  android: `http://${DEFAULT_IP}:5001/api`,
+  default: `http://localhost:5001/api`
 });
 
 const api = axios.create({

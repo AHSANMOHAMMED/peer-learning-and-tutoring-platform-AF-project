@@ -7,7 +7,8 @@ const voteController = require('../controllers/voteController');
 router.post('/', authenticate, voteController.vote);
 router.get('/user/:targetType/:targetId', authenticate, voteController.getUserVote);
 router.get('/counts/:targetType/:targetId', voteController.getVoteCounts);
-router.get('/history/:targetType?', authenticate, voteController.getUserVoteHistory);
+router.get('/history', authenticate, voteController.getUserVoteHistory);
+router.get('/history/:targetType', authenticate, voteController.getUserVoteHistory);
 router.get('/stats', voteController.getVoteStats);
 
 module.exports = router;

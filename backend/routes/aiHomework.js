@@ -11,7 +11,7 @@ const { body, param, validationResult } = require('express-validator');
  */
 router.post('/start', [
   authenticate,
-  body('subject').isIn(['mathematics', 'physics', 'chemistry', 'biology', 'english', 'history', 'geography', 'general']),
+  body('subject').isIn(['mathematics', 'physics', 'chemistry', 'biology', 'science', 'english', 'history', 'geography', 'general']),
   body('topic').optional().trim(),
   body('grade').notEmpty().trim()
 ], async (req, res) => {
@@ -59,7 +59,9 @@ router.post('/start', [
 router.post('/:sessionId/message', [
   authenticate,
   param('sessionId').isMongoId(),
-  body('message').notEmpty().trim()
+  body('message').optional().trim(),
+  body('image').optional().isObject(),
+  body('voiceNote').optional()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -72,9 +74,15 @@ router.post('/:sessionId/message', [
     }
 
     const { sessionId } = req.params;
-    const { message } = req.body;
+    const { image, voiceNote } = req.body;
+    // Allow empty message if image or voice is provided
+    const message = req.body.message || (image ? 'Please analyze this image and explain.' : (voiceNote ? 'Please process this voice note.' : ''));
+    
+    if (!message && !image && !voiceNote) {
+      return res.status(400).json({ success: false, message: 'Message, image, or voice note is required.' });
+    }
 
-    const response = await AIHomeworkAssistant.processMessage(sessionId, message);
+    const response = await AIHomeworkAssistant.processMessage(sessionId, message, image);
 
     res.json({
       success: true,
@@ -368,6 +376,45 @@ router.get('/stats', authenticate, async (req, res) => {
       message: 'Failed to get statistics',
       error: error.message
     });
+  }
+});
+
+/**
+ * @route   POST /api/ai-homework/upload-image
+ * @desc    Upload an image for AI processing
+ * @access  Private
+ */
+const multer = require('multer');
+const upload = multer();
+const GridFSService = require('../services/GridFSService');
+
+router.post('/upload-image', [
+  authenticate,
+  upload.single('image')
+], async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image uploaded' });
+    }
+
+    const gridFile = await GridFSService.upload(req.file.buffer, {
+      filename: `ai_context_${Date.now()}_${req.file.originalname}`,
+      contentType: req.file.mimetype,
+      metadata: { userId: req.user._id, purpose: 'ai_context' }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        fileId: gridFile._id,
+        filename: gridFile.filename,
+        mimeType: req.file.mimetype,
+        base64: req.file.buffer.toString('base64') // For immediate use in AI session
+      }
+    });
+  } catch (error) {
+    console.error('AI Image Upload Error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

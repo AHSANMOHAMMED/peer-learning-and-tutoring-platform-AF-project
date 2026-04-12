@@ -94,6 +94,42 @@ router.get('/', [
 });
 
 /**
+ * @route   GET /api/groups/my-rooms
+ * @desc    Get user's group rooms
+ * @access  Private
+ */
+router.get('/my-rooms', [
+  authenticate,
+  query('status').optional().isIn(['active', 'inactive']),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 50 })
+], async (req, res) => {
+  try {
+    const filters = {
+      ...req.query,
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 10
+    };
+
+    const result = await GroupService.getUserGroupRooms(req.user._id, filters);
+
+    res.json({
+      success: true,
+      message: 'User group rooms retrieved successfully',
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Error getting user group rooms:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while retrieving user group rooms',
+      error: error.message
+    });
+  }
+});
+
+/**
  * @route   GET /api/groups/:id
  * @desc    Get detailed information about a specific group room
  * @access  Private
@@ -402,87 +438,6 @@ router.put('/:id/settings', [
     res.status(500).json({
       success: false,
       message: 'Server error while updating room settings',
-      error: error.message
-    });
-  }
-});
-
-/**
- * @route   GET /api/groups/my-rooms
- * @desc    Get user's group rooms
- * @access  Private
- */
-router.get('/my-rooms', [
-  authenticate,
-  query('status').optional().isIn(['active', 'inactive']),
-  query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 50 })
-], async (req, res) => {
-  try {
-    const filters = {
-      ...req.query,
-      page: parseInt(req.query.page) || 1,
-      limit: parseInt(req.query.limit) || 10
-    };
-
-    const result = await GroupService.getUserGroupRooms(req.user._id, filters);
-
-    res.json({
-      success: true,
-      message: 'User group rooms retrieved successfully',
-      data: result
-    });
-
-  } catch (error) {
-    console.error('Error getting user group rooms:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while retrieving user group rooms',
-      error: error.message
-    });
-  }
-});
-
-/**
- * @route   DELETE /api/groups/:id
- * @desc    Delete/close a group room
- * @access  Private (Host only)
- */
-router.delete('/:id', authenticate, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const groupRoom = await GroupRoom.findById(id);
-    
-    if (!groupRoom) {
-      return res.status(404).json({
-        success: false,
-        message: 'Group room not found'
-      });
-    }
-
-    if (!groupRoom.isHost(req.user._id)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Only host can delete the group room'
-      });
-    }
-
-    // Soft delete by setting isActive to false
-    groupRoom.isActive = false;
-    await groupRoom.save();
-
-    res.json({
-      success: true,
-      message: 'Group room closed successfully',
-      data: { groupRoom }
-    });
-
-  } catch (error) {
-    console.error('Error deleting group room:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while deleting group room',
       error: error.message
     });
   }

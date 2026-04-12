@@ -1,7 +1,9 @@
 const Answer = require('../models/Answer');
 const Question = require('../models/Question');
-// const Vote = require('../models/Vote'); // Temporarily disabled
-// const Comment = require('../models/Comment'); // Temporarily disabled
+const Vote = require('../models/Vote');
+const Comment = require('../models/Comment');
+const PointTransaction = require('../models/PointTransaction');
+const PointsService = require('../services/pointsService');
 const { validationResult } = require('express-validator');
 
 // Get answers for a question
@@ -42,19 +44,18 @@ const getAnswersByQuestion = async (req, res) => {
 
     // Get user votes for each answer if authenticated
     let userVotes = {};
-    // TODO: Re-enable when Vote model is properly integrated
-    // if (req.user) {
-    //   const answerIds = answers.map(a => a._id);
-    //   const votes = await Vote.find({
-    //     targetType: 'answer',
-    //     targetId: { $in: answerIds },
-    //     user: req.user._id
-    //   });
-    //   userVotes = votes.reduce((acc, vote) => {
-    //     acc[vote.targetId.toString()] = vote.voteType;
-    //     return acc;
-    //   }, {});
-    // }
+    if (req.user) {
+      const answerIds = answers.map(a => a._id);
+      const votes = await Vote.find({
+        targetType: 'answer',
+        targetId: { $in: answerIds },
+        user: req.user._id
+      });
+      userVotes = votes.reduce((acc, vote) => {
+        acc[vote.targetId.toString()] = vote.voteType;
+        return acc;
+      }, {});
+    }
 
     const answersWithVotes = answers.map(answer => ({
       ...answer.toObject(),
@@ -95,15 +96,14 @@ const getAnswerById = async (req, res) => {
 
     // Get user's vote if authenticated
     let userVote = null;
-    // TODO: Re-enable when Vote model is properly integrated
-    // if (req.user) {
-    //   const vote = await Vote.findOne({
-    //     targetType: 'answer',
-    //     targetId: id,
-    //     user: req.user._id
-    //   });
-    //   userVote = vote ? vote.voteType : null;
-    // }
+    if (req.user) {
+      const vote = await Vote.findOne({
+        targetType: 'answer',
+        targetId: id,
+        user: req.user._id
+      });
+      userVote = vote ? vote.voteType : null;
+    }
 
     res.json({
       answer,
@@ -125,9 +125,6 @@ const createAnswer = async (req, res) => {
 
     const { questionId } = req.params;
     const { body } = req.body;
-
-    // Temporarily add mock user for testing
-    req.user = { _id: '507f1f77bcf86cd799439012' };
 
     console.log('Looking for question:', questionId);
     // Check if question exists and is not closed
@@ -152,25 +149,26 @@ const createAnswer = async (req, res) => {
     await answer.save();
     console.log('Answer saved successfully:', answer._id);
 
-    // Temporarily disable points for testing
     // Award points for posting answer
-    // await PointTransaction.createTransaction({
-    //   user: req.user._id,
-    //   points: 5,
-    //   type: 'answer_posted',
-    //   referenceId: answer._id,
-    //   referenceType: 'answer',
-    //   description: 'Posted an answer'
-    // });
+    await PointsService.awardPoints(
+      req.user._id,
+      5,
+      'answer_created',
+      answer._id,
+      'answer',
+      'Posted an answer'
+    );
 
     // Update user's forum stats
-    // const User = require('../models/User');
-    // const user = await User.findById(req.user._id);
-    // await user.updateForumStats('answersGiven');
-    // await user.addSubjectPoints(question.category, 5);
+    const User = require('../models/User');
+    const user = await User.findById(req.user._id);
+    if (user) {
+      await user.updateForumStats('answersGiven');
+      await user.addSubjectPoints(question.subject, 5);
+    }
 
-    // Update question's answer count
-    await question.updateAnswerCount();
+    // Update question's answer count (handled by post-save middleware in Answer model, but explicitly calling here if needed)
+    // await question.updateAnswerCount();
 
     // Populate author details for response
     await answer.populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
@@ -243,9 +241,8 @@ const deleteAnswer = async (req, res) => {
     }
 
     // Delete related votes and comments
-    // TODO: Re-enable when Vote and Comment models are properly integrated
-    // await Vote.deleteMany({ targetType: 'answer', targetId: id });
-    // await Comment.deleteMany({ targetType: 'answer', targetId: id });
+    await Vote.deleteMany({ targetType: 'answer', targetId: id });
+    await Comment.deleteMany({ targetType: 'answer', targetId: id });
 
     await answer.remove();
 
@@ -277,23 +274,23 @@ const acceptAnswer = async (req, res) => {
     } else {
       await answer.accept(req.user._id);
 
-      // TODO: Re-enable points system when PointTransaction model is restored
       // Award points for accepted answer
-      // await PointTransaction.createTransaction({
-      //   user: answer.author,
-      //   points: 15,
-      //   type: 'answer_accepted',
-      //   referenceId: answer._id,
-      //   referenceType: 'answer',
-      //   description: 'Answer was accepted'
-      // });
+      await PointsService.awardPoints(
+        answer.author,
+        15,
+        'answer_accepted',
+        answer._id,
+        'answer',
+        'Answer was accepted'
+      );
 
-      // TODO: Re-enable user stats when User model is properly integrated
       // Update answer author's forum stats
-      // const User = require('../models/User');
-      // const answerAuthor = await User.findById(answer.author);
-      // await answerAuthor.updateForumStats('bestAnswers');
-      // await answerAuthor.addSubjectPoints(answer.question.category, 15);
+      const User = require('../models/User');
+      const answerAuthor = await User.findById(answer.author);
+      if (answerAuthor) {
+        await answerAuthor.updateForumStats('bestAnswers');
+        await answerAuthor.addSubjectPoints(answer.question.subject, 15);
+      }
     }
 
     await answer.populate([
@@ -392,6 +389,45 @@ const getAnswerStats = async (req, res) => {
   }
 };
 
+// List all answers for moderation
+const listAnswersForModeration = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = 'newest',
+      status = 'all'
+    } = req.query;
+
+    const query = {};
+    if (status !== 'all') {
+      query.status = status;
+    }
+
+    const answers = await Answer.find(query)
+      .sort({ createdAt: sortBy === 'newest' ? -1 : 1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate('author', 'username profile.firstName profile.lastName')
+      .populate('question', 'title');
+
+    const total = await Answer.countDocuments(query);
+
+    res.json({
+      success: true,
+      answers,
+      pagination: {
+        current: parseInt(page),
+        total: Math.ceil(total / parseInt(limit)),
+        count: total
+      }
+    });
+  } catch (error) {
+    console.error('Error in listAnswersForModeration:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch answers for moderation' });
+  }
+};
+
 module.exports = {
   getAnswersByQuestion,
   getAnswerById,
@@ -400,5 +436,6 @@ module.exports = {
   deleteAnswer,
   acceptAnswer,
   updateAnswerStatus,
-  getAnswerStats
+  getAnswerStats,
+  listAnswersForModeration
 };

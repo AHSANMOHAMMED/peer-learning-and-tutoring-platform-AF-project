@@ -12,7 +12,7 @@ const homeworkSessionSchema = new mongoose.Schema({
   subject: {
     type: String,
     required: true,
-    enum: ['mathematics', 'physics', 'chemistry', 'biology', 'english', 'history', 'geography', 'general']
+    enum: ['mathematics', 'physics', 'chemistry', 'biology', 'science', 'english', 'history', 'geography', 'general']
   },
   topic: {
     type: String,
@@ -31,8 +31,7 @@ const homeworkSessionSchema = new mongoose.Schema({
       required: true
     },
     content: {
-      type: String,
-      required: true
+      type: mongoose.Schema.Types.Mixed
     },
     timestamp: {
       type: Date,

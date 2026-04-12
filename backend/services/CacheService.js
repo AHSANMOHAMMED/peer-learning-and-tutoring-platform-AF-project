@@ -1,4 +1,9 @@
-const redis = require('redis');
+let redis;
+try {
+  redis = require('redis');
+} catch (e) {
+  console.warn('⚠️  Redis module not found. Caching will be disabled.');
+}
 
 class CacheService {
   constructor() {
@@ -15,6 +20,10 @@ class CacheService {
 
   async initializeRedis() {
     try {
+      if (!redis) {
+        console.warn('⚠️  Redis initialization skipped: module not found.');
+        return;
+      }
       this.client = redis.createClient({
         url: process.env.REDIS_URL,
         socket: {

@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "dashboard": "முதன்மை பலகை",
+    "marketplace": "சந்தை",
+    "qa": "கேள்வி பதில்",
+    "gamification": "தேர்ச்சி மையம்",
+    "ai_homework": "AI வீட்டுப்பாடம்",
+    "profile": "சுயவிவரம்",
+    "logout": "வெளியேறு",
+    "settings": "அமைப்புகள்",
+    "smart_match": "ஸ்மார்ட் பொருத்தம்",
+    "social_feed": "சமூக ஊட்டம்",
+    "materials": "கற்றல் பொருட்கள்",
+    "planner": "படிப்புத் திட்டம்",
+    "voice_tutor": "குரல் ஆசிரியர்",
+    "bookings": "பதிவுகள்",
+    "certificates": "சான்றிதழ்கள்",
+    "games": "விளையாட்டுகள்",
+    "tutor_workspace": "ஆசிரியர் பணியிடம்",
+    "school_admin": "பள்ளி நிர்வாகி",
+    "moderation_hub": "நடுவர் மையம்",
+    "user_index": "பயனர் அட்டவணை",
+    "global_admin": "உலகளாவிய நிர்வாகி"
+  },
+  "auth": {
+    "login": "உள்நுழைய",
+    "login_title": "மீண்டும் வருக",
+    "register": "Aura இல் இணையுங்கள்",
+    "register_title": "கற்றலைத் தொடங்குங்கள்",
+    "joining_as": "இணைவது",
+    "student": "மாணவர்",
+    "tutor": "ஆசிரியர்",
+    "parent": "பெற்றோர்",
+    "verify": "கணக்கைச் சரிபார்க்கவும்",
+    "send_otp": "சரிபார்க்க முன்னகர்க",
+    "username": "பயனர் பெயர்",
+    "email": "மின்னஞ்சல் முகவரி",
+    "password": "கடவுச்சொல்",
+    "first_name": "முதற்பெயர்",
+    "last_name": "குடும்பப் பெயர்"
+  },
+  "general": {
+    "save": "மாற்றங்களைச் சேமி",
+    "cancel": "ரத்துசெய்",
+    "search": "தேடுக...",
+    "load_more": "மேலும் காட்டுக",
+    "loading": "தரவு ஒத்திசைக்கப்படுகிறது...",
+    "success": "செயல்பாடு வெற்றி",
+    "error": "பரிமாற்றம் தோல்வி"
+  },
+  "dashboard": {
+    "welcome": "வணக்கம், {{name}}",
+    "student_hub": "மாணவர் தகவல் மையம்",
+    "tutor_hub": "ஆசிரியர் கட்டளை மையம்",
+    "parent_hub": "பெற்றோர் தகவல் மையம்",
+    "parent": {
+      "management_center": "நிர்வாக மையம்",
+      "title": "பெற்றோர் தகவல் மையம்",
+      "subtitle": "உங்கள் குழந்தையின் கற்றல் பயணத்தைக் கண்காணிக்கவும், நிர்வகிக்கவும்.",
+      "secure_tutors": "ஆசிரியர்களைத் தேடுக",
+      "link_student": "மாணவரை இணைக்கவும்",
+      "fleet": "உங்கள் குழு",
+      "priority_matrix": "முன்னுரிமை வரிசை",
+      "growth_projection": "வளர்ச்சி கணிப்பு",
+      "session_fleet": "வகுப்புப் பட்டியல்",
+      "grades": "கல்வித் தரம்",
+      "mentorship_hub": "ஆலோசனை மையம்",
+      "knowledge_level": "அறிவு நிலை",
+      "total_score": "மொத்த மதிப்பெண்",
+      "success_rate": "வெற்றி விகிதம்",
+      "link_desc": "உங்கள் குழந்தையின் மின்னஞ்சலை உள்ளிடவும். சரிபார்க்கப்பட்டதும் தரவு ஒத்திசைக்கப்படும்."
+    }
+  },
+  "gamification": {
+    "hub_title": "கல்வி விருதுகள் மையம்",
+    "intelligence_title": "தேர்ச்சி நுண்ணறிவு",
+    "total_merit": "மொத்த தகுதி",
+    "level_progression": "நிலை முன்னேற்றம்",
+    "network_engagement": "ஜால ஈடுபாடு",
+    "social_sphere": "சமூக கட்டளை மண்டலம்",
+    "honor_badges": "கௌரவ பேட்ஜ்கள்"
+  },
+  "marketplace": {
+    "hub_title": "அறிவுச் சந்தை மையம்",
+    "inventory_title": "கல்விப் பட்டியல்",
+    "elite_syncs": "சிறந்த ஒத்திசைவுகள்",
+    "control_matrix": "உலகளாவிய கட்டுப்பாட்டு அணி"
+  },
+  "smart_match": {
+    "engine_title": "நரம்பு சார் பொருத்த இயந்திரம்",
+    "calibrate_title": "உங்கள் எதிர்காலப் பாதையை வடிவமைக்கவும்",
+    "probability_core": "நரம்பு சார் நிகழ்தகவு மையம்"
+  },
+  "ai_homework": {
+    "assistant_core": "நரம்பு சார் உதவியாளர் மையம்",
+    "mastery_title": "AI வீட்டுப்பாட தேர்ச்சி",
+    "cognitive_focus": "அறிவாற்றல் கவனம்",
+    "academic_tier": "கல்வி அடுக்கு"
+  },
+  "bookings": {
+    "command_center": "அட்டவணை கட்டளை மையம்",
+    "session_inventory": "வகுப்புப் பட்டியல்",
+    "operational_agenda": "நேரடி செயல்பாட்டு நிகழ்ச்சி நிரல்"
+  },
+  "common": {
+    "welcome_back": "மீண்டும் வருக"
+  }
+}

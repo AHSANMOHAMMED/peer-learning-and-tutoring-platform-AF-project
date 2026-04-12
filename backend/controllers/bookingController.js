@@ -68,8 +68,8 @@ exports.updateBookingStatus = async (req, res) => {
 
       booking.status = status;
       if (status === 'confirmed') {
-        // Mock meeting URL generation
-        booking.meetingUrl = `https://meet.jit.si/peerlearn-session-${booking._id}`;
+        // Platform-integrated meeting room
+        booking.meetingUrl = `/session/${booking._id}`;
       }
       
       const updatedBooking = await booking.save();

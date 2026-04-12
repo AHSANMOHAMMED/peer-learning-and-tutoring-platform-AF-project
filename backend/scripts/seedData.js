@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load env
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const User = require('../models/User');
@@ -11,221 +10,179 @@ const Tutor = require('../models/Tutor');
 const Booking = require('../models/Booking');
 const Material = require('../models/Material');
 const Report = require('../models/Report');
+const Question = require('../models/Question');
+const Answer = require('../models/Answer');
+const Vote = require('../models/Vote');
+const Timetable = require('../models/Timetable');
+const Badge = require('../models/Badge');
+const UserBadge = require('../models/UserBadge');
+const PointTransaction = require('../models/PointTransaction');
 
 const seedUsers = [
   {
-    username: 'ahsan_student',
-    email: 'student@peerlearn.com',
+    username: 'nimal_student',
+    email: 'nimal@peerlearn.lk',
     password: 'password123',
     role: 'student',
     district: 'Colombo',
     stream: 'Combined Maths',
     grade: 'A/L 2025',
-    profile: {
-      firstName: 'Ahsan',
-      lastName: 'Mohammed',
-      bio: 'Aspiring engineer from Colombo focused on mastering Higher Mathematics.'
-    },
-    gamification: {
-      points: 1250,
-      level: 4,
-      streak: 7,
-      badges: ['Calculus Conqueror', 'Biology Ace']
-    }
+    profile: { firstName: 'Nimal', lastName: 'Perera', bio: 'A/L Maths student from Royal College.' },
+    gamification: { points: 1250, level: 4, streak: 7, badges: [] }
   },
   {
-    username: 'saritha_tutor',
-    email: 'tutor@peerlearn.com',
+    username: 'kamal_tutor',
+    email: 'kamal@peerlearn.lk',
     password: 'password123',
     role: 'tutor',
-    district: 'Gampaha',
+    district: 'Colombo',
     stream: 'Combined Maths',
-    profile: {
-      firstName: 'Saritha',
-      lastName: 'Munasinghe',
-      bio: 'B.Sc Engineering (Honors) at University of Moratuwa. Teaching Physics & Maths for 5 years.'
-    }
+    profile: { firstName: 'Kamal', lastName: 'Silva', bio: 'B.Sc Engineering (Honors) at University of Moratuwa.' }
   },
   {
-    username: 'kumar_tutor',
-    email: 'kumar@peerlearn.com',
+    username: 'ruwanthi_student',
+    email: 'ruwanthi@peerlearn.lk',
+    password: 'password123',
+    role: 'student',
+    district: 'Kandy',
+    stream: 'Biology',
+    grade: 'A/L 2024',
+    profile: { firstName: 'Ruwanthi', lastName: 'Jayasooriya', bio: 'Aiming for Medical College.' },
+    gamification: { points: 600, level: 2, streak: 3, badges: [] }
+  },
+  {
+    username: 'dinithi_tutor',
+    email: 'dinithi@peerlearn.lk',
     password: 'password123',
     role: 'tutor',
     district: 'Kandy',
     stream: 'Biology',
-    profile: {
-      firstName: 'Kumar',
-      lastName: 'Sangakkara',
-      bio: 'Medical student at University of Peradeniya. Passionate about Biology and Chemistry.'
-    }
+    profile: { firstName: 'Dinithi', lastName: 'Fernando', bio: 'MBBS (Reading) at University of Peradeniya.' }
   },
   {
-    username: 'admin_user',
-    email: 'admin@peerlearn.com',
+    username: 'amil_parent',
+    email: 'amil@peerlearn.lk',
     password: 'password123',
-    role: 'admin',
-    profile: {
-      firstName: 'Platform',
-      lastName: 'Admin',
-      bio: 'Senior PeerLearn Moderator.'
-    }
+    role: 'parent',
+    profile: { firstName: 'Amil', lastName: 'Perera', bio: 'Parent of Nimal.' }
   },
   {
-    username: 'super_admin',
-    email: 'super@peerlearn.com',
-    password: 'password123',
+    username: 'admin_lk',
+    email: 'admin@peerlearn.lk',
+    password: 'admin123',
     role: 'superadmin',
-    profile: {
-      firstName: 'System',
-      lastName: 'Architect',
-      bio: 'Full system oversight and security.'
-    }
+    profile: { firstName: 'System', lastName: 'Administrator', bio: 'Platform Admin' }
   }
+];
+
+const seedBadges = [
+  { name: 'O/L Master', description: 'Solved 100 O/L papers', icon: '🎓', category: 'milestone', rarity: 'rare', tier: 2, criteria: { type: 'points', value: 1000 } },
+  { name: 'A/L Scholar', description: 'Scored top marks in A/L Mock Exams', icon: '🏆', category: 'quality', rarity: 'legendary', tier: 5, criteria: { type: 'points', value: 5000 } },
+  { name: 'Moratuwa Material', description: 'Earned 10,000 points in Combined Maths', icon: '⚙️', category: 'subject_mastery', rarity: 'epic', tier: 4, criteria: { type: 'points', value: 10000, subject: 'Mathematics' } }
 ];
 
 const seedDatabase = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/peerlearn';
+    const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/peerlearn';
     await mongoose.connect(mongoUri);
-    console.log('MongoDB Connected for seeding...');
+    console.log('MongoDB Connected. Nuking comprehensive seed architecture...');
 
-    // Clear existing
-    await User.deleteMany({});
-    await Tutor.deleteMany({});
-    await Booking.deleteMany({});
-    await Material.deleteMany({});
-    await Report.deleteMany({});
-    console.log('Cleared existing data.');
+    await Promise.all([
+      User.deleteMany({}), Tutor.deleteMany({}), Booking.deleteMany({}),
+      Material.deleteMany({}), Report.deleteMany({}), Question.deleteMany({}),
+      Answer.deleteMany({}), Vote.deleteMany({}), Timetable.deleteMany({}),
+      Badge.deleteMany({}), UserBadge.deleteMany({}), PointTransaction.deleteMany({})
+    ]);
 
+    // 1. Badges
+    const createdBadges = await Badge.insertMany(seedBadges);
+
+    // 2. Users
     const createdUsers = [];
     for (const userData of seedUsers) {
       const user = await User.create(userData);
       createdUsers.push(user);
     }
+    const [nimal, kamal, ruwanthi, dinithi, amil, admin] = createdUsers;
 
-    const student = createdUsers.find(u => u.username === 'ahsan_student');
-    const tutor1 = createdUsers.find(u => u.username === 'saritha_tutor');
-    const tutor2 = createdUsers.find(u => u.username === 'kumar_tutor');
-    const admin = createdUsers.find(u => u.username === 'admin_user');
+    // 3. Gamification Transactions & User Badges
+    await UserBadge.create({ user: nimal._id, badge: createdBadges[0]._id, awardedAt: new Date() });
+    await PointTransaction.create({ user: nimal._id, action: 'daily_login', points: 5, subjectType: 'Course' });
+    await PointTransaction.create({ user: kamal._id, action: 'answer_upvote_received', points: 10, subjectType: 'Answer' });
 
-    // Create Tutor Profiles
-    const tutorProfile1 = await Tutor.create({
-      userId: tutor1._id,
-      subjects: ['Combined Maths', 'Physics'],
-      alStream: 'Combined Maths',
-      bio: 'B.Sc Engineering (Honors) at University of Moratuwa. Teaching Physics & Maths for 5 years.',
-      education: [{
-        institution: 'University of Moratuwa',
-        degree: 'B.Sc. Engineering (Honors)',
-        year: 2022
-      }],
-      experience: 5,
-      rating: 4.9,
-      reviewCount: 42,
-      verificationStatus: 'approved',
-      hourlyRate: 1500,
-      isFeatured: true
+    // 4. Tutor Profiles
+    const tutor1 = await Tutor.create({
+      userId: kamal._id, subjects: ['Combined Maths', 'Physics'], alStream: 'Combined Maths',
+      bio: 'B.Sc Engineering at Moratuwa. Specializes in Pure Maths.',
+      education: [{ institution: 'University of Moratuwa', degree: 'B.Sc. Engineering', year: 2024 }],
+      experience: 4, rating: 4.8, reviewCount: 75, verificationStatus: 'approved', hourlyRate: 2000, isFeatured: true
+    });
+    
+    const tutor2 = await Tutor.create({
+      userId: dinithi._id, subjects: ['Biology', 'Chemistry'], alStream: 'Biology',
+      bio: 'Medical Student. I will teach you how to crack A/L Biology MCQs.',
+      education: [{ institution: 'University of Peradeniya', degree: 'MBBS', year: 2026 }],
+      experience: 3, rating: 4.9, reviewCount: 42, verificationStatus: 'approved', hourlyRate: 1500, isFeatured: false
     });
 
-    const tutorProfile2 = await Tutor.create({
-      userId: tutor2._id,
-      subjects: ['Biology', 'Chemistry'],
-      alStream: 'Biology',
-      bio: 'Medical student at University of Peradeniya. Passionate about Biology and Chemistry.',
-      education: [{
-        institution: 'University of Peradeniya',
-        degree: 'MBBS (Reading)',
-        year: 2026
-      }],
-      experience: 2,
-      rating: 4.5,
-      reviewCount: 12,
-      verificationStatus: 'pending',
-      hourlyRate: 1200,
-      isFeatured: false
+    // 5. Questions & Answers
+    const q1 = await Question.create({
+      title: 'How to solve 2022 A/L Combined Maths Integration Problem?',
+      body: 'I am struggling with the substitution method on the second part of the essay question. Can someone explain?',
+      tags: ['A/L', 'Maths', 'Integration'],
+      subject: 'Mathematics', grade: 13, author: nimal._id, difficulty: 'Hard'
     });
 
-    // Create Materials
-    const material1 = await Material.create({
-      title: 'Advanced Calculus Integration Techniques',
-      description: 'Comprehensive guide for A/L Combined Maths integration problems.',
-      fileUrl: '/uploads/calculus_guide.pdf',
-      fileType: 'pdf',
-      uploaderId: tutor1._id,
-      subject: 'Combined Maths',
-      grade: 'A/L 2025',
-      price: 500,
-      isApproved: true,
-      moderationStatus: 'approved',
-      tags: ['Calculus', 'Maths', 'A/L'],
-      downloads: 120,
-      trustScore: 95
+    const a1 = await Answer.create({
+      body: 'The trick is to use u = tan(x/2). This will simplify the denominator significantly. I have attached the steps.',
+      question: q1._id, author: kamal._id, isAccepted: true, upvotes: 12
+    });
+    await q1.updateAnswerCount();
+    await Vote.create({ user: ruwanthi._id, targetType: 'answer', targetId: a1._id, voteType: 'up' });
+
+    const q2 = await Question.create({
+      title: 'Differences between C3 and C4 pathways in Photosynthesis?',
+      body: 'What are the main morphological differences shown in leaf anatomy for A/L Biology?',
+      tags: ['A/L', 'Biology', 'Botany'],
+      subject: 'Science', grade: 12, author: ruwanthi._id, difficulty: 'Medium'
     });
 
-    const material2 = await Material.create({
-      title: 'Organic Chemistry Reactions Summary',
-      description: 'Handwritten notes covering all mandatory organic reactions.',
-      fileUrl: '/uploads/organic_chem.pdf',
-      fileType: 'pdf',
-      uploaderId: tutor2._id,
-      subject: 'Chemistry',
-      grade: 'A/L 2025',
-      price: 350,
-      isApproved: false,
-      moderationStatus: 'pending',
-      tags: ['Chemistry', 'A/L', 'Organic'],
-      downloads: 0,
-      trustScore: 40
+    const a2 = await Answer.create({
+      body: 'C4 plants exhibit Kranz anatomy, where the mesophyll cells are clustered around the bundle-sheath cells. This prevents photorespiration.',
+      question: q2._id, author: dinithi._id, isAccepted: false, upvotes: 5
+    });
+    await q2.updateAnswerCount();
+
+    // 6. Timetables
+    await Timetable.create({
+      userId: nimal._id, title: 'Combined Maths Revision', dayOfWeek: 1, startTime: '16:00', endTime: '18:00',
+      type: 'study', description: 'Past paper module 1', isAvailable: false, color: '#3b82f6'
+    });
+    await Timetable.create({
+      userId: ruwanthi._id, title: 'Biology Tuition', dayOfWeek: 3, startTime: '14:30', endTime: '16:30',
+      type: 'tutoring', description: 'With Dr. Dinithi', isAvailable: false, color: '#10b981'
     });
 
-    // Create Bookings for Ahsan
+    // 7. Bookings
     await Booking.create({
-      tutorId: tutorProfile1._id,
-      studentId: student._id,
-      date: new Date(Date.now() + 86400000), // Tomorrow
-      startTime: '16:00',
-      endTime: '18:00',
-      status: 'confirmed',
-      subject: 'Combined Maths: Integration',
-      meetingUrl: 'https://peerlearn.live/math-session-001',
-      price: 3000,
-      paymentStatus: 'paid'
+      tutorId: tutor1._id, studentId: nimal._id, date: new Date(Date.now() + 86400000),
+      startTime: '16:00', endTime: '18:00', status: 'confirmed', subject: 'Maths Integration',
+      meetingUrl: '/session/math-integrations-1', price: 4000, paymentStatus: 'paid'
     });
-
     await Booking.create({
-      tutorId: tutorProfile1._id,
-      studentId: student._id,
-      date: new Date(Date.now() + 172800000), // Day after tomorrow
-      startTime: '14:00',
-      endTime: '15:30',
-      status: 'pending',
-      subject: 'Physics: Mechanics',
-      price: 2250,
-      paymentStatus: 'pending'
+      tutorId: tutor2._id, studentId: ruwanthi._id, date: new Date(Date.now() - 172800000),
+      startTime: '09:00', endTime: '11:00', status: 'completed', subject: 'Kranz Anatomy',
+      meetingUrl: '/session/kranz-1', price: 3000, paymentStatus: 'paid'
     });
 
-    // Create Reports
-    await Report.create({
-      reporterId: student._id,
-      targetId: material1._id,
-      targetType: 'Material',
-      reason: 'Inappropriate Content',
-      description: 'The material contains some irrelevant political commentary in the notes.',
-      status: 'pending',
-      suspicionScore: 15
+    // 8. Materials
+    await Material.create({
+      title: 'Moratuwa Engineering Physics Notes', description: 'Targeted for A/L 2025 Physics.',
+      fileUrl: '/uploads/physics.pdf', fileType: 'pdf', uploaderId: tutor1._id, subject: 'Physics',
+      grade: 'A/L 2025', price: 500, isApproved: true, moderationStatus: 'approved', tags: ['A/L', 'Physics']
     });
 
-    await Report.create({
-      reporterId: student._id,
-      targetId: tutor2._id,
-      targetType: 'User',
-      reason: 'Unprofessional Behavior',
-      description: 'The tutor failed to join the trial session twice without notice.',
-      status: 'pending',
-      suspicionScore: 85
-    });
-
-    console.log('Successfully seeded all platform roles, tutor profiles, materials, bookings, and reports!');
+    console.log('Successfully seeded Sri Lankan localized platform ecosystem!');
     process.exit(0);
   } catch (err) {
     console.error('Seeding Error:', err);

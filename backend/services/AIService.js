@@ -293,8 +293,45 @@ class AIService {
    * Summarize using Google Gemini
    */
   async summarizeWithGoogle(transcript, type) {
-    // Implementation would use Google Gemini API
-    throw new Error('Google summarization not implemented');
+    const prompts = {
+      bullet: `Summarize the following educational session transcript into 5-7 bullet points highlighting key concepts taught:\n\n${transcript}`,
+      detailed: `Provide a comprehensive summary of this educational session, including main topics covered, key explanations given, and important takeaways:\n\n${transcript}`,
+      'key-points': `Extract the 10 most important learning points from this session transcript:\n\n${transcript}`
+    };
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.googleAIKey}`;
+    
+    const response = await axios.post(geminiUrl, {
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompts[type] || prompts.bullet }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1000
+      }
+    });
+
+    const content = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Parse key points and action items (same logic as OpenAI for consistency)
+    const lines = content.split('\n').filter(line => line.trim());
+    const keyPoints = lines.filter(line => 
+      line.match(/^\d+\.|^[-•]|^\*/)
+    ).map(line => line.replace(/^\d+\.\s*|^[-•]\s*|^\*\s*/, '').trim());
+
+    const actionItems = lines.filter(line =>
+      line.toLowerCase().includes('action') ||
+      line.toLowerCase().includes('homework') ||
+      line.toLowerCase().includes('practice') ||
+      line.toLowerCase().includes('review')
+    ).map(line => line.replace(/^\d+\.\s*|^[-•]\s*|^\*\s*/, '').trim());
+
+    return {
+      summary: content,
+      keyPoints: keyPoints.slice(0, 10),
+      actionItems: actionItems.slice(0, 5)
+    };
   }
 
   /**
@@ -325,6 +362,8 @@ class AIService {
 
       if (this.openAIKey) {
         recommendations = await this.recommendationsWithOpenAI(userData);
+      } else if (this.googleAIKey) {
+        recommendations = await this.recommendationsWithGoogle(userData);
       } else {
         recommendations = this.generateMockRecommendations(userData);
       }
@@ -396,6 +435,52 @@ Provide:
   }
 
   /**
+   * Get recommendations using Google Gemini
+   */
+  async recommendationsWithGoogle(userData) {
+    const prompt = `Given a student with the following profile:
+- Grade: ${userData.grade}
+- Strong topics: ${userData.strongTopics.join(', ')}
+- Weak topics: ${userData.weakTopics.join(', ')}
+- Preferred subjects: ${userData.preferredSubjects.join(', ')}
+- Learning style: ${userData.learningStyle}
+- Goals: ${userData.goals.join(', ')}
+
+Provide:
+1. 3-5 specific learning recommendations
+2. Suggested study schedule
+3. Type of content formats that would work best
+4. Areas to focus on for improvement
+
+Format the output clearly.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.googleAIKey}`;
+    
+    const response = await axios.post(geminiUrl, {
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 1500
+      }
+    });
+
+    const content = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const lines = content.split('\n').filter(line => line.trim());
+    
+    return {
+      suggestedCourses: this.extractCourses(lines),
+      suggestedPeers: [],
+      studyPlan: this.extractStudyPlan(lines),
+      resources: this.extractResources(lines),
+      reasoning: content,
+      generatedAt: new Date()
+    };
+  }
+
+  /**
    * Analyze engagement patterns from session data
    * @param {Array} sessionData - Array of session participation data
    * @returns {Object} Engagement analysis
@@ -451,22 +536,35 @@ Provide:
    */
   async generateQuizQuestions(content, numQuestions = 5) {
     try {
-      if (!this.openAIKey) {
+      if (this.openAIKey) {
+        return await this.generateQuizQuestionsWithOpenAI(content, numQuestions);
+      } else if (this.googleAIKey) {
+        return await this.generateQuizQuestionsWithGoogle(content, numQuestions);
+      } else {
         return this.generateMockQuizQuestions(numQuestions);
       }
+    } catch (error) {
+      console.error('Quiz generation error:', error);
+      return this.generateMockQuizQuestions(numQuestions);
+    }
+  }
 
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: this.providers.openai.chat,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an educational quiz generator. Create multiple choice questions based on provided content.'
-            },
-            {
-              role: 'user',
-              content: `Generate ${numQuestions} multiple choice quiz questions based on this content:\n\n${content}\n\nFormat each question as:
+  /**
+   * Generate quiz questions using OpenAI
+   */
+  async generateQuizQuestionsWithOpenAI(content, numQuestions) {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: this.providers.openai.chat,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an educational quiz generator. Create multiple choice questions based on provided content.'
+          },
+          {
+            role: 'user',
+            content: `Generate ${numQuestions} multiple choice quiz questions based on this content:\n\n${content}\n\nFormat each question as:
 Q: [Question text]
 A: [Option 1]
 B: [Option 2]
@@ -474,25 +572,49 @@ C: [Option 3]
 D: [Option 4]
 Correct: [A/B/C/D]
 Explanation: [Why this is correct]`
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 2000
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.openAIKey}`,
-            'Content-Type': 'application/json'
           }
+        ],
+        temperature: 0.3,
+        max_tokens: 2000
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.openAIKey}`,
+          'Content-Type': 'application/json'
         }
-      );
+      }
+    );
 
-      return this.parseQuizQuestions(response.data.choices[0].message.content);
+    return this.parseQuizQuestions(response.data.choices[0].message.content);
+  }
 
-    } catch (error) {
-      console.error('Quiz generation error:', error);
-      return this.generateMockQuizQuestions(numQuestions);
-    }
+  /**
+   * Generate quiz questions using Google Gemini
+   */
+  async generateQuizQuestionsWithGoogle(content, numQuestions) {
+    const prompt = `Generate ${numQuestions} multiple choice quiz questions based on this content:\n\n${content}\n\nFormat each question as:
+Q: [Question text]
+A: [Option 1]
+B: [Option 2]
+C: [Option 3]
+D: [Option 4]
+Correct: [A/B/C/D]
+Explanation: [Why this is correct]`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.googleAIKey}`;
+    
+    const response = await axios.post(geminiUrl, {
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 2000
+      }
+    });
+
+    return this.parseQuizQuestions(response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '');
   }
 
   /**

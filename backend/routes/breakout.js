@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body, param, validationResult } = require('express-validator');
-const { authenticate } = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
+const { authenticate, authorize } = require('../middleware/auth');
 const BreakoutRoomService = require('../services/BreakoutRoomService');
 
 // Validation middleware

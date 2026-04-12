@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { useAuthStore } from './src/store/authStore';
 import { useNotificationStore } from './src/store/notificationStore';
+import i18n, { initializeLanguage } from './src/i18n';
 
 // Screens
 import LoginScreen from './src/screens/auth/LoginScreen';
@@ -46,8 +47,15 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const { user, token, initializeAuth } = useAuthStore();
   const { registerForPushNotifications } = useNotificationStore();
+  // Force re-render when language changes
+  const [, setLangTick] = useState(0);
 
   useEffect(() => {
+    // Initialize language preference before anything else
+    initializeLanguage().then(() => {
+      setLangTick((t) => t + 1);
+    });
+
     // Initialize auth state
     initializeAuth().then(() => {
       setIsLoading(false);
@@ -98,7 +106,7 @@ function App() {
               <Stack.Screen 
                 name="PeerMatching" 
                 component={PeerMatchingScreen}
-                options={{ headerShown: true, title: 'Find a Tutor' }}
+                options={{ headerShown: true, title: i18n.t('screens.find_tutor') }}
               />
               <Stack.Screen 
                 name="SessionRoom" 
@@ -108,27 +116,27 @@ function App() {
               <Stack.Screen 
                 name="AIHomework" 
                 component={AIHomeworkScreen}
-                options={{ headerShown: true, title: 'AI Homework Help' }}
+                options={{ headerShown: true, title: i18n.t('screens.ai_homework') }}
               />
               <Stack.Screen 
                 name="CourseDetail" 
                 component={CourseDetailScreen}
-                options={{ headerShown: true, title: 'Course Details' }}
+                options={{ headerShown: true, title: i18n.t('screens.course_details') }}
               />
               <Stack.Screen 
                 name="Profile" 
                 component={ProfileScreen}
-                options={{ headerShown: true, title: 'Profile' }}
+                options={{ headerShown: true, title: i18n.t('screens.profile') }}
               />
               <Stack.Screen 
                 name="StudyPlanner" 
                 component={StudyPlannerScreen}
-                options={{ headerShown: true, title: 'AI Study Planner' }}
+                options={{ headerShown: true, title: i18n.t('screens.study_planner') }}
               />
               <Stack.Screen 
                 name="VoiceTutor" 
                 component={VoiceTutorScreen}
-                options={{ headerShown: true, title: 'Voice Tutor' }}
+                options={{ headerShown: true, title: i18n.t('screens.voice_tutor') }}
               />
             </>
           )}

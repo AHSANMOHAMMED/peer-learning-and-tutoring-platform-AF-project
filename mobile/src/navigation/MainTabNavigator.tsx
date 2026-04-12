@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import i18n from '../i18n';
 
 // Screens
 import HomeScreen from '../screens/home/HomeScreen';
@@ -29,6 +30,7 @@ export default function MainTabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
+          tabBarLabel: i18n.t('nav.home'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home" color={color} size={size} />
           ),
@@ -38,6 +40,7 @@ export default function MainTabNavigator() {
         name="Sessions"
         component={SessionsScreen}
         options={{
+          tabBarLabel: i18n.t('nav.sessions'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="video" color={color} size={size} />
           ),
@@ -47,6 +50,7 @@ export default function MainTabNavigator() {
         name="Courses"
         component={CoursesScreen}
         options={{
+          tabBarLabel: i18n.t('nav.courses'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="book-open" color={color} size={size} />
           ),
@@ -56,6 +60,7 @@ export default function MainTabNavigator() {
         name="Community"
         component={SocialScreen}
         options={{
+          tabBarLabel: i18n.t('nav.community'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account-group" color={color} size={size} />
           ),
@@ -65,6 +70,7 @@ export default function MainTabNavigator() {
         name="Settings"
         component={SettingsScreen}
         options={{
+          tabBarLabel: i18n.t('nav.settings'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="cog" color={color} size={size} />
           ),

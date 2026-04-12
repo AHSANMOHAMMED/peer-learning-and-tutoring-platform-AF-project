@@ -1,0 +1,27 @@
+config:
+  target: "http://localhost:5001"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Warm up phase"
+    - duration: 60
+      arrivalRate: 20
+      name: "Sustained load phase"
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: "Browsing Learning Games Catalog"
+    flow:
+      # Simulate a student loading the platform and browsing games without deep auth
+      - get:
+          url: "/api/search?q=math"
+          expect:
+            - statusCode: 200
+  - name: "Fetching Global Tutors"
+    flow:
+      - get:
+          url: "/api/tutors"
+          expect:
+            - statusCode: 200

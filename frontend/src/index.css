@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    /* Mentoos light gray background */
+    @apply bg-[#f8f9fc] text-[#2b2d42] overflow-x-hidden transition-colors duration-300;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.2;
+    @apply font-bold text-[#1e293b];
+  }
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  }
+  .shadow-soft-hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  }
+}
+
+@layer components {
+  /* Clean Mentoos/EduCare Cards */
+  .clean-card {
+    @apply bg-white rounded-2xl p-6 shadow-soft transition-all duration-300 hover:shadow-soft-hover;
+  }
+
+  .stat-card {
+    @apply rounded-xl p-5 flex flex-col justify-center relative overflow-hidden;
+  }
+
+  .pill-tab {
+    @apply px-4 py-2 rounded-full font-medium text-sm transition-all;
+  }
+  
+  .pill-tab-active {
+    @apply bg-primary-light text-primary-dark shadow-sm;
+  }
+  
+  .pill-tab-inactive {
+    @apply text-slate-500 hover:bg-slate-100;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white font-medium rounded-lg px-6 py-2.5 hover:bg-primary-dark transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-slate-200 text-slate-700 font-medium rounded-lg px-6 py-2.5 hover:bg-slate-50 transition-colors;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom Selection */
+::selection {
+  background: rgba(0, 168, 204, 0.2);
+  color: #1e293b;
+}
+
+/* Smooth page transitions */
+* {
+  scroll-behavior: smooth;
+}

@@ -12,6 +12,10 @@ interface User {
     grade?: string;
     subjects?: string[];
   };
+  gamification?: {
+    points: number;
+    streak: number;
+  };
 }
 
 interface AuthState {
@@ -19,7 +23,9 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  sendOTP: (email: string) => Promise<string | null>;
+  verifyOTP: (email: string, otp: string) => Promise<void>;
+  register: (userData: any) => Promise<string | null>;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
@@ -53,9 +59,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (userData: any) => {
+  sendOTP: async (email: string) => {
     try {
-      const response = await api.post('/api/auth/register', userData);
+      const response = await api.post('/api/auth/send-otp', { email });
+      return response.data.otp || null;
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      throw error;
+    }
+  },
+
+  verifyOTP: async (email: string, otp: string) => {
+    try {
+      const response = await api.post('/api/auth/verify-otp', { email, otp });
       
       if (response.data.success) {
         const { user, token } = response.data.data;
@@ -66,6 +82,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user, token });
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       }
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      throw error;
+    }
+  },
+
+  register: async (userData: any) => {
+    try {
+      const response = await api.post('/api/auth/register', userData);
+      
+      const { user, token, otp } = response.data;
+      
+      if (token) {
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        set({ user, token });
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
+      
+      return otp || null;
     } catch (error) {
       console.error('Register error:', error);
       throw error;

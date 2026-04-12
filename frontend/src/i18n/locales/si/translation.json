@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "dashboard": "පාලන පුවරුව",
+    "marketplace": "වෙළඳපොළ",
+    "qa": "ප්‍රශ්න සහ පිළිතුරු",
+    "gamification": "ප්‍රවීණතා මධ්‍යස්ථානය",
+    "ai_homework": "AI ගෙදර වැඩ",
+    "profile": "පරිශීලක පැතිකඩ",
+    "logout": "පිටවෙන්න",
+    "settings": "සැකසුම්",
+    "smart_match": "ස්මාර්ට් ගැලපීම",
+    "social_feed": "සමාජ සංග්‍රහය",
+    "materials": "අධ්‍යයන ද්‍රව්‍ය",
+    "planner": "අධ්‍යයන සැලසුම්කරණය",
+    "voice_tutor": "හඬ ගුරු",
+    "bookings": "වෙන්කරවා ගැනීම්",
+    "certificates": "සහතික පත්‍ර",
+    "games": "ක්‍රීඩා",
+    "tutor_workspace": "ගුරු වැඩබිම",
+    "school_admin": "පාසල් පරිපාලක",
+    "moderation_hub": "මධ්‍යස්ථ මධ්‍යස්ථානය",
+    "user_index": "පරිශීලක සුචිය",
+    "global_admin": "ගෝලීය පරිපාලක"
+  },
+  "auth": {
+    "login": "පිවිසෙන්න",
+    "login_title": "නැවතත් සාදරයෙන් පිළිගනිමු",
+    "register": "Aura හා එක්වන්න",
+    "register_title": "ඉගෙනීම ආරම්භ කරන්න",
+    "joining_as": "එක්වන්නේ",
+    "student": "ශිෂ්‍යයා",
+    "tutor": "ගුරුවරයා",
+    "parent": "මව්පියන්",
+    "verify": "ගිණුම තහවුරු කරන්න",
+    "send_otp": "තහවුරු කිරීමට ඉදිරියට යන්න",
+    "username": "පරිශීලක නාමය",
+    "email": "විද්‍යුත් තැපෑල",
+    "password": "මුරපදය",
+    "first_name": "මුල් නම",
+    "last_name": "වාසගම"
+  },
+  "general": {
+    "save": "වෙනස්කම් සුරකින්න",
+    "cancel": "අවලංගු කරන්න",
+    "search": "සොයන්න...",
+    "load_more": "තවත් පෙන්වන්න",
+    "loading": "දත්ත සමමුහුර්ත වෙමින් පවතී...",
+    "success": "සාර්ථකයි",
+    "error": "දෝෂයකි"
+  },
+  "dashboard": {
+    "welcome": "ආයුබෝවන්, {{name}}",
+    "student_hub": "ශිෂ්‍ය තොරතුරු මධ්‍යස්ථානය",
+    "tutor_hub": "ගුරු උපදෙස් මධ්‍යස්ථානය",
+    "parent_hub": "මව්පිය තොරතුරු මධ්‍යස්ථානය",
+    "parent": {
+      "management_center": "කළමනාකරණ මධ්‍යස්ථානය",
+      "title": "මව්පිය තොරතුරු මධ්‍යස්ථානය",
+      "subtitle": "ඔබේ දරුවාගේ ඉගෙනීමේ ගමන නිරීක්ෂණය සහ කළමනාකරණය කරන්න.",
+      "secure_tutors": "ගුරුවරුන් සොයන්න",
+      "link_student": "දරුවා සම්බන්ධ කරන්න",
+      "fleet": "ඔබේ දරුවෝ",
+      "priority_matrix": "ප්‍රමුඛතා මාලාව",
+      "growth_projection": "වර්ධන ප්‍රක්ෂේපණය",
+      "session_fleet": "පාඩම් මාලාව",
+      "grades": "අධ්‍යයන ශ්‍රේණි",
+      "mentorship_hub": "උපදේශන මධ්‍යස්ථානය",
+      "knowledge_level": "දැනුම මට්ටම",
+      "total_score": "මුළු ලකුණු",
+      "success_rate": "සාර්ථකත්ව අනුපාතය",
+      "link_desc": "ඔබේ දරුවාගේ ශිෂ්‍ය විද්‍යුත් තැපෑල ඇතුළත් කරන්න. තහවුරු වූ පසු තොරතුරු සමමුහුර්ත වනු ඇත."
+    }
+  },
+  "gamification": {
+    "hub_title": "ශාස්ත්‍රීය සම්මාන මධ්‍යස්ථානය",
+    "intelligence_title": "ප්‍රවීණතා බුද්ධිය",
+    "total_merit": "මුළු කුසලතා",
+    "level_progression": "මට්ටම් ප්‍රගතිය",
+    "network_engagement": "ජාල නියැලීම",
+    "social_sphere": "සමාජ විධාන ක්ෂේත්‍රය",
+    "honor_badges": "ගෞරව ලාංඡන"
+  },
+  "marketplace": {
+    "hub_title": "දැනුම වෙළඳපොළ මධ්‍යස්ථානය",
+    "inventory_title": "ශාස්ත්‍රීය තොගය",
+    "elite_syncs": "ප්‍රභූ සමමුහුර්තකරණයන්",
+    "control_matrix": "ගෝලීය පාලන මාලාව"
+  },
+  "smart_match": {
+    "engine_title": "ස්නායුක ගැලපුම් එන්ජිම",
+    "calibrate_title": "ඔබේ අනාගත මාවත ක්‍රමාංකනය කරන්න",
+    "probability_core": "ස්නායුක සම්භාවිතා මධ්‍යය"
+  },
+  "ai_homework": {
+    "assistant_core": "ස්නායුක සහකාර මධ්‍යය",
+    "mastery_title": "AI ගෙදර වැඩ ප්‍රවීණතාවය",
+    "cognitive_focus": "සංජානන අවධානය",
+    "academic_tier": "ශාස්ත්‍රීය ස්ථරය"
+  },
+  "bookings": {
+    "command_center": "කාලසටහන් විධාන මධ්‍යස්ථානය",
+    "session_inventory": "පාඩම් තොගය",
+    "operational_agenda": "සජීවී මෙහෙයුම් න්‍යාය පත්‍රය"
+  },
+  "common": {
+    "welcome_back": "නැවතත් සාදරයෙන් පිළිගනිමු"
+  }
+}

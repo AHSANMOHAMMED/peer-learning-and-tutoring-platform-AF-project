@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "marketplace": "Marketplace",
+    "qa": "Q&A Forum",
+    "gamification": "Mastery Hub",
+    "ai_homework": "AI Homework",
+    "profile": "User Profile",
+    "logout": "Logout",
+    "settings": "Settings",
+    "smart_match": "Smart Match",
+    "social_feed": "Social Feed",
+    "materials": "Materials Library",
+    "planner": "Study Planner",
+    "voice_tutor": "Voice Tutor",
+    "bookings": "Bookings",
+    "certificates": "Certificates",
+    "games": "Games",
+    "tutor_workspace": "Tutor Workspace",
+    "school_admin": "School Admin",
+    "moderation_hub": "Moderation Hub",
+    "user_index": "User Index",
+    "global_admin": "Global Admin"
+  },
+  "auth": {
+    "login": "Login",
+    "login_title": "Welcome Back",
+    "register": "Join Aura",
+    "register_title": "Initialize Learning",
+    "joining_as": "Joining as",
+    "student": "Student",
+    "tutor": "Tutor",
+    "parent": "Parent",
+    "verify": "Verify Account",
+    "send_otp": "Continue to Verification",
+    "username": "Username",
+    "email": "Email Address",
+    "password": "Password",
+    "first_name": "First Name",
+    "last_name": "Last Name"
+  },
+  "general": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "search": "Search Resources...",
+    "load_more": "Load More Content",
+    "loading": "Syncing Data...",
+    "success": "Operation Successful",
+    "error": "Transmission Failed"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}",
+    "student_hub": "Student Insights HUB",
+    "tutor_hub": "Educator Command Center",
+    "parent_hub": "Parental Insight HUB",
+    "parent": {
+      "management_center": "MANAGEMENT CENTER",
+      "title": "Parental Insight HUB",
+      "subtitle": "Monitor, Manage, and Master your child's learning journey.",
+      "secure_tutors": "Secure Tutors",
+      "link_student": "Link Student",
+      "fleet": "Your Fleet",
+      "priority_matrix": "Priority Matrix",
+      "growth_projection": "Growth Projection",
+      "session_fleet": "Session Fleet",
+      "grades": "Academic Grades",
+      "mentorship_hub": "Mentorship Hub",
+      "knowledge_level": "Knowledge Level",
+      "total_score": "Total Score",
+      "success_rate": "Success Rate",
+      "link_desc": "Enter your child's student email address. Authentication logs will be synced across your dashboards once verified."
+    }
+  },
+  "gamification": {
+    "hub_title": "Scholastic Honors HUB",
+    "intelligence_title": "Mastery Intelligence",
+    "total_merit": "Total Merit",
+    "level_progression": "Level Progression",
+    "network_engagement": "Network Engagement",
+    "social_sphere": "Social Command Sphere",
+    "honor_badges": "Honor Badges"
+  },
+  "marketplace": {
+    "hub_title": "Knowledge Marketplace HUB",
+    "inventory_title": "Scholastic Inventory",
+    "elite_syncs": "Elite Synchronizations",
+    "control_matrix": "Global Control Matrix"
+  },
+  "smart_match": {
+    "engine_title": "Neural Matching Engine",
+    "calibrate_title": "Calibrate Your Future Path",
+    "probability_core": "Neural Probability Core"
+  },
+  "ai_homework": {
+    "assistant_core": "Neural Assistant Core",
+    "mastery_title": "AI Homework Mastery",
+    "cognitive_focus": "Cognitive Focus",
+    "academic_tier": "Academic Tier"
+  },
+  "bookings": {
+    "command_center": "Schedule Command Center",
+    "session_inventory": "Session Inventory",
+    "operational_agenda": "Live Operational Agenda"
+  },
+  "common": {
+    "welcome_back": "Welcome Back"
+  }
+}

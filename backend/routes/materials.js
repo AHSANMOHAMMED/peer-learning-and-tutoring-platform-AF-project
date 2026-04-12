@@ -10,8 +10,8 @@ const {
 const { protect, authorize } = require('../middleware/auth');
 
 router.post('/', protect, uploadMaterial);
-router.get('/', getMaterials);
-router.get('/:id', getMaterialById);
+router.get('/', protect, getMaterials);
+router.get('/:id', protect, getMaterialById);
 router.put('/:id/moderate', protect, authorize('admin', 'moderator'), moderateMaterial);
 router.delete('/:id', protect, deleteMaterial);
 

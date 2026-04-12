@@ -1,5 +1,4 @@
-const fs = require('fs').promises;
-const path = require('path');
+const GridFSService = require('./GridFSService');
 const crypto = require('crypto');
 
 /**
@@ -38,11 +37,8 @@ class FileSharingService {
    * Initialize upload directory
    */
   async initialize() {
-    try {
-      await fs.mkdir(this.uploadDir, { recursive: true });
-    } catch (error) {
-      console.error('Error creating upload directory:', error);
-    }
+    // GridFS initializes with DB connection, no local directory needed
+    console.log('FileSharingService using GridFS storage');
   }
 
   /**
@@ -64,29 +60,26 @@ class FileSharingService {
       throw new Error(`File type ${type} is not allowed`);
     }
 
-    // Generate unique filename
-    const fileId = crypto.randomUUID();
-    const ext = path.extname(name);
-    const uniqueName = `${fileId}${ext}`;
-    const filePath = path.join(this.uploadDir, uniqueName);
-
-    // Save file
+    // Save file to GridFS
     const buffer = Buffer.from(data, 'base64');
-    await fs.writeFile(filePath, buffer);
+    const gridFile = await GridFSService.upload(buffer, {
+      filename: name,
+      contentType: type,
+      metadata: { sessionId, uploadedBy: userId }
+    });
 
     const fileInfo = {
-      id: fileId,
+      id: gridFile._id.toString(),
       name,
       type,
       size,
-      path: filePath,
       sessionId,
       uploadedBy: userId,
       uploadedAt: new Date(),
       downloads: 0,
       isShared: true,
-      sharedWith: [], // specific users if private
-      url: `/api/files/download/${fileId}`
+      sharedWith: [], 
+      url: `/api/files/download/${gridFile._id}`
     };
 
     // Add to session files
@@ -123,28 +116,25 @@ class FileSharingService {
    * @returns {Object} File data
    */
   async downloadFile(fileId) {
-    // Find file
+    // Find file metadata
+    const fileMetadata = await GridFSService.getFileMetadata(fileId);
+    if (!fileMetadata) throw new Error('File not found in GridFS');
+
+    // Get session tracking
     let fileInfo = null;
     for (const [sessionId, files] of this.sessionFiles) {
       fileInfo = files.find(f => f.id === fileId);
       if (fileInfo) break;
     }
 
-    if (!fileInfo) {
-      throw new Error('File not found');
-    }
-
-    // Read file
-    const data = await fs.readFile(fileInfo.path);
-    
-    // Increment download count
-    fileInfo.downloads++;
+    // Still increment downloads if tracking exists
+    if (fileInfo) fileInfo.downloads++;
 
     return {
-      name: fileInfo.name,
-      type: fileInfo.type,
-      data: data.toString('base64'),
-      size: fileInfo.size
+      name: fileMetadata.filename,
+      type: fileMetadata.contentType,
+      id: fileId,
+      size: fileMetadata.length
     };
   }
 
@@ -165,12 +155,8 @@ class FileSharingService {
           throw new Error('Permission denied');
         }
 
-        // Delete from filesystem
-        try {
-          await fs.unlink(file.path);
-        } catch (error) {
-          console.error('Error deleting file from disk:', error);
-        }
+        // Delete from GridFS
+        await GridFSService.delete(fileId);
 
         // Remove from session files
         files.splice(fileIndex, 1);

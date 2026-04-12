@@ -219,7 +219,7 @@ const approveTutor = async (req, res) => {
       });
     }
     
-    tutor.verificationStatus = 'verified';
+    tutor.verificationStatus = 'approved';
     tutor.verifiedBy = req.user._id;
     tutor.verifiedAt = new Date();
     tutor.verificationNotes = notes;

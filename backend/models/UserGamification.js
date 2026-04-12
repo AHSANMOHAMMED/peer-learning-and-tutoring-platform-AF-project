@@ -35,7 +35,7 @@ const userGamificationSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     },
-    isNew: {
+    isNewBadge: {
       type: Boolean,
       default: true
     },
@@ -224,7 +224,7 @@ userGamificationSchema.methods.addBadge = function(badgeId, pointsAwarded) {
     this.badges.push({
       badge: badgeId,
       earnedAt: new Date(),
-      isNew: true
+      isNewBadge: true
     });
     
     // Add badge points

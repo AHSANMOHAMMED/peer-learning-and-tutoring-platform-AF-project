@@ -173,8 +173,8 @@ const createQuestion = async (req, res) => {
     
     await question.save();
     
-    // Award points for posting question (+2 points) - temporarily disabled
-    // await PointsService.awardQuestionPosted(req.user._id, question._id, subject);
+    // Award points for posting question (+2 points)
+    await PointsService.awardQuestionPosted(req.user._id, question._id, subject);
     
     // Update user's forum stats
     const User = require('../models/User');

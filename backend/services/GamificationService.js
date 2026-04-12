@@ -37,236 +37,101 @@ class GamificationService {
     if (count > 0) return;
 
     const defaultBadges = [
-      // Achievement Badges - Sessions
+      // Activity Badges - Sessions
       {
-        badgeId: 'first_session',
         name: 'First Steps',
         description: 'Complete your first learning session',
-        category: 'achievement',
-        tier: 'bronze',
+        category: 'activity',
+        tier: 1, // bronze
+        rarity: 'common',
         icon: '/badges/first-session.svg',
-        color: '#CD7F32',
-        requirements: {
-          type: 'sessions',
-          minSessions: 1,
-          sessionType: 'any'
+        criteria: {
+          type: 'points',
+          value: 100
         },
         pointsAwarded: 100
       },
       {
-        badgeId: 'session_starter',
         name: 'Session Starter',
         description: 'Complete 10 learning sessions',
-        category: 'achievement',
-        tier: 'silver',
+        category: 'activity',
+        tier: 2, // silver
+        rarity: 'uncommon',
         icon: '/badges/sessions-10.svg',
-        color: '#C0C0C0',
-        requirements: {
-          type: 'sessions',
-          minSessions: 10,
-          sessionType: 'any'
+        criteria: {
+          type: 'points',
+          value: 200
         },
         pointsAwarded: 200
       },
       {
-        badgeId: 'session_master',
         name: 'Session Master',
         description: 'Complete 50 learning sessions',
-        category: 'achievement',
-        tier: 'gold',
+        category: 'activity',
+        tier: 3, // gold
+        rarity: 'rare',
         icon: '/badges/sessions-50.svg',
-        color: '#FFD700',
-        requirements: {
-          type: 'sessions',
-          minSessions: 50,
-          sessionType: 'any'
+        criteria: {
+          type: 'points',
+          value: 500
         },
         pointsAwarded: 500
-      },
-      {
-        badgeId: 'dedicated_learner',
-        name: 'Dedicated Learner',
-        description: 'Complete 100 learning sessions',
-        category: 'achievement',
-        tier: 'platinum',
-        icon: '/badges/sessions-100.svg',
-        color: '#E5E4E2',
-        requirements: {
-          type: 'sessions',
-          minSessions: 100,
-          sessionType: 'any'
-        },
-        pointsAwarded: 1000
       },
 
       // Milestone Badges - Streaks
       {
-        badgeId: 'streak_week',
         name: '7-Day Streak',
         description: 'Maintain a 7-day learning streak',
         category: 'milestone',
-        tier: 'bronze',
+        tier: 1,
+        rarity: 'common',
         icon: '/badges/streak-7.svg',
-        color: '#CD7F32',
-        requirements: {
+        criteria: {
           type: 'streak',
-          minStreak: 7,
-          streakType: 'daily'
+          value: 7
         },
         pointsAwarded: 150
       },
       {
-        badgeId: 'streak_month',
         name: '30-Day Champion',
         description: 'Maintain a 30-day learning streak',
         category: 'milestone',
-        tier: 'silver',
+        tier: 2,
+        rarity: 'uncommon',
         icon: '/badges/streak-30.svg',
-        color: '#C0C0C0',
-        requirements: {
+        criteria: {
           type: 'streak',
-          minStreak: 30,
-          streakType: 'daily'
+          value: 30
         },
         pointsAwarded: 500
       },
-      {
-        badgeId: 'streak_century',
-        name: '100-Day Legend',
-        description: 'Maintain a 100-day learning streak',
-        category: 'milestone',
-        tier: 'gold',
-        icon: '/badges/streak-100.svg',
-        color: '#FFD700',
-        requirements: {
-          type: 'streak',
-          minStreak: 100,
-          streakType: 'daily'
-        },
-        pointsAwarded: 1500
-      },
 
-      // Skill Badges - Courses
+      // Subject Mastery - Courses
       {
-        badgeId: 'course_enthusiast',
         name: 'Course Enthusiast',
         description: 'Complete 5 courses',
-        category: 'skill',
-        tier: 'bronze',
+        category: 'subject_mastery',
+        tier: 1,
+        rarity: 'common',
         icon: '/badges/courses-5.svg',
-        color: '#CD7F32',
-        requirements: {
-          type: 'courses',
-          minCourses: 5,
-          minCompletionRate: 80
+        criteria: {
+          type: 'custom',
+          value: 5
         },
         pointsAwarded: 300
       },
-      {
-        badgeId: 'course_master',
-        name: 'Course Master',
-        description: 'Complete 20 courses',
-        category: 'skill',
-        tier: 'gold',
-        icon: '/badges/courses-20.svg',
-        color: '#FFD700',
-        requirements: {
-          type: 'courses',
-          minCourses: 20,
-          minCompletionRate: 80
-        },
-        pointsAwarded: 1000
-      },
 
-      // Help Badges - Tutoring
+      // Community Badges - Tutoring
       {
-        badgeId: 'helpful_hand',
         name: 'Helpful Hand',
         description: 'Help 5 students as a peer tutor',
-        category: 'social',
-        tier: 'bronze',
+        category: 'community',
+        tier: 1,
+        rarity: 'common',
         icon: '/badges/help-5.svg',
-        color: '#CD7F32',
-        requirements: {
-          type: 'help',
-          studentsHelped: 5
-        },
-        pointsAwarded: 200
-      },
-      {
-        badgeId: 'mentor',
-        name: 'Mentor',
-        description: 'Help 25 students as a peer tutor',
-        category: 'social',
-        tier: 'silver',
-        icon: '/badges/help-25.svg',
-        color: '#C0C0C0',
-        requirements: {
-          type: 'help',
-          studentsHelped: 25
-        },
-        pointsAwarded: 500
-      },
-      {
-        badgeId: 'star_tutor',
-        name: 'Star Tutor',
-        description: 'Maintain a 4.5+ rating after helping 50 students',
-        category: 'social',
-        tier: 'gold',
-        icon: '/badges/star-tutor.svg',
-        color: '#FFD700',
-        requirements: {
-          type: 'rating',
-          minRating: 4.5,
-          minReviews: 50
-        },
-        pointsAwarded: 1000
-      },
-
-      // Special Badges
-      {
-        badgeId: 'early_bird',
-        name: 'Early Bird',
-        description: 'Join the platform in its first month',
-        category: 'special',
-        tier: 'platinum',
-        icon: '/badges/early-bird.svg',
-        color: '#E5E4E2',
-        isLimited: true,
-        limitedQuantity: 1000,
-        requirements: {
+        criteria: {
           type: 'custom',
-          customCondition: { joinedInFirstMonth: true }
-        },
-        pointsAwarded: 500
-      },
-      {
-        badgeId: 'perfect_attendance',
-        name: 'Perfect Attendance',
-        description: 'Attend 100% of sessions in a course',
-        category: 'achievement',
-        tier: 'gold',
-        icon: '/badges/perfect-attendance.svg',
-        color: '#FFD700',
-        requirements: {
-          type: 'sessions',
-          minSessions: 1,
-          sessionType: 'any',
-          customCondition: { attendanceRate: 100 }
-        },
-        pointsAwarded: 300
-      },
-      {
-        badgeId: 'social_butterfly',
-        name: 'Social Butterfly',
-        description: 'Join 10 different study groups',
-        category: 'social',
-        tier: 'silver',
-        icon: '/badges/social-butterfly.svg',
-        color: '#C0C0C0',
-        requirements: {
-          type: 'social',
-          groupsJoined: 10
+          value: 5
         },
         pointsAwarded: 200
       }
@@ -425,6 +290,7 @@ class GamificationService {
    */
   async checkBadgeRequirements(badge, gamification, user) {
     const req = badge.requirements;
+    if (!req) return false;
     
     switch (req.type) {
       case 'sessions':
@@ -599,12 +465,12 @@ class GamificationService {
       { user: userId },
       {
         $set: {
-          'badges.$[elem].isNew': false,
+          'badges.$[elem].isNewBadge': false,
           'badges.$[elem].viewedAt': new Date()
         }
       },
       {
-        arrayFilters: [{ 'elem.isNew': true }]
+        arrayFilters: [{ 'elem.isNewBadge': true }]
       }
     );
   }

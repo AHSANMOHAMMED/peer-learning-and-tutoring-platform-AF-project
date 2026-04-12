@@ -1,5 +1,6 @@
 const Tutor = require('../models/Tutor');
 const Booking = require('../models/Booking');
+const aiHomeworkAssistant = require('../services/AIHomeworkAssistant');
 
 // @desc    Smart Tutor Matcher
 // @route   POST /api/ai/match
@@ -42,23 +43,40 @@ exports.getSessionInsights = async (req, res) => {
       return res.status(404).json({ message: 'Session not found' });
     }
 
-    // Mock AI insights logic
-    res.json({
-      summary: "The session focused on advanced calculus concepts, specifically limits and derivatives.",
-      keyTakeaways: [
-        "Mastered the definition of a limit.",
-        "Understood the power rule for derivatives.",
-        "Needs more practice with the chain rule."
-      ],
-      suggestedResources: [
-        "Calculus: Early Transcendentals, Chapter 3",
-        "Khan Academy: Chain Rule Practice"
-      ],
-      autoFlashcards: [
-        { front: "What is the power rule?", back: "d/dx [x^n] = n * x^(n-1)" },
-        { front: "What is a limit?", back: "The value that a function approaches as the input approaches some value." }
-      ]
-    });
+    // Use real AI to generate session insights
+    const prompt = `Based on this session booking, generate a summary, 3 key takeaways, 2 suggested resources, and 2 flashcards.
+    Session Details:
+    - Subject: ${booking.subject}
+    - Topic: ${booking.topic || 'General'}
+    - Duration: ${booking.duration} mins
+    
+    Format the response as a valid JSON object:
+    {
+      "summary": "...",
+      "keyTakeaways": ["...", "...", "..."],
+      "suggestedResources": ["...", "..."],
+      "autoFlashcards": [{"front": "...", "back": "..."}, {"front": "...", "back": "..."}]
+    }`;
+
+    try {
+      const aiResponse = await aiHomeworkAssistant.callAI(`You are an educational analyst.`, [{ role: 'user', content: prompt }]);
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+         return res.json(JSON.parse(jsonMatch[0]));
+      }
+      
+      throw new Error('Could not parse AI response');
+    } catch (aiError) {
+      console.error('AI Insights generation error:', aiError);
+      // Fallback if AI fails
+      res.json({
+        summary: `Session about ${booking.subject}: ${booking.topic || 'General'}.`,
+        keyTakeaways: ["Reviewed core concepts", "Discussed practical examples"],
+        suggestedResources: ["Check textbook chapter related to " + booking.subject],
+        autoFlashcards: []
+      });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

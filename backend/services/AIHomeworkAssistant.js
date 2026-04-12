@@ -5,45 +5,95 @@ const User = require('../models/User');
 class AIHomeworkAssistant {
   constructor() {
     this.openAIKey = process.env.OPENAI_API_KEY;
+    this.geminiKey = process.env.GOOGLE_AI_API_KEY;
     this.model = 'gpt-4';
     this.maxTokens = 2000;
     this.temperature = 0.7;
     
-    // Subject-specific system prompts
+    // Subject-specific system prompts (Optimized for Sri Lankan National Syllabus)
     this.subjectPrompts = {
-      mathematics: `You are an expert mathematics tutor for students grades 6-13. 
+      mathematics: `You are an expert mathematics tutor for Sri Lankan students (Grade 6-13, including O/L and A/L Combined Maths). 
         Help students understand concepts step-by-step. 
         Don't just give answers - guide them through the problem-solving process.
         Use clear explanations, visual descriptions when helpful, and check for understanding.
-        Format math expressions clearly using LaTeX-style notation where appropriate.`,
+        Follow the Sri Lankan National Curriculum standards.`,
       
-      physics: `You are an expert physics tutor. Explain concepts with real-world examples.
+      physics: `You are an expert physics tutor specialized in the Sri Lankan A/L Physics syllabus. 
+        Explain concepts with real-world examples from a Sri Lankan context.
         Use analogies to make abstract concepts concrete. 
-        Always show the relevant formulas and explain the units.
+        Always show the relevant formulas and explain the units (SI units).
         Encourage students to think about cause and effect relationships.`,
       
-      chemistry: `You are an expert chemistry tutor. Explain chemical reactions, equations, and concepts clearly.
+      chemistry: `You are an expert chemistry tutor for Sri Lankan A/L students. 
+        Explain chemical reactions, organic mechanisms, and inorganic concepts clearly.
         Use molecular visualization descriptions when helpful.
-        Explain safety considerations when relevant.
-        Connect concepts to everyday life examples.`,
+        Explain safety considerations and connect concepts to everyday life in Sri Lanka.`,
       
-      biology: `You are an expert biology tutor. Explain biological processes clearly and accurately.
-        Use analogies to explain complex systems.
-        Connect concepts to real-world health and environmental applications.`,
+      biology: `You are an expert biology tutor for Sri Lankan A/L students. 
+        Explain biological processes, anatomy, and biodiversity (including local flora and fauna) clearly.
+        Use analogies to explain complex systems.`,
       
-      english: `You are an expert English literature and language tutor.
-        Help with grammar, comprehension, essay writing, and literary analysis.
-        Provide constructive feedback on writing.
-        Explain rules with clear examples.`,
+      tamil: `You are an expert Tamil language and literature tutor for Sri Lankan students.
+        Help with grammar (Ilakkanam), comprehension, and analysis of A/L and O/L Tamil literature.
+        Provide constructive feedback in clear Tamil (using Unicode).`,
       
-      history: `You are an expert history tutor. Present historical facts accurately.
-        Help students understand cause-and-effect in historical events.
-        Encourage critical thinking about sources and perspectives.`,
+      sinhala: `You are an expert Sinhala language and literature tutor for Sri Lankan students.
+        Help with grammar, comprehension, and analysis of A/L and O/L Sinhala literature.
+        Provide constructive feedback in clear Sinhala (using Unicode).`,
       
-      general: `You are a helpful educational assistant for students grades 6-13.
+      science: `You are an expert Science tutor for Sri Lankan students (Grade 6-9). 
+        Explain natural phenomena, basic physics, chemistry, and biology concepts clearly.
+        Use observations from daily life in Sri Lanka to make science interesting and relatable. 
+        Focus on curiosity and the scientific method.`,
+
+      english: `You are an expert English language tutor for Sri Lankan students.
+        Help with grammar, vocabulary, composition, and literature.
+        Provide clear explanations and encourage students to practice writing and speaking.`,
+
+      history: `You are an expert History tutor for Sri Lankan students.
+        Explain historical events, civilizations, and the history of Sri Lanka clearly.
+        Provide context and help students understand the significance of historical developments.`,
+
+      geography: `You are an expert Geography tutor for Sri Lankan students.
+        Explain physical and human geography, maps, and the geography of Sri Lanka clearly.
+        Help students understand the relationship between humans and their environment.`,
+
+      general: `You are a helpful educational assistant for Sri Lankan students (Grades 6-13).
         Guide students to answers rather than just providing them.
-        Encourage critical thinking and understanding.
-        Be encouraging and patient.`
+        Be encouraging, patient, and culturally aware of the Sri Lankan academic environment.`
+    };
+
+    this.syllabusConstraints = {
+      '6': `CURRICULUM CONSTRAINTS (GRADE 6 - Sri Lankan National Syllabus):
+        - Mathematics Units: Prathama Sankhya (Natural Numbers), Dashama (Decimals), Bhinna (Fractions), Parimithiya (Perimeter), Vargaphala (Area), Kona (Angles), Dishawa (Directions).
+        - Science Units: Jeevi ha Ajeevi dravya (Living/Non-living), Jalaya (Water), Shakha (Plants), Tapaya (Heat), Dhvaniya (Sound), Alokaya (Light), Balaya ha Chalanaya (Force/Motion).
+        - Language: Use very simple Sinhalish/English terminology. Focus on 'Environment' based examples.`,
+      
+      '7': `CURRICULUM CONSTRAINTS (GRADE 7 - Sri Lankan National Syllabus):
+        - Mathematics Units: Prathishathaya (Percentages), Anupathaya (Ratios), Sarala Samikarana (Simple Equations), Rekha ha Kona (Line properties).
+        - Science Units: Manava Indriya Paddhathi (Human Organ Systems), Sarala Paripatha (Simple Circuits), Chumbakathvaya (Magnetism), Vayugolaya (Atmosphere).`,
+      
+      '8': `CURRICULUM CONSTRAINTS (GRADE 8 - Sri Lankan National Syllabus):
+        - Mathematics Units: Vargayamula (Square Roots), Kula (Sets), Bijiya Prakashana (Algebraic Expressions), Ghanaphalaya (Volume).
+        - Science Units: Shvasanaya (Respiration), Kshudra Jeevin (Micro-organisms), Taranga (Waves), Amila ha Bhshma (Acids/Bases).`,
+      
+      '9': `CURRICULUM CONSTRAINTS (GRADE 9 - Sri Lankan National Syllabus):
+        - Mathematics Units: Thathvika Sankhya (Real Numbers), Yugala Samikarana (Simultaneous Equations), Jyamithiya (Geometry proofs), Siyambala (Map reading).
+        - Science Units: Paramanvaka Viruhaya (Atomic Structure - Bohr model), Payala (Tissues), Vidyuthiya (Electricity - V=IR), Avartithana Chakraya (Periodic Table).`,
+      
+      '10': `CURRICULUM CONSTRAINTS (GRADE 10 - O/L Part 1):
+        - Mathematics Units: Varga Samikarana (Quadratic Equations), Laguganaka (Logarithms), Trikonamithiya (Trigonometry), Vruththa (Circles), Vruththa Jyamithiya (Circle Geometry).
+        - Science Units: Molaya ha Gananaya (Moles), Anuvanshikaya (Inheritance), Balaya ha Chalana Niyama (Newton's Laws), Karya ha Shakthiya (Work/Energy).
+        - General: Strictly align with Sri Lankan O/L syllabus terminology.`,
+      
+      '11': `CURRICULUM CONSTRAINTS (GRADE 11 - O/L Final):
+        - Mathematics Units: Vruththa Jyamithiya (Advanced), Trikonamithiya (Advanced), Sambhavithawa (Probability), Sankhyanaya (Statistics).
+        - Science Units: Karbanika Rasayanaya (Organic Chemistry basics), Vidyut Chumbakathvaya (Electromagnetism), Parisarika Jeeva Vidyawa (Environmental Bio).`,
+        
+      '12': `CURRICULUM CONSTRAINTS (GRADE 12/13 - A/L):
+        - Combined Maths: Calculus (Kalanaya), Statics (Sthithika Vidyawa), Dynamics (Chalaka Vidyawa).
+        - Physics/Bio/Chem: Advanced terminology as per Sri Lankan National Syllabus.
+        - Focus on deep conceptual derivation and exam techniques.`
     };
     
     // Conversation memory for each session
@@ -104,33 +154,49 @@ class AIHomeworkAssistant {
    * Process student message and get AI response
    * @param {String} sessionId - Session ID
    * @param {String} message - Student's message
+   * @param {Object} imageData - Optional image data { mimeType: 'image/jpeg', data: 'base64...' }
    * @returns {Object} AI response
    */
-  async processMessage(sessionId, message) {
+  async processMessage(sessionId, message, imageData = null) {
     try {
       const session = await HomeworkSession.findById(sessionId);
       if (!session || session.status !== 'active') {
         throw new Error('Session not found or inactive');
       }
       
-      const memory = this.sessionMemory.get(sessionId);
+      let memory = this.sessionMemory.get(sessionId);
       if (!memory) {
-        throw new Error('Session memory not found');
+        // Recover memory from MongoDB after server restart
+        memory = {
+          subject: session.subject || 'general',
+          grade: session.grade,
+          topic: session.topic,
+          messageHistory: session.messages.map(m => ({ role: m.role, content: m.content })),
+          conceptsCovered: new Set(session.conceptsCovered || []),
+          hintsGiven: session.hintsGiven || 0,
+          understandingChecks: session.understandingChecks || 0
+        };
+        this.sessionMemory.set(sessionId, memory);
       }
       
       // Add student message
-      await this.addMessageToSession(session._id, 'user', message);
-      memory.messageHistory.push({ role: 'user', content: message });
+      const messageContent = imageData 
+        ? { text: message, image: imageData } 
+        : message;
+        
+      await this.addMessageToSession(session._id, 'user', messageContent);
+      memory.messageHistory.push({ role: 'user', content: messageContent });
       
       // Analyze the question type
-      const questionType = this.analyzeQuestionType(message);
+      const questionText = typeof message === 'object' ? (message.text || '') : (message || '');
+      const questionType = this.analyzeQuestionType(questionText);
       
       // Build context-aware prompt
       const systemPrompt = this.buildSystemPrompt(memory);
       const messages = this.buildMessageHistory(memory);
       
-      // Call OpenAI API
-      const aiResponse = await this.callOpenAI(systemPrompt, messages);
+      // Call Unified AI API (prioritizing Gemini/OpenAI over fallback)
+      const aiResponse = await this.callAI(systemPrompt, messages);
       
       // Post-process response
       const processedResponse = this.postProcessResponse(aiResponse, questionType, memory);
@@ -138,9 +204,10 @@ class AIHomeworkAssistant {
       // Track concepts covered
       this.extractConcepts(processedResponse, memory);
       
-      // Add AI response to session
-      await this.addMessageToSession(session._id, 'assistant', processedResponse.content);
-      memory.messageHistory.push({ role: 'assistant', content: processedResponse.content });
+      // Add AI response to session as string content
+      const aiContent = processedResponse.content || 'I am sorry, I could not generate a response.';
+      await this.addMessageToSession(session._id, 'assistant', aiContent);
+      memory.messageHistory.push({ role: 'assistant', content: aiContent });
       
       // Update session stats
       await this.updateSessionStats(session._id, memory);
@@ -148,8 +215,14 @@ class AIHomeworkAssistant {
       return processedResponse;
       
     } catch (error) {
-      console.error('Error processing message:', error);
-      throw error;
+      console.error('Error in AIHomeworkAssistant.processMessage:', error);
+      // Fallback response for better UX
+      return {
+        content: "I'm having trouble connecting to my brain right now. Please try again in a moment.",
+        responseType: 'error',
+        followUpQuestions: ["Would you like to try sending the message again?"],
+        resources: []
+      };
     }
   }
 
@@ -198,23 +271,41 @@ class AIHomeworkAssistant {
     return 'general';
   }
 
-  /**
+    /**
    * Build system prompt based on context
    */
   buildSystemPrompt(memory) {
     let prompt = this.subjectPrompts[memory.subject] || this.subjectPrompts.general;
     
-    // Add grade-appropriate language hints
-    if (memory.grade && parseInt(memory.grade) <= 8) {
-      prompt += '\nUse simple language appropriate for younger students. Break down concepts into small steps.';
-    } else if (memory.grade && parseInt(memory.grade) >= 11) {
-      prompt += '\nYou can use more advanced terminology and complex examples appropriate for advanced students.';
+    // Add Grade-Specific Syllabus Constraints
+    const gradeKey = memory.grade?.toString();
+    const constraints = this.syllabusConstraints[gradeKey] || (parseInt(gradeKey) >= 12 ? this.syllabusConstraints['12'] : '');
+    
+    if (constraints) {
+      prompt += `\n\nSTRICT CURRICULUM BOUNDARIES:\n${constraints}\n
+      IMPORTANT: If the student asks for something explicitly mentioned above as "NO" or "TOO ADVANCED", explain that you cannot teach it as it is beyond their current grade level. instead, explain why they need to master their current concepts first to understand that later.`;
+    } else {
+      // Fallback for missing grade info or other grades
+      if (memory.grade && parseInt(memory.grade) <= 8) {
+        prompt += '\nUse simple language appropriate for younger students. Break down concepts into small steps.';
+      } else if (memory.grade && parseInt(memory.grade) >= 11) {
+        prompt += '\nYou can use more advanced terminology and complex examples appropriate for advanced students.';
+      }
     }
     
     // Add topic context if available
     if (memory.topic) {
       prompt += `\nThe student is currently studying: ${memory.topic}`;
     }
+
+    // NEW: Multilingual Guard for Tamil and Sinhala
+    prompt += `\n\nLANGUAGE INSTRUCTIONS:
+    - If the student communicates in Sinhala, respond primarily in Sinhala (using Unicode).
+    - If the student communicates in Tamil, respond primarily in Tamil (using Unicode).
+    - If explaining complex concepts, you may provide the English term in parentheses.
+    - If requested, provide a transliteration into Latin script to help with pronunciation.
+    - Always maintain the educational persona described above, regardless of the language used.
+    - For National Syllabus (O/L, A/L) questions, use the terminology officially recognized by the Sri Lankan Department of Examinations.`;
     
     return prompt;
   }
@@ -226,10 +317,103 @@ class AIHomeworkAssistant {
     // Get last 10 messages for context (to stay within token limits)
     const recentMessages = memory.messageHistory.slice(-10);
     
-    return recentMessages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    return recentMessages.map(msg => {
+      // Handle both string and complex content (with images)
+      if (typeof msg.content === 'object' && msg.content.image) {
+        return {
+          role: msg.role,
+          content: msg.content.text,
+          image: msg.content.image
+        };
+      }
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
+  }
+
+  /**
+   * Call OpenAI API
+   */
+  async callAI(systemPrompt, messages) {
+    try {
+      // 1. Try Google Gemini first if key exists
+      if (this.geminiKey) {
+        return await this.callGemini(systemPrompt, messages);
+      }
+
+      // 2. Try OpenAI if key exists
+      if (this.openAIKey) {
+        return await this.callOpenAI(systemPrompt, messages);
+      }
+
+      // 3. Last resort: High-quality subject-aware fallback (not the generic mock)
+      return this.generateSubjectAwareFallback(messages);
+    } catch (error) {
+      console.error('Core AI Call Error:', error);
+      return this.generateSubjectAwareFallback(messages);
+    }
+  }
+
+  /**
+   * Call Google Gemini API
+   */
+  async callGemini(systemPrompt, messages) {
+    try {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.geminiKey}`;
+      
+      // Map history to Gemini format (supporting Multimodal)
+      const contents = messages.map(msg => {
+        const parts = [];
+        
+        // Add text part
+        let textContent = '';
+        if (typeof msg.content === 'object' && msg.content !== null) {
+          textContent = msg.content.text || '';
+        } else {
+          textContent = msg.content;
+        }
+
+        if (msg.role === 'user' && messages.indexOf(msg) === 0) {
+           textContent = `System Instructions: ${systemPrompt}\n\nStudent Query: ${textContent}`;
+        }
+        parts.push({ text: textContent });
+
+        // Add image part if exists in content object or directly
+        const imageData = msg.image || (typeof msg.content === 'object' && msg.content !== null ? msg.content.image : null);
+        if (imageData) {
+          parts.push({
+            inline_data: {
+              mime_type: imageData.mimeType || 'image/jpeg',
+              data: imageData.data // Base64
+            }
+          });
+        }
+
+        return {
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts
+        };
+      });
+
+      const response = await axios.post(geminiUrl, {
+        contents: contents,
+        generationConfig: {
+          temperature: this.temperature,
+          maxOutputTokens: this.maxTokens,
+        }
+      });
+
+      if (response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return response.data.candidates[0].content.parts[0].text;
+      }
+      
+      throw new Error('Unexpected Gemini API response format');
+    } catch (error) {
+      console.error('Gemini API Error:', error.response?.data || error.message);
+      throw error;
+    }
   }
 
   /**
@@ -237,10 +421,6 @@ class AIHomeworkAssistant {
    */
   async callOpenAI(systemPrompt, messages) {
     try {
-      if (!this.openAIKey) {
-        throw new Error('OpenAI API key not configured');
-      }
-
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
@@ -250,9 +430,7 @@ class AIHomeworkAssistant {
             ...messages
           ],
           max_tokens: this.maxTokens,
-          temperature: this.temperature,
-          presence_penalty: 0.1,
-          frequency_penalty: 0.1
+          temperature: this.temperature
         },
         {
           headers: {
@@ -263,11 +441,32 @@ class AIHomeworkAssistant {
       );
 
       return response.data.choices[0].message.content;
-
     } catch (error) {
       console.error('OpenAI API error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate a much better subject-aware fallback when AI keys are missing
+   */
+  generateSubjectAwareFallback(messages) {
+    const lastMessage = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+    const query = lastMessage.toLowerCase();
+    
+    let subject = 'general';
+    if (query.match(/math|solve|calculate|equation/)) subject = 'mathematics';
+    else if (query.match(/physic|force|energy|motion/)) subject = 'physics';
+    else if (query.match(/chem|molecule|atom|reaction/)) subject = 'chemistry';
+    else if (query.match(/bio|cell|organ|plant|animal/)) subject = 'biology';
+
+    const fallbacks = {
+      mathematics: "I'm currently in high-stability mode. To solve this math problem, try identifying your 'known' variables vs 'unknowns' first. Are you using the quadratic formula or basic algebra here? Let's check the first step together.",
+      physics: "Physics concepts are best understood by visualizing the forces at play. For your specific question, consider which Sri Lankan A/L laws apply (like Newton's or Kirchhoff's). What constants do we have?",
+      general: "I'm working in a limited capacity right now. To help you better, could you specify the subject and the specific part of the Sri Lankan curriculum this relates to?"
+    };
+
+    return `[LIMITED MODE] ${fallbacks[subject] || fallbacks.general}\n\n(Note: AI key not fully authorized for this session. Please check system configurations.)`;
   }
 
   /**
@@ -534,7 +733,7 @@ class AIHomeworkAssistant {
         
         Make sure problems are similar to what was discussed but not identical.`;
       
-      const response = await this.callOpenAI(
+      const response = await this.callAI(
         this.subjectPrompts[session.subject] || this.subjectPrompts.general,
         [{ role: 'user', content: prompt }]
       );

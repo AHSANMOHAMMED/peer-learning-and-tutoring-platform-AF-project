@@ -8,6 +8,7 @@ const axios = require('axios');
 class AIPersonalizationService {
   constructor() {
     this.openAIKey = process.env.OPENAI_API_KEY;
+    this.geminiKey = process.env.GOOGLE_AI_API_KEY;
   }
 
   /**
@@ -117,10 +118,6 @@ class AIPersonalizationService {
    * Generate AI-powered insights
    */
   async generateInsights(user, metrics) {
-    if (!this.openAIKey) {
-      return this.generateBasicInsights(metrics);
-    }
-
     const prompt = `Analyze this student's learning patterns and provide personalized insights:
 
 Student Profile:
@@ -152,23 +149,7 @@ Provide insights in this JSON format:
 }`;
 
     try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 800,
-          temperature: 0.7
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.openAIKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      const aiResponse = response.data.choices[0].message.content;
+      const aiResponse = await this.callAI(prompt);
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       
       if (jsonMatch) {
@@ -372,23 +353,7 @@ Create a structured learning path with:
 Format as JSON with these sections.`;
 
     try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1000,
-          temperature: 0.7
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.openAIKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      const content = response.data.choices[0].message.content;
+      const content = await this.callAI(prompt);
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       
       if (jsonMatch) {
@@ -517,6 +482,46 @@ Format as JSON with these sections.`;
     }
     
     return recommendations;
+  }
+
+  /**
+   * Universal AI Wrapper (Gemini Priority)
+   */
+  async callAI(prompt) {
+    if (this.geminiKey) {
+      return await this.callGemini(prompt);
+    }
+    if (this.openAIKey) {
+      return await this.callOpenAI(prompt);
+    }
+    throw new Error('No AI provider configured');
+  }
+
+  async callGemini(prompt) {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.geminiKey}`;
+    const response = await axios.post(geminiUrl, {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+    return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  async callOpenAI(prompt) {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1000,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.openAIKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data.choices[0].message.content;
   }
 }
 

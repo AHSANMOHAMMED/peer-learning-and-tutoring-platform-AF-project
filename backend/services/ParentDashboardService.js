@@ -563,6 +563,52 @@ class ParentDashboardService {
       throw error;
     }
   }
+
+  /**
+   * Nudge student to join a session or start studying
+   */
+  async nudgeStudent(parentId, studentId, messageType = 'session_reminder') {
+    try {
+      // 1. Verify access
+      const link = await ParentStudentLink.findOne({
+        parent: parentId,
+        student: studentId,
+        status: 'active'
+      });
+
+      if (!link) throw new Error('No monitoring link active for this student');
+
+      const parent = await User.findById(parentId).select('name');
+      const student = await User.findById(studentId).select('name');
+
+      let title = 'Parent Reminder';
+      let message = `${parent.name} is reminding you to check your study schedule.`;
+
+      if (messageType === 'session_reminder') {
+        title = 'Time for Class!';
+        message = `${parent.name} sent you a reminder for your upcoming session. Join now!`;
+      } else if (messageType === 'homework_check') {
+        title = 'Homework Check';
+        message = `${parent.name} is asking about your homework progress.`;
+      }
+
+      // 2. Create notification
+      await Notification.create({
+        recipient: studentId,
+        sender: parentId,
+        type: 'alert',
+        title,
+        message,
+        priority: 'high',
+        channels: ['inApp', 'email', 'push']
+      });
+
+      return { success: true, message: `Nudge sent to ${student.name}` };
+    } catch (error) {
+      console.error('Error nudging student:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new ParentDashboardService();

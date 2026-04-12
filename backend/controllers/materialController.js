@@ -26,12 +26,22 @@ exports.uploadMaterial = async (req, res) => {
   }
 };
 
-// @desc    Get all approved materials
+// @desc    Get all approved materials (Filtered by Grade for students)
 // @route   GET /api/materials
-// @access  Public
+// @access  Private (Authenticated)
 exports.getMaterials = async (req, res) => {
   try {
-    const materials = await Material.find({ moderationStatus: 'approved' })
+    const query = { moderationStatus: 'approved' };
+    
+    // Strict Access Control: Students only see their own grade
+    if (req.user.role === 'student' && req.user.grade) {
+      query.grade = req.user.grade.toString();
+    } else if (req.query.grade) {
+      // Admins/Tutors/Unset users can use query param
+      query.grade = req.query.grade;
+    }
+
+    const materials = await Material.find(query)
       .populate('uploaderId', 'username profile.firstName profile.lastName');
     res.json(materials);
   } catch (error) {
@@ -41,17 +51,22 @@ exports.getMaterials = async (req, res) => {
 
 // @desc    Get material by ID
 // @route   GET /api/materials/:id
-// @access  Public
+// @access  Private (Authenticated)
 exports.getMaterialById = async (req, res) => {
   try {
     const material = await Material.findById(req.params.id)
       .populate('uploaderId', 'username profile.firstName profile.lastName');
     
-    if (material) {
-      res.json(material);
-    } else {
-      res.status(404).json({ message: 'Material not found' });
+    if (!material) {
+      return res.status(404).json({ message: 'Material not found' });
     }
+
+    // Access Control: Students restricted to their grade
+    if (req.user.role === 'student' && material.grade !== req.user.grade?.toString()) {
+       return res.status(403).json({ message: 'Access denied: This material is for a different grade level.' });
+    }
+
+    res.json(material);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

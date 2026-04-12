@@ -606,4 +606,37 @@ router.delete('/parent/link/:linkId', [
   }
 });
 
+/**
+ * @route   POST /api/parent/student/:studentId/nudge
+ * @desc    Nudge student with a reminder
+ * @access  Private (Parents)
+ */
+router.post('/parent/student/:studentId/nudge', [
+  authenticate,
+  param('studentId').isMongoId(),
+  body('type').optional().isIn(['session_reminder', 'homework_check'])
+], async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { type } = req.body;
+
+    const result = await ParentDashboardService.nudgeStudent(
+      req.user._id,
+      studentId,
+      type
+    );
+
+    res.json({
+      success: true,
+      message: result.message
+    });
+  } catch (error) {
+    console.error('Error nudging student:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to nudge student'
+    });
+  }
+});
+
 module.exports = router;

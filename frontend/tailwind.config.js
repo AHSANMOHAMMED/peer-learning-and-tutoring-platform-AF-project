@@ -12,24 +12,31 @@ export default {
       },
       colors: {
         primary: {
-          light: '#6366f1',
-          DEFAULT: '#4f46e5', // Indigo
-          dark: '#3730a3',
+          light: '#e6f7fa',
+          DEFAULT: '#00a8cc',
+          dark: '#008ba8',
         },
         secondary: {
-          light: '#2dd4bf',
-          DEFAULT: '#0d9488', // Teal
-          dark: '#0f766e',
+          light: '#f5f5f0',
+          DEFAULT: '#a08b7d',
+          dark: '#7c6a5e',
         },
         accent: {
-          light: '#a855f7',
-          DEFAULT: '#8b5cf6', // Violet
-          dark: '#6d28d9',
+          light: '#c6e2ff',
+          DEFAULT: '#3b82f6',
+          dark: '#2563eb',
+        },
+        pastel: {
+          pink: '#ffd1e8',
+          blue: '#d4f2fa',
+          purple: '#e5dbff',
+          orange: '#ffeacc',
+          green: '#d1fae5',
         },
         glass: {
-          light: 'rgba(255, 255, 255, 0.1)',
-          DEFAULT: 'rgba(255, 255, 255, 0.2)',
-          dark: 'rgba(15, 23, 42, 0.5)',
+          light: 'rgba(255, 255, 255, 0.4)',
+          DEFAULT: 'rgba(255, 255, 255, 0.65)',
+          dark: 'rgba(255, 255, 255, 0.85)',
         }
       },
       animation: {
@@ -53,6 +60,10 @@ export default {
       },
       backdropBlur: {
         xs: '2px',
+      },
+      boxShadow: {
+        '5xl': '0 35px 60px -15px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.1)',
+        '4xl': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
       }
     },
   },

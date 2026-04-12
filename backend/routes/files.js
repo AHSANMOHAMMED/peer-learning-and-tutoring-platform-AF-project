@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { body, param, validationResult } = require('express-validator');
-const { authenticate } = require('../middleware/auth');
-const authorize = require('../middleware/authorize');
+const { authenticate, authorize } = require('../middleware/auth');
 const FileSharingService = require('../services/FileSharingService');
+const GridFSService = require('../services/GridFSService');
 
 // Validation middleware
 const validate = (req, res, next) => {
@@ -91,10 +91,12 @@ router.get('/download/:fileId', [
     const { fileId } = req.params;
 
     const file = await FileSharingService.downloadFile(fileId);
-
+    
     res.setHeader('Content-Type', file.type);
     res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
-    res.send(Buffer.from(file.data, 'base64'));
+    
+    const downloadStream = GridFSService.getDownloadStream(fileId);
+    downloadStream.pipe(res);
   } catch (error) {
     console.error('Error downloading file:', error);
     res.status(500).json({ message: error.message || 'Failed to download file' });
@@ -113,10 +115,13 @@ router.get('/preview/:fileId', [
 ], async (req, res) => {
   try {
     const { fileId } = req.params;
+    
+    const fileMetadata = await GridFSService.getFileMetadata(fileId);
+    if (!fileMetadata) return res.status(404).json({ message: 'File not found' });
 
-    const preview = await FileSharingService.previewFile(fileId);
-
-    res.json(preview);
+    res.setHeader('Content-Type', fileMetadata.contentType);
+    const downloadStream = GridFSService.getDownloadStream(fileId);
+    downloadStream.pipe(res);
   } catch (error) {
     console.error('Error previewing file:', error);
     res.status(500).json({ message: error.message || 'Failed to preview file' });

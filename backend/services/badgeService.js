@@ -1,6 +1,7 @@
 const Badge = require('../models/Badge');
 const UserBadge = require('../models/UserBadge');
 const User = require('../models/User');
+const PointTransaction = require('../models/PointTransaction');
 const mongoose = require('mongoose');
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');

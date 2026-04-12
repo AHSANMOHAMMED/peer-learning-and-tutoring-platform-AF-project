@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Badge = require('../models/Badge');
 const UserBadge = require('../models/UserBadge');
-const PointTransaction = require('../modules/qa/models/PointTransaction');
+const PointTransaction = require('../models/PointTransaction');
 
 class PointsService {
   // Point constants as per requirements
@@ -17,12 +17,27 @@ class PointsService {
     try {
       // Create point transaction
       const transaction = await new PointTransaction({
-        userId,
+        user: userId,
         action: type,
         points,
         subject: referenceId,
         subjectType: referenceType || 'question'
       }).save();
+
+      // Update User document directly for fast dashboard access
+      const user = await User.findById(userId);
+      if (user) {
+        user.gamification.points += points;
+        
+        // Simple level up logic: level = floor(sqrt(points / 10)) + 1
+        const newLevel = Math.floor(Math.sqrt(user.gamification.points / 10)) + 1;
+        if (newLevel > user.gamification.level) {
+          user.gamification.level = newLevel;
+          // Could emit level up event here
+        }
+        
+        await user.save();
+      }
 
       // Check for new badges after points award
       await this.checkAndAwardBadges(userId);
@@ -326,7 +341,7 @@ class PointsService {
 
       const existingBonus = await PointTransaction.findOne({
         user: userId,
-        type: 'daily_login',
+        action: 'daily_login',
         createdAt: { $gte: today }
       });
 
@@ -359,7 +374,7 @@ class PointsService {
 
       const existingFirstAnswer = await PointTransaction.findOne({
         user: userId,
-        type: 'first_answer_of_day',
+        action: 'first_answer_of_day',
         createdAt: { $gte: today }
       });
 

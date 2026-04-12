@@ -565,6 +565,36 @@ class ParentDashboardService {
   }
 
   /**
+   * Get pending link requests for a specific student
+   */
+  async getPendingLinkRequestsForStudent(studentId) {
+    try {
+      return await ParentStudentLink.find({
+        student: studentId,
+        status: 'pending'
+      }).populate('parent', 'username email profile.firstName profile.lastName');
+    } catch (error) {
+      console.error('Error getting student pending requests:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get pending link requests sent by a specific parent
+   */
+  async getPendingLinkRequestsForParent(parentId) {
+    try {
+      return await ParentStudentLink.find({
+        parent: parentId,
+        status: 'pending'
+      }).populate('student', 'username email profile.firstName profile.lastName');
+    } catch (error) {
+      console.error('Error getting parent pending requests:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Nudge student to join a session or start studying
    */
   async nudgeStudent(parentId, studentId, messageType = 'session_reminder') {
@@ -606,6 +636,66 @@ class ParentDashboardService {
       return { success: true, message: `Nudge sent to ${student.name}` };
     } catch (error) {
       console.error('Error nudging student:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all pending link requests for admin review
+   */
+  async getPendingLinkRequestsForAdmin() {
+    try {
+      return await ParentStudentLink.find({ status: 'pending' })
+        .populate('parent', 'username email profile.firstName profile.lastName')
+        .populate('student', 'username email profile.firstName profile.lastName')
+        .sort({ createdAt: -1 });
+    } catch (error) {
+      console.error('Error getting pending requests for admin:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin reviews a link request
+   */
+  async reviewLinkRequestByAdmin(linkId, adminId, approve, reviewNote, permissions = null) {
+    try {
+      const link = await ParentStudentLink.findById(linkId);
+      if (!link) throw new Error('Link request not found');
+
+      if (approve) {
+        link.status = 'active';
+        link.adminApproved = true;
+        link.adminId = adminId;
+        link.adminApprovedAt = new Date();
+        link.activatedAt = new Date();
+        if (permissions) {
+          link.permissions = { ...link.permissions, ...permissions };
+        }
+      } else {
+        link.status = 'revoked';
+        link.revokedAt = new Date();
+        link.revokeReason = reviewNote || 'Admin rejected';
+      }
+
+      await link.save();
+
+      // Notify parent
+      const Notification = require('../models/Notification'); // Ensure Notification is available
+      await Notification.create({
+        recipient: link.parent,
+        type: 'system',
+        title: approve ? 'Link Approved' : 'Link Rejected',
+        message: approve 
+          ? 'Your student link request has been approved by the administration.' 
+          : `Your student link request was rejected. Reason: ${reviewNote || 'Contact support for details.'}`,
+        priority: 'high',
+        channels: ['inApp', 'email']
+      });
+
+      return link;
+    } catch (error) {
+      console.error('Error in admin review:', error);
       throw error;
     }
   }

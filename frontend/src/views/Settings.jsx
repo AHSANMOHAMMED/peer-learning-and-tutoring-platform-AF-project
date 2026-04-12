@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Shield, Bell, MapPin, GraduationCap, CheckCircle2, Save, Lock, Mail, Loader2, AlertCircle, Info, Unlock } from 'lucide-react';
+import { User, Shield, Bell, MapPin, GraduationCap, CheckCircle2, Save, Lock, Mail, Loader2, AlertCircle, Info, Unlock, Users, X, Check } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';
+import { useParentLinks } from '../controllers/useParentLinks';
 import { cn } from '../utils/cn';
 
 const Settings = () => {
-  const { user, updateProfile, loading } = useAuth();
+  const { user, updateProfile, changePassword, loading } = useAuth();
+  const { linkRequests, fetchStudentLinkRequests, studentRespondToLink, loading: linksLoading } = useParentLinks();
   const [activeTab, setActiveTab] = useState('profile');
+
+  React.useEffect(() => {
+    if (activeTab === 'family' && user?.role === 'student') {
+      fetchStudentLinkRequests();
+    }
+  }, [activeTab, user, fetchStudentLinkRequests]);
 
   const [formData, setFormData] = useState({
     firstName: user?.profile?.firstName || '',
@@ -28,21 +36,25 @@ const Settings = () => {
   const handleSave = async () => {
     setSaveStatus('saving');
     try {
-      const payload = {
-        profile: { firstName: formData.firstName, lastName: formData.lastName, bio: formData.bio },
-        district: formData.district,
-        stream: formData.stream,
-        grade: formData.grade
-      };
-
-      if (activeTab === 'security' && securityData.newPassword) {
-        payload.password = securityData.newPassword;
-        payload.currentPassword = securityData.currentPassword;
+      if (activeTab === 'security') {
+        if (!securityData.newPassword || !securityData.currentPassword) {
+           toast.error("Both current and new passwords are required");
+           setSaveStatus('idle');
+           return;
+        }
+        await changePassword(securityData.currentPassword, securityData.newPassword);
+        setSecurityData({ currentPassword: '', newPassword: '' });
+      } else {
+        const payload = {
+          profile: { firstName: formData.firstName, lastName: formData.lastName, bio: formData.bio },
+          district: formData.district,
+          stream: formData.stream,
+          grade: formData.grade
+        };
+        await updateProfile(payload);
       }
-
-      await updateProfile(payload);
+      
       setSaveStatus('success');
-      setSecurityData({ currentPassword: '', newPassword: '' });
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (err) {
       setSaveStatus('error');
@@ -53,7 +65,8 @@ const Settings = () => {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell }
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    ...(user?.role === 'student' ? [{ id: 'family', label: 'Family', icon: Users }] : [])
   ];
 
   return (
@@ -143,7 +156,7 @@ const Settings = () => {
                                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-[15px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#00a8cc] transition-colors appearance-none"
                                >
-                                  {['Colombo', 'Kandy', 'Gampaha', 'Galle', 'Kurunegala', 'Matara', 'Jaffna'].map(d => (
+                                  {['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee', 'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle'].map(d => (
                                     <option key={d} value={d}>{d}</option>
                                   ))}
                                </select>
@@ -162,12 +175,13 @@ const Settings = () => {
                                  onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-[15px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#00a8cc] transition-colors appearance-none"
                                >
-                                  <option value="Combined Mathematics (A/L)">Combined Mathematics (A/L)</option>
-                                  <option value="Biological Sciences (A/L)">Biological Sciences (A/L)</option>
-                                  <option value="Commercial Stream (A/L)">Commercial Stream (A/L)</option>
-                                  <option value="Physical Sciences (A/L)">Physical Sciences (A/L)</option>
-                                  <option value="Arts Stream (A/L)">Arts Stream (A/L)</option>
-                                  <option value="Technology Stream (A/L)">Technology Stream (A/L)</option>
+                                  <option value="Combined Mathematics">Combined Mathematics</option>
+                                  <option value="Biological Sciences">Biological Sciences</option>
+                                  <option value="Commercial Stream">Commercial Stream</option>
+                                  <option value="Physical Sciences">Physical Sciences</option>
+                                  <option value="Arts Stream">Arts Stream</option>
+                                  <option value="Technology Stream">Technology Stream</option>
+                                  <option value="O/L General">O/L General</option>
                                </select>
                             </div>
                          </div>
@@ -234,6 +248,64 @@ const Settings = () => {
                       </div>
                    </motion.div>
                  )}
+                  {activeTab === 'family' && user?.role === 'student' && (
+                    <motion.div key="family" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="flex-1 space-y-8">
+                       <h2 className="text-xl font-bold text-slate-800">Family Management</h2>
+                       <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex items-start gap-4 mb-8">
+                          <Users size={24} className="text-[#00a8cc] shrink-0" />
+                          <div>
+                             <p className="text-sm font-bold text-slate-800 mb-1">Parental Monitoring</p>
+                             <p className="text-sm font-medium text-slate-600 leading-relaxed">Respond to requests from parents or guardians who want to monitor your academic progress and session activity.</p>
+                          </div>
+                       </div>
+
+                       <div className="space-y-6">
+                          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Pending Requests</h3>
+                          {linksLoading ? (
+                             <div className="py-12 flex flex-col items-center gap-3 opacity-40">
+                                <Loader2 size={32} className="animate-spin text-[#00a8cc]" />
+                                <p className="text-xs font-bold uppercase tracking-widest">Fetching Requests...</p>
+                             </div>
+                          ) : linkRequests.length > 0 ? (
+                             <div className="grid grid-cols-1 gap-4">
+                                {linkRequests.map((req) => (
+                                   <div key={req._id} className="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6 group hover:border-[#00a8cc] transition-all">
+                                      <div className="flex items-center gap-4">
+                                         <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg">
+                                            {req.parent?.username?.[0]?.toUpperCase() || 'P'}
+                                         </div>
+                                         <div>
+                                            <h4 className="font-bold text-slate-800">{req.parent?.username}</h4>
+                                            <p className="text-xs font-medium text-slate-400">{req.parent?.email}</p>
+                                         </div>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-3 w-full md:w-auto">
+                                         <button 
+                                            onClick={() => studentRespondToLink(req._id, { approve: false })}
+                                            className="flex-1 md:flex-none px-6 py-2.5 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl font-bold text-xs uppercase tracking-widest transition-all border border-transparent hover:border-rose-100 flex items-center justify-center gap-2"
+                                         >
+                                            <X size={14} /> Decline
+                                         </button>
+                                         <button 
+                                            onClick={() => studentRespondToLink(req._id, { approve: true })}
+                                            className="flex-1 md:flex-none px-6 py-2.5 bg-indigo-600 hover:bg-[#00a8cc] text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                                         >
+                                            <Check size={14} /> Approve
+                                         </button>
+                                      </div>
+                                   </div>
+                                ))}
+                             </div>
+                          ) : (
+                             <div className="py-16 text-center border-2 border-dashed border-slate-100 rounded-3xl opacity-50 flex flex-col items-center gap-4">
+                                <Users size={40} className="text-slate-200" />
+                                <p className="text-sm font-medium text-slate-400">No pending family link requests.</p>
+                             </div>
+                          )}
+                       </div>
+                    </motion.div>
+                  )}
               </AnimatePresence>
 
               {/* Footer Actions */}

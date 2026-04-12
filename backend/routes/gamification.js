@@ -121,12 +121,13 @@ router.post('/badges/viewed', authenticate, async (req, res) => {
  */
 router.get('/leaderboard', async (req, res) => {
   try {
-    const { type = 'global', limit = 100 } = req.query;
+    const { type = 'global', limit = 100, subject = 'Global' } = req.query;
     const parsedLimit = parseInt(limit);
 
     const leaderboard = await GamificationService.getLeaderboard(
       type,
-      parsedLimit
+      parsedLimit,
+      subject
     );
 
     res.json({
@@ -148,6 +149,30 @@ router.get('/leaderboard', async (req, res) => {
     });
   }
 });
+
+/**
+ * @route   GET /api/gamification/leaderboard/districts
+ * @desc    Get regional district leaderboard
+ * @access  Public
+ */
+router.get('/leaderboard/districts', async (req, res) => {
+  try {
+    const leaderboard = await GamificationService.getDistrictLeaderboard();
+    res.json({
+      success: true,
+      message: 'District leaderboard retrieved',
+      data: { leaderboard }
+    });
+  } catch (error) {
+    console.error('Error getting district leaderboard:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get district leaderboard',
+      error: error.message
+    });
+  }
+});
+
 
 /**
  * @route   GET /api/gamification/leaderboard/nearby

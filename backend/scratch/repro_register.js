@@ -9,7 +9,7 @@ async function testRegister() {
       password: 'Password123!',
       role: 'student',
       district: 'Colombo',
-      stream: 'Combined Maths',
+      stream: 'Combined Mathematics',
       grade: '12'
     });
     console.log('Response Status:', response.status);

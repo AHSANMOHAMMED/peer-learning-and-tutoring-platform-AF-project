@@ -164,6 +164,49 @@ router.get('/recommendations', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * @route   POST /api/ai/chat
+ * @desc    Get AI chat response
+ * @access  Private
+ */
+router.post('/chat', [
+  authenticate,
+  body('message').notEmpty().withMessage('Message is required'),
+  body('history').optional().isArray()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { message, history = [], options = {} } = req.body;
+
+    // Inject user context for better personalized responses
+    options.subject = options.subject || req.user.stream;
+    options.grade = options.grade || req.user.grade;
+
+    const response = await AIService.generateChatResponse(message, history, options);
+
+    res.json({
+      success: true,
+      data: response
+    });
+
+  } catch (error) {
+    console.error('AI Chat Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get AI response',
+      error: error.message
+    });
+  }
+});
+
 // ==========================================
 // Analytics Routes
 // ==========================================

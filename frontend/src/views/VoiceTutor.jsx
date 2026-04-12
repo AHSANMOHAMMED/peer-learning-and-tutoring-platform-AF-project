@@ -29,29 +29,59 @@ const VoiceTutor = () => {
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
 
-  const mockTutorResponse = (text) => {
-    setIsSpeaking(true);
-    setResponse(`AI Tutor Node: Based on your inquiry regarding "${text}", I am synchronizing the core pedagogical parameters...`);
+  const [history, setHistory] = useState([]);
 
-    const utterance = new SpeechSynthesisUtterance(`I understand you're asking about ${text}. Let's break that down together.`);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error', event);
+  const getTutorResponse = async (text) => {
+    try {
+      setIsSpeaking(true);
+      const res = await api.post('/ai/chat', { message: text, history });
+      
+      if (res.data.success) {
+        const aiMessage = res.data.data.content;
+        setResponse(aiMessage);
+        setHistory(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: aiMessage }]);
+
+        // Voice Feedback
+        const utterance = new SpeechSynthesisUtterance(aiMessage);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error', event);
+          setIsSpeaking(false);
+        };
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (err) {
+      setResponse("SYNC_ERROR: UNABLE_TO_REACH_PEDAGOGICAL_NODE. PLEASE_RETRY.");
       setIsSpeaking(false);
-    };
-    window.speechSynthesis.speak(utterance);
+    }
   };
 
   const handleMicToggle = () => {
     if (!isListening) {
+      const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Recognition) {
+        setTranscript('WEB_SPEECH_API_UNAVAILABLE_IN_THIS_NODE.');
+        return;
+      }
+
+      const recognition = new Recognition();
+      recognition.lang = 'en-US';
+      recognition.start();
+      
       setIsListening(true);
       setTranscript('CAPTURE... LISTENING_FOR_INPUT_PARAMETERS...');
-      setTimeout(() => {
+
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        setTranscript(result);
         setIsListening(false);
-        const demoQuestion = "How do I calculate projectile motion?";
-        setTranscript(demoQuestion);
-        mockTutorResponse(demoQuestion);
-      }, 3000);
+        getTutorResponse(result);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+        setTranscript('ERROR: SENSOR_MALFUNCTION.');
+      };
     } else {
       setIsListening(false);
     }

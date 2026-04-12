@@ -6,7 +6,20 @@ const materialSchema = new mongoose.Schema({
   fileUrl: { type: String, required: true },
   fileType: { type: String, enum: ['pdf', 'docx', 'ppt', 'txt'], required: true },
   uploaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  subject: { type: String, required: true },
+  subject: { 
+    type: String, 
+    required: true,
+    enum: [
+      'Combined Mathematics', 
+      'Biological Sciences', 
+      'Commercial Stream', 
+      'Physical Sciences', 
+      'Arts Stream', 
+      'Technology Stream', 
+      'O/L General',
+      'Other'
+    ]
+  },
   grade: { type: String, required: true },
   price: { type: Number, default: 0 },
   isApproved: { type: Boolean, default: false },

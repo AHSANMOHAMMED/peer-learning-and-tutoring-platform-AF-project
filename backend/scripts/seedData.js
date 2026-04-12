@@ -25,7 +25,7 @@ const seedUsers = [
     password: 'password123',
     role: 'student',
     district: 'Colombo',
-    stream: 'Combined Maths',
+    stream: 'Combined Mathematics',
     grade: 'A/L 2025',
     profile: { firstName: 'Nimal', lastName: 'Perera', bio: 'A/L Maths student from Royal College.' },
     gamification: { points: 1250, level: 4, streak: 7, badges: [] }
@@ -36,7 +36,7 @@ const seedUsers = [
     password: 'password123',
     role: 'tutor',
     district: 'Colombo',
-    stream: 'Combined Maths',
+    stream: 'Combined Mathematics',
     profile: { firstName: 'Kamal', lastName: 'Silva', bio: 'B.Sc Engineering (Honors) at University of Moratuwa.' }
   },
   {
@@ -45,7 +45,7 @@ const seedUsers = [
     password: 'password123',
     role: 'student',
     district: 'Kandy',
-    stream: 'Biology',
+    stream: 'Biological Sciences',
     grade: 'A/L 2024',
     profile: { firstName: 'Ruwanthi', lastName: 'Jayasooriya', bio: 'Aiming for Medical College.' },
     gamification: { points: 600, level: 2, streak: 3, badges: [] }
@@ -56,7 +56,7 @@ const seedUsers = [
     password: 'password123',
     role: 'tutor',
     district: 'Kandy',
-    stream: 'Biology',
+    stream: 'Biological Sciences',
     profile: { firstName: 'Dinithi', lastName: 'Fernando', bio: 'MBBS (Reading) at University of Peradeniya.' }
   },
   {
@@ -78,7 +78,7 @@ const seedUsers = [
 const seedBadges = [
   { name: 'O/L Master', description: 'Solved 100 O/L papers', icon: '🎓', category: 'milestone', rarity: 'rare', tier: 2, criteria: { type: 'points', value: 1000 } },
   { name: 'A/L Scholar', description: 'Scored top marks in A/L Mock Exams', icon: '🏆', category: 'quality', rarity: 'legendary', tier: 5, criteria: { type: 'points', value: 5000 } },
-  { name: 'Moratuwa Material', description: 'Earned 10,000 points in Combined Maths', icon: '⚙️', category: 'subject_mastery', rarity: 'epic', tier: 4, criteria: { type: 'points', value: 10000, subject: 'Mathematics' } }
+  { name: 'Moratuwa Material', description: 'Earned 10,000 points in Combined Mathematics', icon: '⚙️', category: 'subject_mastery', rarity: 'epic', tier: 4, criteria: { type: 'points', value: 10000, subject: 'Combined Mathematics' } }
 ];
 
 const seedDatabase = async () => {
@@ -112,14 +112,14 @@ const seedDatabase = async () => {
 
     // 4. Tutor Profiles
     const tutor1 = await Tutor.create({
-      userId: kamal._id, subjects: ['Combined Maths', 'Physics'], alStream: 'Combined Maths',
+      userId: kamal._id, subjects: ['Combined Mathematics', 'Physical Sciences'], alStream: 'Combined Mathematics',
       bio: 'B.Sc Engineering at Moratuwa. Specializes in Pure Maths.',
       education: [{ institution: 'University of Moratuwa', degree: 'B.Sc. Engineering', year: 2024 }],
       experience: 4, rating: 4.8, reviewCount: 75, verificationStatus: 'approved', hourlyRate: 2000, isFeatured: true
     });
     
     const tutor2 = await Tutor.create({
-      userId: dinithi._id, subjects: ['Biology', 'Chemistry'], alStream: 'Biology',
+      userId: dinithi._id, subjects: ['Biological Sciences', 'Physical Sciences'], alStream: 'Biological Sciences',
       bio: 'Medical Student. I will teach you how to crack A/L Biology MCQs.',
       education: [{ institution: 'University of Peradeniya', degree: 'MBBS', year: 2026 }],
       experience: 3, rating: 4.9, reviewCount: 42, verificationStatus: 'approved', hourlyRate: 1500, isFeatured: false
@@ -127,10 +127,10 @@ const seedDatabase = async () => {
 
     // 5. Questions & Answers
     const q1 = await Question.create({
-      title: 'How to solve 2022 A/L Combined Maths Integration Problem?',
+      title: 'How to solve 2022 A/L Combined Mathematics Integration Problem?',
       body: 'I am struggling with the substitution method on the second part of the essay question. Can someone explain?',
       tags: ['A/L', 'Maths', 'Integration'],
-      subject: 'Mathematics', grade: 13, author: nimal._id, difficulty: 'Hard'
+      subject: 'Combined Mathematics', grade: 13, author: nimal._id, difficulty: 'Hard'
     });
 
     const a1 = await Answer.create({
@@ -144,7 +144,7 @@ const seedDatabase = async () => {
       title: 'Differences between C3 and C4 pathways in Photosynthesis?',
       body: 'What are the main morphological differences shown in leaf anatomy for A/L Biology?',
       tags: ['A/L', 'Biology', 'Botany'],
-      subject: 'Science', grade: 12, author: ruwanthi._id, difficulty: 'Medium'
+      subject: 'O/L General', grade: 12, author: ruwanthi._id, difficulty: 'Medium'
     });
 
     const a2 = await Answer.create({
@@ -155,11 +155,11 @@ const seedDatabase = async () => {
 
     // 6. Timetables
     await Timetable.create({
-      userId: nimal._id, title: 'Combined Maths Revision', dayOfWeek: 1, startTime: '16:00', endTime: '18:00',
+      userId: nimal._id, title: 'Combined Mathematics Revision', dayOfWeek: 1, startTime: '16:00', endTime: '18:00',
       type: 'study', description: 'Past paper module 1', isAvailable: false, color: '#3b82f6'
     });
     await Timetable.create({
-      userId: ruwanthi._id, title: 'Biology Tuition', dayOfWeek: 3, startTime: '14:30', endTime: '16:30',
+      userId: ruwanthi._id, title: 'Biological Sciences Masterclass', dayOfWeek: 3, startTime: '14:30', endTime: '16:30',
       type: 'tutoring', description: 'With Dr. Dinithi', isAvailable: false, color: '#10b981'
     });
 
@@ -178,7 +178,7 @@ const seedDatabase = async () => {
     // 8. Materials
     await Material.create({
       title: 'Moratuwa Engineering Physics Notes', description: 'Targeted for A/L 2025 Physics.',
-      fileUrl: '/uploads/physics.pdf', fileType: 'pdf', uploaderId: tutor1._id, subject: 'Physics',
+      fileUrl: '/uploads/physics.pdf', fileType: 'pdf', uploaderId: tutor1._id, subject: 'Physical Sciences',
       grade: 'A/L 2025', price: 500, isApproved: true, moderationStatus: 'approved', tags: ['A/L', 'Physics']
     });
 

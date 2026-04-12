@@ -16,7 +16,19 @@ const MaterialsLibrary = () => {
     fetchMaterials();
   }, [fetchMaterials]);
 
-  const SUBJECTS = ['All Subjects', 'Combined Maths', 'Physics', 'Chemistry', 'Biology', 'ICT', 'Accounting', 'Science', 'History'];
+  const SUBJECTS = [
+    'All Subjects', 
+    'Combined Mathematics', 
+    'Biological Sciences', 
+    'Physical Sciences', 
+    'Commercial Stream',
+    'Technology Stream',
+    'ICT', 
+    'Accounting', 
+    'Science', 
+    'History',
+    'Other'
+  ];
 
   const filteredMaterials = materials.filter((material) => {
     const title = material.title || '';
@@ -24,7 +36,14 @@ const MaterialsLibrary = () => {
     const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSubject = selectedSubject === 'All Subjects' || material.subject === selectedSubject;
-    return matchesSearch && matchesSubject;
+    
+    // Grade restriction logic
+    const matchesGrade = user.role === 'admin' || 
+                        !material.grade || 
+                        material.grade === 'General' || 
+                        parseInt(material.grade) === parseInt(user.grade);
+
+    return matchesSearch && matchesSubject && matchesGrade;
   });
 
   return (

@@ -171,12 +171,12 @@ const LandingPage = () => {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                 { name: 'Combined Maths', desc: 'Pure & Applied', icon: Trophy, bg: 'bg-blue-50 text-blue-600' },
-                 { name: 'Biology', desc: 'Medical Trajectory', icon: Heart, bg: 'bg-rose-50 text-rose-600' },
-                 { name: 'Physics', desc: 'Mechanics & Matter', icon: Database, bg: 'bg-purple-50 text-purple-600' },
-                 { name: 'Chemistry', desc: 'Organic & Physical', icon: Cpu, bg: 'bg-emerald-50 text-emerald-600' }
-              ].map((sub, i) => (
+               {[
+                  { name: 'Combined Mathematics', desc: 'Pure & Applied Units', icon: Trophy, bg: 'bg-blue-50 text-blue-600' },
+                  { name: 'Biological Sciences', desc: 'Medical Trajectory Hub', icon: Heart, bg: 'bg-rose-50 text-rose-600' },
+                  { name: 'Physical Sciences', desc: 'Physics & Chemistry Mastery', icon: Database, bg: 'bg-purple-50 text-purple-600' },
+                  { name: 'Commercial Stream', desc: 'Accounting & Business', icon: Cpu, bg: 'bg-emerald-50 text-emerald-600' }
+               ].map((sub, i) => (
                  <div key={i} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:border-[#00a8cc] hover:shadow-soft transition-all cursor-pointer group">
                     <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", sub.bg)}>
                        <sub.icon size={28} />
@@ -202,9 +202,9 @@ const LandingPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { n: 'Kasun Perera', s: 'Maths Specialist', u: 'UOM / Royal', r: '4.9', img: '/images/tutor-male.png' },
-              { n: 'Tharushi Silva', s: 'Biology Mentor', u: 'UOC / Visakha', r: '5.0', img: '/images/tutor-female.png' },
-              { n: 'Dulani Peiris', s: 'Chemistry Expert', u: 'UOP / Musaeus', r: '4.8', img: '/images/srilankan_tutor_female_1775832744468.png' }
+              { n: 'Kasun Perera', s: 'Combined Mathematics Specialist', u: 'UOM / Royal', r: '4.9', img: '/images/tutor-male.png' },
+              { n: 'Tharushi Silva', s: 'Biological Sciences Mentor', u: 'UOC / Visakha', r: '5.0', img: '/images/tutor-female.png' },
+              { n: 'Dulani Peiris', s: 'Physical Sciences Expert', u: 'UOP / Musaeus', r: '4.8', img: '/images/srilankan_tutor_female_1775832744468.png' }
             ].map((tutor, i) => (
               <div key={i} className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm hover:shadow-soft transition-shadow flex items-start gap-6 cursor-pointer group">
                 <img src={tutor.img} className="w-20 h-20 rounded-2xl object-cover bg-slate-50" alt={tutor.n} />

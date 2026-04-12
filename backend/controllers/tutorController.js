@@ -1,5 +1,7 @@
 const Tutor = require('../models/Tutor');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const EmailService = require('../services/emailService');
 
 // @desc    Become a tutor
 // @route   POST /api/tutors
@@ -113,28 +115,67 @@ exports.getAllTutors = async (req, res) => {
 // @route   PUT /api/tutors/:id/moderate
 // @access  Private (Admin)
 exports.moderateTutor = async (req, res) => {
-  const { status } = req.body; // 'approved' or 'rejected'
+  const { status, reason, notes } = req.body; // 'approved' or 'rejected'
 
   try {
-    const tutor = await Tutor.findById(req.params.id);
+    const tutor = await Tutor.findById(req.params.id).populate('userId');
 
-    if (tutor) {
-      tutor.verificationStatus = status;
-      const updatedTutor = await tutor.save();
-      
-      // Update user role to tutor if approved
+    if (!tutor) {
+      return res.status(404).json({ message: 'Tutor not found' });
+    }
+
+    tutor.verificationStatus = status;
+    if (status === 'approved') {
+      tutor.verifiedBy = req.user._id;
+      tutor.verifiedAt = new Date();
+      tutor.verificationNotes = notes;
+    } else {
+      tutor.rejectedBy = req.user._id;
+      tutor.rejectedAt = new Date();
+      tutor.rejectionReason = reason;
+      tutor.rejectionNotes = notes;
+    }
+
+    const updatedTutor = await tutor.save();
+    
+    // Update user role and send notifications
+    const user = await User.findById(tutor.userId);
+    if (user) {
       if (status === 'approved') {
-        const user = await User.findById(tutor.userId);
-        if (user) {
-          user.role = 'tutor';
-          await user.save();
+        user.role = 'tutor';
+        await user.save();
+
+        // Notifications
+        try {
+          await Notification.create({
+            userId: user._id,
+            title: 'Tutor Application Approved',
+            message: 'Congratulations! Your application to become a tutor has been approved.',
+            type: 'success',
+            link: '/tutor-dashboard'
+          });
+          await EmailService.sendTutorApprovedEmail(user.email, user.username);
+        } catch (notifyErr) {
+          console.error('Notification error (approval):', notifyErr);
+        }
+      } else {
+        // Notifications (rejection)
+        try {
+          await Notification.create({
+            userId: user._id,
+            title: 'Tutor Application Update',
+            message: `Your tutor application was rejected. Reason: ${reason || 'Incomplete profile'}`,
+            type: 'error',
+            link: '/profile/setup'
+          });
+          await EmailService.sendTutorRejectedEmail(user.email, user.username, reason);
+        } catch (notifyErr) {
+          console.error('Notification error (rejection):', notifyErr);
         }
       }
-      
-      res.json(updatedTutor);
-    } else {
-      res.status(404).json({ message: 'Tutor not found' });
     }
+    
+    res.json(updatedTutor);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

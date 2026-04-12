@@ -59,6 +59,9 @@ const getQuestions = async (req, res) => {
       if (grade !== 'all') {
         query.grade = parseInt(grade);
       }
+      if (req.query.unanswered === 'true') {
+        query.answerCount = 0;
+      }
       if (tags) {
         const tagArray = tags.split(',').map(tag => tag.trim());
         query.tags = { $in: tagArray };

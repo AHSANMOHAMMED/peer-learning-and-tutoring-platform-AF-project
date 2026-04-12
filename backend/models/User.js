@@ -23,7 +23,15 @@ const userSchema = new mongoose.Schema({
   },
   stream: { 
     type: String, 
-    enum: ['Combined Maths', 'Combined Mathematics (A/L)', 'Biology', 'Commerce', 'Arts', 'Tech', 'O/L', 'Other'] 
+    enum: [
+      'Combined Mathematics', 
+      'Biological Sciences', 
+      'Commercial Stream', 
+      'Physical Sciences', 
+      'Arts Stream', 
+      'Technology Stream', 
+      'O/L General'
+    ] 
   },
   grade: { type: String }, // e.g., 'Grade 11', 'A/L 2025'
   profile: {

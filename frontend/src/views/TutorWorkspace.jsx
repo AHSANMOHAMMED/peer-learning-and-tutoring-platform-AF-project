@@ -41,7 +41,7 @@ const TutorWorkspace = () => {
      subjects: '',
      bio: '',
      education: '',
-     alStream: 'Combined Maths',
+     alStream: 'Combined Mathematics',
      experience: '',
      hourlyRate: '',
      availability: ''
@@ -59,7 +59,7 @@ const TutorWorkspace = () => {
                 subjects: Array.isArray(data.subjects) ? data.subjects.join(', ') : data.subjects || '',
                 bio: data.bio || '',
                 education: data.education || '',
-                alStream: data.alStream || 'Combined Maths',
+                alStream: data.alStream || 'Combined Mathematics',
                 experience: data.experience || '',
                 hourlyRate: data.hourlyRate || '',
                 availability: data.availability ? JSON.stringify(data.availability) : ''
@@ -358,9 +358,19 @@ const TutorWorkspace = () => {
                                value={profileForm.alStream}
                                onChange={(e) => setProfileForm({...profileForm, alStream: e.target.value})}
                              >
-                                {['Combined Maths', 'Biology', 'Commerce', 'Arts', 'Tech', 'London A/L', 'Other'].map(stream => (
-                                   <option key={stream} value={stream}>{stream}</option>
-                                ))}
+                                {[
+                                    'Combined Mathematics', 
+                                    'Biological Sciences', 
+                                    'Commercial Stream', 
+                                    'Physical Sciences', 
+                                    'Arts Stream', 
+                                    'Technology Stream', 
+                                    'O/L General',
+                                    'London A/L', 
+                                    'Other'
+                                 ].map(stream => (
+                                    <option key={stream} value={stream}>{stream}</option>
+                                 ))}
                              </select>
                           </div>
                        </div>

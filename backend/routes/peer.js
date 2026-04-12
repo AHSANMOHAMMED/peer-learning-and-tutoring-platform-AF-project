@@ -18,7 +18,7 @@ router.post('/match', authenticate, async (req, res) => {
     // Convert stream to subject/grade context
     const matches = await MatchingService.findPeerMatches({
       userId: req.user._id,
-      subject: stream || 'Combined Maths',
+      subject: stream || 'Combined Mathematics',
       grade: req.user.profile?.grade || 'Grade 12',
       topic: 'General Discussion',
       scheduledAt: new Date(),

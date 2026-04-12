@@ -340,6 +340,100 @@ router.post('/parent/admin/review-link/:linkId', [
 });
 
 /**
+ * @route   GET /api/parent/student/link-requests
+ * @desc    Get pending parent link requests for student
+ * @access  Private (Student)
+ */
+router.get('/parent/student/link-requests', authenticate, async (req, res) => {
+  try {
+    const requests = await ParentDashboardService.getPendingLinkRequestsForStudent(req.user._id);
+    res.json({
+      success: true,
+      message: 'Pending link requests retrieved',
+      data: { requests }
+    });
+  } catch (error) {
+    console.error('Error getting student pending requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve link requests',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   POST /api/parent/student/respond-link/:linkId
+ * @desc    Student responds to parent link request
+ * @access  Private (Student)
+ */
+router.post('/parent/student/respond-link/:linkId', [
+  authenticate,
+  param('linkId').isMongoId(),
+  body('approve').isBoolean(),
+  body('permissions').optional().isObject()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { linkId } = req.params;
+    const { approve, permissions } = req.body;
+
+    const result = await ParentDashboardService.respondToLinkRequest(
+      linkId,
+      req.user._id,
+      approve,
+      permissions
+    );
+
+    res.json({
+      success: true,
+      message: approve ? 'Link approved' : 'Link rejected',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error responding to link request:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to respond to link request',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/parent/link-requests
+ * @desc    Get pending link requests sent by parent
+ * @access  Private (Parent)
+ */
+router.get('/parent/link-requests', authenticate, async (req, res) => {
+  try {
+    const requests = await ParentDashboardService.getPendingLinkRequestsForParent(req.user._id);
+    res.json({
+      success: true,
+      message: 'Pending link requests retrieved',
+      data: { requests }
+    });
+  } catch (error) {
+    console.error('Error getting parent pending requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve link requests',
+      error: error.message
+    });
+  }
+});
+
+
+
+/**
  * @route   GET /api/parent/students
  * @desc    Get parent's linked students
  * @access  Private (Parents)

@@ -22,6 +22,21 @@ export const useTutors = () => {
     }
   }, []);
 
+  const fetchAllTutors = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get('/tutors/all');
+      setTutors(data);
+      return data;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch all tutors');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const registerTutor = useCallback(async (tutorData) => {
     setLoading(true);
     setError(null);
@@ -80,5 +95,5 @@ export const useTutors = () => {
     }
   }, []);
 
-  return { tutors, loading, error, fetchTutors, registerTutor, getTutorProfile, getTutorByUserId, moderateTutor };
+  return { tutors, loading, error, fetchTutors, fetchAllTutors, registerTutor, getTutorProfile, getTutorByUserId, moderateTutor };
 };

@@ -22,13 +22,15 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      'Mathematics', 'English', 'English Language', 'Science', 'History', 'Geography', 'Civic Education',
-      'Health & Physical Education', 'Buddhism', 'Islam', 'Hinduism', 'Saivaneri',
-      'Roman Catholicism', 'Christianity', 'Catholicism', 'Sinhala', 'Tamil',
-      'ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies',
-      'Art', 'Dancing', 'Music', 'Drama & Theatre', 'Life Competencies',
-      'Life Competencies and Citizenship Education', 'Eastern Music', 'Western Music',
-      'Practical & Technical Skills'
+      'Combined Mathematics', 
+      'Biological Sciences', 
+      'Commercial Stream', 
+      'Physical Sciences', 
+      'Arts Stream', 
+      'Technology Stream', 
+      'O/L General',
+      'London A/L',
+      'Other'
     ]
   },
   grade: {

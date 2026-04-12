@@ -12,7 +12,17 @@ const tutorSchema = new mongoose.Schema({
   }],
   alStream: { 
     type: String, 
-    enum: ['Combined Maths', 'Biology', 'Commerce', 'Arts', 'Tech', 'London A/L', 'Other'],
+    enum: [
+      'Combined Mathematics', 
+      'Biological Sciences', 
+      'Commercial Stream', 
+      'Physical Sciences', 
+      'Arts Stream', 
+      'Technology Stream', 
+      'O/L General',
+      'London A/L', 
+      'Other'
+    ],
     required: true
   },
   experience: { type: Number, default: 0 },

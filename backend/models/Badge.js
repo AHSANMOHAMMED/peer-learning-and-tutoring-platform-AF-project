@@ -35,7 +35,17 @@ const badgeSchema = new mongoose.Schema({
     },
     subject: {
       type: String,
-      enum: ['Mathematics', 'Science', 'English', 'History', 'Geography', 'Computer Science', 'Physics', 'Chemistry', 'Biology', 'all'],
+      enum: [
+        'Combined Mathematics', 
+        'Biological Sciences', 
+        'Commercial Stream', 
+        'Physical Sciences', 
+        'Arts Stream', 
+        'Technology Stream', 
+        'O/L General',
+        'Other',
+        'all'
+      ],
       default: 'all'
     },
     timeFrame: {

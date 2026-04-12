@@ -16,7 +16,7 @@ const SessionRoom = () => {
 
   // Mock Session Data
   const session = {
-    title: 'Combined Maths: Integration Mastery',
+    title: 'Combined Mathematics: Integration Mastery',
     tutor: 'Verified Instructor',
     time: '4:00 PM - 5:30 PM',
     attendees: 2,

@@ -137,29 +137,34 @@ class MatchingService {
    * @returns {Number} Score 0-1
    */
   calculateGradeCompatibility(helper, requestedGrade) {
-    const helperGrade = helper.profile?.grade;
+    const helperGrade = helper.profile?.grade || helper.grade;
     
-    if (!helperGrade) return 0;
+    if (!helperGrade || !requestedGrade) return 0.5; // Neutral if missing
 
-    const gradeLevels = {
-      'grade 6': 6, 'grade 7': 7, 'grade 8': 8, 'grade 9': 9,
-      'grade 10': 10, 'grade 11': 11, 'grade 12': 12, 'grade 13': 13
+    const normalize = (g) => {
+      if (!g) return 0;
+      const match = String(g).match(/\d+/);
+      if (match) return parseInt(match[0]);
+      if (typeof g === 'string') {
+          const lower = g.toLowerCase();
+          if (lower.includes('a/l')) return 13;
+          if (lower.includes('o/l')) return 11;
+      }
+      return 0;
     };
 
-    const helperLevel = gradeLevels[helperGrade.toLowerCase()];
-    const requestedLevel = gradeLevels[requestedGrade.toLowerCase()];
+    const helperLevel = normalize(helperGrade);
+    const requestedLevel = normalize(requestedGrade);
 
-    if (!helperLevel || !requestedLevel) return 0;
+    if (helperLevel === 0 || requestedLevel === 0) return 0.5;
 
     const difference = helperLevel - requestedLevel;
     
     if (difference === 0) return 1.0; // Same grade
-    if (difference === 1) return 0.9; // One grade higher
-    if (difference === 2) return 0.7; // Two grades higher
-    if (difference === 3) return 0.5; // Three grades higher
-    if (difference > 3) return 0.3; // Much higher grade
+    if (difference >= 1 && difference <= 2) return 0.9; // Slightly higher
+    if (difference > 2) return 0.7; // Much higher
     
-    return 0; // Helper is in lower grade
+    return 0.2; // Helper is in lower grade
   }
 
   /**

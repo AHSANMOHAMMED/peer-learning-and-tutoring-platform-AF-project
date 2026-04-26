@@ -1,23 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const socialService = require('../services/SocialService');
+const { protect } = require('../middleware/auth');
 
 /**
  * @route   GET /api/social/feed
- * @desc    Get social feed
+ * @desc    Get social activity feed
  * @access  Private
  */
-router.get('/feed', authenticate, async (req, res) => {
+router.get('/feed', protect, async (req, res) => {
   try {
-    // Placeholder for social feed
-    res.json({
-      success: true,
-      data: [],
-      message: 'Social features coming soon'
-    });
+    const { filter = 'all', page = 1 } = req.query;
+    const posts = await socialService.getFeed(req.user._id, { filter, page });
+    res.json({ success: true, data: posts });
   } catch (error) {
-    console.error('Error fetching social feed:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch feed' });
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/social/post
+ * @desc    Create a new post
+ * @access  Private
+ */
+router.post('/post', protect, async (req, res) => {
+  try {
+    const post = await socialService.createPost(req.user._id, req.body);
+    res.status(201).json({ success: true, data: post });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -26,16 +37,12 @@ router.get('/feed', authenticate, async (req, res) => {
  * @desc    Follow a user
  * @access  Private
  */
-router.post('/follow/:userId', authenticate, async (req, res) => {
+router.post('/follow/:userId', protect, async (req, res) => {
   try {
-    // Placeholder for follow functionality
-    res.json({
-      success: true,
-      message: 'User followed successfully'
-    });
+    const result = await socialService.followUser(req.user._id, req.params.userId);
+    res.json(result);
   } catch (error) {
-    console.error('Error following user:', error);
-    res.status(500).json({ success: false, message: 'Failed to follow user' });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -44,16 +51,40 @@ router.post('/follow/:userId', authenticate, async (req, res) => {
  * @desc    Unfollow a user
  * @access  Private
  */
-router.post('/unfollow/:userId', authenticate, async (req, res) => {
+router.post('/unfollow/:userId', protect, async (req, res) => {
   try {
-    // Placeholder for unfollow functionality
-    res.json({
-      success: true,
-      message: 'User unfollowed successfully'
-    });
+    const result = await socialService.unfollowUser(req.user._id, req.params.userId);
+    res.json(result);
   } catch (error) {
-    console.error('Error unfollowing user:', error);
-    res.status(500).json({ success: false, message: 'Failed to unfollow user' });
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route   POST /api/social/like/:postId
+ * @desc    Like or unlike a post
+ * @access  Private
+ */
+router.post('/like/:postId', protect, async (req, res) => {
+  try {
+    const result = await socialService.toggleLike(req.params.postId, req.user._id);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @route   GET /api/social/recommendations
+ * @desc    Get suggested users to follow
+ * @access  Private
+ */
+router.get('/recommendations', protect, async (req, res) => {
+  try {
+    const recommendations = await socialService.getRecommendations(req.user._id);
+    res.json({ success: true, data: recommendations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

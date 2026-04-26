@@ -77,6 +77,73 @@ export const useUsers = () => {
     }
   }, [fetchUsers, pagination]);
 
+  const createUser = useCallback(async (userData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.post('/admin/users', userData);
+      if (data.success) {
+        setUsers(prev => [data.data.user, ...prev]);
+        setPagination(prev => ({ ...prev, total: prev.total + 1 }));
+      }
+      return data;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create user');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getUserById = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get(`/admin/users/${id}`);
+      return data;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch user details');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateUser = useCallback(async (id, updateData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.put(`/admin/users/${id}`, updateData);
+      if (data.success) {
+        setUsers(prev => prev.map(u => u._id === id ? { ...u, ...data.data.user } : u));
+      }
+      return data;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update user');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteUser = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.delete(`/admin/users/${id}`);
+      if (data.success) {
+        setUsers(prev => prev.filter(u => u._id !== id));
+        setPagination(prev => ({ ...prev, total: prev.total - 1 }));
+      }
+      return data;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete user');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return { 
     users, 
     pagination, 
@@ -85,6 +152,10 @@ export const useUsers = () => {
     fetchUsers, 
     toggleUserStatus, 
     changeUserRole, 
-    bulkAction 
+    bulkAction,
+    createUser,
+    getUserById,
+    updateUser,
+    deleteUser
   };
 };

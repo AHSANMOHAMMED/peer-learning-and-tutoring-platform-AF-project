@@ -127,7 +127,7 @@ class FeatureFlagService {
           updatedBy: userId,
           updatedAt: new Date()
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       // Invalidate cache

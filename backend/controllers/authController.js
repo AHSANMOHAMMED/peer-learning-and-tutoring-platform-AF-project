@@ -29,7 +29,21 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ message });
     }
 
-    const user = await User.create({ username, email, password, role, profile, district, stream, grade, authProvider: 'local' });
+    // Handle school code if provided
+    let schoolId = null;
+    if (req.body.schoolCode) {
+      const School = require('../models/School');
+      const school = await School.findOne({ code: req.body.schoolCode.toUpperCase() });
+      if (school) {
+        schoolId = school._id;
+      }
+    }
+
+    const user = await User.create({ 
+      username, email, password, role, profile, 
+      district, stream, grade, school: schoolId,
+      authProvider: 'local' 
+    });
 
     // Send OTP for email verification
     const otp = generateOTP();

@@ -66,7 +66,7 @@ const MaterialsLibrary = () => {
               </p>
            </div>
            <button onClick={fetchMaterials} className="bg-white border border-slate-200 text-slate-600 hover:text-[#00a8cc] px-4 py-2.5 rounded-xl font-bold text-sm shadow-soft transition-colors flex items-center gap-2">
-              <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Sync Resources
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Refresh Resources
            </button>
         </div>
 

@@ -121,7 +121,7 @@ const StudentDashboard = () => {
                  </div>
                  <div className="flex items-baseline justify-between">
                     <h3 className="text-2xl font-black text-slate-800">{stats.streakDays}</h3>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Days Sync</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Day Streak</span>
                  </div>
               </div>
               <div className="bg-white rounded-2xl p-4 shadow-soft min-w-[150px] border-b-4 border-indigo-500">
@@ -208,7 +208,7 @@ const StudentDashboard = () => {
               </div>
               <div className="space-y-4">
                  {upcomingBookings.length > 0 ? upcomingBookings.map((b, i) => (
-                    <div key={i} className="flex items-center gap-4 bg-[#fcfcfc] border border-slate-100 p-4 rounded-2xl hover:border-[#00a8cc] transition-colors cursor-pointer" onClick={() => navigate(`/lesson/${b._id}`)}>
+                    <div key={i} className="flex items-center gap-4 bg-[#fcfcfc] border border-slate-100 p-4 rounded-2xl hover:border-[#00a8cc] transition-colors cursor-pointer" onClick={() => navigate(`/session/${b._id}`)}>
                        <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center font-bold">
                           {b.subject?.[0]}
                        </div>
@@ -246,7 +246,7 @@ const StudentDashboard = () => {
                                  {activeChallenge.difficulty || 'NEW'}
                               </span>
                            </div>
-                           <h4 className="font-bold">{activeChallenge.title || 'Neural Mathematics Blitz'}</h4>
+                           <h4 className="font-bold">{activeChallenge.title || 'Academic Speed Challenge'}</h4>
                         </div>
                      </div>
                   </div>

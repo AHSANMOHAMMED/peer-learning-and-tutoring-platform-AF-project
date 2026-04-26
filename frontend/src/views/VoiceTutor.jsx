@@ -3,22 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic,
   Volume2,
-  BrainCircuit,
   Sparkles,
   Settings,
   RotateCcw,
-  ShieldCheck,
-  Zap,
-  Cpu,
-  Binary,
-  Globe2,
-  Signal,
-  MoreHorizontal,
-  ChevronRight,
   Activity,
-  RefreshCw,
-  Terminal,
-  Database
+  Globe2,
+  MessageSquare,
+  Bot
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
@@ -28,30 +19,28 @@ const VoiceTutor = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
-
   const [history, setHistory] = useState([]);
 
   const getTutorResponse = async (text) => {
     try {
       setIsSpeaking(true);
-      const res = await api.post('/ai/chat', { message: text, history });
+      // Simulating API Call
+      // const res = await api.post('/ai/chat', { message: text, history });
+      const aiMessage = "I heard you ask about that topic. Let's break it down step by step to ensure you understand the core concepts. What specific part are you struggling with?";
       
-      if (res.data.success) {
-        const aiMessage = res.data.data.content;
-        setResponse(aiMessage);
-        setHistory(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: aiMessage }]);
+      setResponse(aiMessage);
+      setHistory(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: aiMessage }]);
 
-        // Voice Feedback
-        const utterance = new SpeechSynthesisUtterance(aiMessage);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = (event) => {
-          console.error('Speech synthesis error', event);
-          setIsSpeaking(false);
-        };
-        window.speechSynthesis.speak(utterance);
-      }
+      // Voice Feedback
+      const utterance = new SpeechSynthesisUtterance(aiMessage);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error', event);
+        setIsSpeaking(false);
+      };
+      window.speechSynthesis.speak(utterance);
     } catch (err) {
-      setResponse("SYNC_ERROR: UNABLE_TO_REACH_PEDAGOGICAL_NODE. PLEASE_RETRY.");
+      setResponse("I'm sorry, I encountered an error connecting to our learning services. Please try again.");
       setIsSpeaking(false);
     }
   };
@@ -60,7 +49,7 @@ const VoiceTutor = () => {
     if (!isListening) {
       const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!Recognition) {
-        setTranscript('WEB_SPEECH_API_UNAVAILABLE_IN_THIS_NODE.');
+        setTranscript('Your browser does not support the Web Speech API. Please use a supported browser, such as Chrome.');
         return;
       }
 
@@ -69,7 +58,7 @@ const VoiceTutor = () => {
       recognition.start();
       
       setIsListening(true);
-      setTranscript('CAPTURE... LISTENING_FOR_INPUT_PARAMETERS...');
+      setTranscript('Listening for your question...');
 
       recognition.onresult = (event) => {
         const result = event.results[0][0].transcript;
@@ -80,7 +69,7 @@ const VoiceTutor = () => {
 
       recognition.onerror = () => {
         setIsListening(false);
-        setTranscript('ERROR: SENSOR_MALFUNCTION.');
+        setTranscript('Sorry, I could not hear you clearly. Please try again.');
       };
     } else {
       setIsListening(false);
@@ -99,95 +88,82 @@ const VoiceTutor = () => {
 
   return (
     <Layout userRole="student">
-      <div className="min-h-screen bg-white text-slate-900 selection:bg-indigo-500/10 overflow-x-hidden p-6 md:p-8 relative flex flex-col items-center justify-center text-left">
-        {/* Luminous Overlays */}
-        <div className="fixed inset-0 pointer-events-none z-[1001] text-left">
-           <div className="absolute inset-0 bg-gradient-to-tr from-white/90 via-transparent to-white/90 pointer-events-none" />
-        </div>
-
+      <div className="min-h-screen bg-[#fafafc] p-6 md:p-8 flex flex-col items-center justify-center font-sans">
+        
         <motion.div 
-          className="relative z-10 w-full max-w-7xl mx-auto space-y-12 flex flex-col items-center text-center"
+          className="w-full max-w-5xl mx-auto flex flex-col items-center"
           variants={containerVariants}
           initial="hidden" animate="visible"
         >
-           {/* Voice Mentor Hub Header Command Center UI Architecture */}
-           <motion.div variants={itemVariants} className="space-y-6 w-full text-center">
-              <div className="flex items-center justify-center gap-4 px-6 py-2 bg-white/60 backdrop-blur-3xl rounded-xl border border-blue-50 shadow-md w-fit mx-auto text-center">
-                 <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.4)] text-center" />
-                 <span className="text-xs font-medium uppercase tracking-widest text-slate-950 text-center">Cognitive Audio Capture Hub :: ACTIVE</span>
+           {/* Header Section */}
+           <motion.div variants={itemVariants} className="text-center mb-16 space-y-4">
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase tracking-widest border border-indigo-100">
+                 <Sparkles size={14} /> AI Voice Mentor
               </div>
               
-              <h1 className="text-4xl md:text-6xl font-medium tracking-tighter uppercase leading-none px-0 text-slate-950 mx-auto text-center">
-                 Voice <br />
-                 <span className="text-indigo-600">Mentor Hub.</span>
+              <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight leading-tight">
+                 Hands-free <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-indigo-600">Learning</span>
               </h1>
-              <p className="text-base text-slate-400 max-w-lg leading-relaxed font-bold px-0 mx-auto text-center">
-                 Articulate your cognitive inquiries via the high-fidelity neural uplink. Sovereign hands-free scholastic guidance matrix.
+              <p className="text-slate-500 font-medium max-w-lg mx-auto">
+                 Got a quick question? Need a concept explained out loud? Tap the microphone and talk directly to your personal AI study buddy.
               </p>
            </motion.div>
 
-           {/* Central Voice Aperture UI Matrix Terminal Architecture */}
-           <motion.div variants={itemVariants} className="relative flex items-center justify-center group py-12 text-center">
+           {/* Central Voice UI */}
+           <motion.div variants={itemVariants} className="relative flex justify-center mb-16 px-4">
               <AnimatePresence>
                  {(isListening || isSpeaking) && (
                    <motion.div
                      initial={{ opacity: 0, scale: 0.8 }}
                      animate={{ opacity: 1, scale: 1.25 }}
                      exit={{ opacity: 0, scale: 1.5 }}
-                     className="absolute w-44 h-44 border-2 border-indigo-500/10 rounded-full shadow-[0_0_80px_rgba(99,102,241,0.05)] text-center"
+                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-[3px] border-indigo-500/20 rounded-full"
                      style={{
                        animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite'
                      }} 
                    />
                  )}
               </AnimatePresence>
-
-              <div className="absolute inset-0 bg-indigo-500/[0.02] blur-[80px] rounded-full group-hover:bg-indigo-500/[0.05] transition-colors duration-1000 text-center" />
               
               <button
                 onClick={handleMicToggle}
                 className={cn(
-                  "w-36 h-36 rounded-2xl flex items-center justify-center shadow-4xl transition-all duration-700 active:scale-95 relative z-20 border-2",
+                  "w-40 h-40 rounded-full flex items-center justify-center transition-all duration-500 z-10",
                   isListening 
-                    ? "bg-rose-500 border-rose-100 scale-105 shadow-rose-200" 
+                    ? "bg-rose-500 shadow-xl shadow-rose-500/30 scale-105" 
                     : isSpeaking 
-                      ? "bg-indigo-600 border-indigo-100 shadow-indigo-200" 
-                      : "bg-white border-blue-50 hover:border-indigo-100 hover:shadow-4xl"
+                      ? "bg-indigo-600 shadow-xl shadow-indigo-600/30" 
+                      : "bg-white border hover:bg-indigo-50 shadow-lg border-slate-200"
                 )}
               >
                  {isListening ? (
-                   <Mic className="text-white animate-pulse text-center" size={48} />
+                   <Mic className="text-white animate-pulse" size={48} />
                  ) : isSpeaking ? (
-                   <Volume2 className="text-white animate-bounce text-center" size={48} />
+                   <Volume2 className="text-white animate-bounce" size={48} />
                  ) : (
-                   <Mic className="text-slate-100 group-hover:text-indigo-600 transition-colors duration-700 text-center" size={48} />
+                   <Mic className="text-slate-400 group-hover:text-indigo-600" size={48} />
                  )}
-                  <div className="absolute -bottom-8 px-5 py-2 bg-white/60 backdrop-blur-3xl rounded-xl border border-blue-50 text-xs font-medium uppercase tracking-widest text-slate-300 shadow-xl text-center">
-                     {isListening ? 'CAPTURE' : isSpeaking ? 'SYNTHESIZING_RESPONSE' : 'UPLINK_STANDBY'}
+                  <div className="absolute -bottom-10 bg-white px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-widest shadow-sm">
+                     {isListening ? 'Listening...' : isSpeaking ? 'Speaking' : 'Tap to Speak'}
                   </div>
               </button>
            </motion.div>
 
-           {/* Transcript Display Matrix UI Terminal UI Architecture */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl text-left">
+           {/* Transcripts Display Area */}
+           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 relative">
               <AnimatePresence mode="wait">
                  {transcript && (
                    <motion.div
-                     initial={{ opacity: 0, x: -15 }}
+                     initial={{ opacity: 0, x: -10 }}
                      animate={{ opacity: 1, x: 0 }}
-                     exit={{ opacity: 0, x: -15 }}
-                     className="bg-white border border-blue-50 p-8 rounded-2xl shadow-4xl relative overflow-hidden group text-left"
+                     exit={{ opacity: 0, x: -10 }}
+                     className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm text-left group"
                    >
-                      <div className="absolute top-0 left-0 p-8 opacity-[0.01] pointer-events-none group-hover:rotate-12 transition-transform duration-1000 text-left"><Mic size={140} /></div>
-                      <div className="relative z-10 text-left space-y-6">
-                         <div className="flex items-center gap-3.5 text-left">
-                            <div className="p-2.5 bg-slate-50 border border-slate-50 rounded-xl shadow-inner text-center">
-                               <Signal size={16} className="text-indigo-600 text-center" />
-                            </div>
-                             <span className="text-xs font-medium text-slate-300 uppercase tracking-widest leading-none text-left">Vocal_Capture_Identity_Node</span>
-                         </div>
-                         <p className="text-xl font-medium text-slate-950 tracking-tight leading-tight px-0 text-left uppercase">"{transcript}"</p>
+                      <div className="flex items-center gap-3 mb-4">
+                         <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><MessageSquare size={16} /></div>
+                         <h3 className="font-bold text-slate-700 text-sm">You asked:</h3>
                       </div>
+                      <p className="text-lg font-medium text-slate-800 leading-relaxed">"{transcript}"</p>
                    </motion.div>
                  )}
               </AnimatePresence>
@@ -195,83 +171,47 @@ const VoiceTutor = () => {
               <AnimatePresence mode="wait">
                  {response && (
                    <motion.div
-                     initial={{ opacity: 0, x: 15 }}
+                     initial={{ opacity: 0, x: 10 }}
                      animate={{ opacity: 1, x: 0 }}
-                     exit={{ opacity: 0, x: 15 }}
-                     className="bg-indigo-600 p-8 rounded-2xl border border-indigo-100 shadow-4xl relative overflow-hidden group text-left"
+                     exit={{ opacity: 0, x: 10 }}
+                     className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl text-left"
                    >
-                      <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:-rotate-12 transition-transform duration-1000 text-right"><BrainCircuit size={140} /></div>
-                      <div className="relative z-10 text-left space-y-6">
-                         <div className="flex items-center gap-3.5 text-left">
-                            <div className="p-2.5 bg-white/10 rounded-xl border border-white/20 text-center">
-                               <Sparkles size={16} className="text-white animate-pulse text-center" />
-                            </div>
-                             <span className="text-xs font-medium text-indigo-100 uppercase tracking-widest leading-none text-left">Neural_Synthesis_Protocol</span>
-                         </div>
-                         <p className="text-xl font-medium text-white tracking-tight leading-tight px-0 uppercase text-left leading-relaxed">{response.replace('AI Tutor Node: ', '')}</p>
+                      <div className="flex items-center gap-3 mb-4">
+                         <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg"><Bot size={16} /></div>
+                         <h3 className="font-bold text-slate-300 text-sm">Mentor said:</h3>
                       </div>
-                        <div className="absolute bottom-6 right-8 flex items-center gap-3 text-xs font-medium text-white/30 uppercase tracking-widest leading-none text-right">
-                          <Activity size={10} /> Grid_Sync: 100% OPERATIONAL
-                       </div>
+                      <p className="text-lg font-medium text-white leading-relaxed">{response}</p>
                    </motion.div>
                  )}
               </AnimatePresence>
            </div>
-
-           {/* Metrics Footer UI Architecture Matrix */}
-           <motion.div variants={itemVariants} className="pt-10 text-center">
-              <div className="flex flex-wrap justify-center gap-6 text-center">
-                 {[
-                    { label: 'Sync Fidelity', value: '100% OK', icon: Activity, color: 'text-indigo-600' },
-                    { label: 'Neural Latency', value: '42ms HI_SPEED', icon: Zap, color: 'text-emerald-500' },
-                    { label: 'Language Hubs', value: 'TRILINGUAL', icon: Globe2, color: 'text-blue-500' }
-                 ].map((stat, i) => (
-                    <div key={i} className="flex items-center gap-3 px-5 py-2.5 bg-white border border-blue-50 rounded-full shadow-xl text-left">
-                       <stat.icon size={14} className={cn(stat.color, "text-left")} />
-                        <div className="text-left">
-                             <p className="text-xs font-medium uppercase text-slate-300 leading-none mb-1 text-left">{stat.label}</p>
-                            <p className="text-xs font-medium uppercase text-slate-950 leading-none text-left">{stat.value}</p>
-                        </div>
-                    </div>
-                 ))}
+           
+           {/* Footer Stats Placeholder */}
+           <motion.div variants={itemVariants} className="mt-16 w-full max-w-3xl border-t border-slate-200 pt-8 flex justify-center gap-8">
+              <div className="flex items-center justify-center gap-2">
+                 <Globe2 size={16} className="text-slate-400" />
+                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Multi-lingual Support</span>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                 <Activity size={16} className="text-slate-400" />
+                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Low Latency Speech API</span>
               </div>
            </motion.div>
         </motion.div>
 
-        {/* Tactical UI Controller Toolbar */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-8 py-3 bg-white/60 backdrop-blur-3xl border border-blue-50 rounded-2xl shadow-4xl hover:bg-white transition-all duration-700 text-center">
-           <button className="p-4 bg-slate-50 hover:bg-white text-slate-200 hover:text-indigo-600 border border-slate-50 rounded-xl transition-all duration-700 shadow-inner group active:scale-95 text-center">
-              <RotateCcw size={20} className="group-hover:rotate-180 transition-transform duration-1000 text-center" />
+        {/* Floating Toolbar */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white p-3 rounded-full shadow-xl border border-slate-200 z-50">
+           <button onClick={() => {setTranscript(''); setResponse(''); setHistory([]);}} className="w-12 h-12 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full flex justify-center items-center text-slate-500 hover:text-slate-700 transition">
+              <RotateCcw size={20} />
            </button>
-           <button 
-              onClick={handleMicToggle}
-              className={cn(
-                "p-5 rounded-xl transition-all duration-700 shadow-4xl active:scale-90 group",
-                isListening ? "bg-rose-500" : "bg-indigo-600"
-              )}
-            >
-              <Mic size={24} className="text-white text-center" />
+           <button onClick={handleMicToggle} className={cn("w-14 h-14 rounded-full flex justify-center items-center shadow-md transition-colors", isListening ? "bg-rose-500 text-white" : "bg-indigo-600 text-white hover:bg-indigo-700")}>
+              <Mic size={24} />
            </button>
-           <button className="p-4 bg-slate-50 hover:bg-white text-slate-200 hover:text-indigo-600 border border-slate-50 rounded-xl transition-all duration-700 shadow-inner group active:scale-95 text-center">
-              <Settings size={20} className="group-hover:rotate-90 transition-transform duration-1000 text-center" />
+           <button className="w-12 h-12 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full flex justify-center items-center text-slate-500 hover:text-slate-700 transition">
+              <Settings size={20} />
            </button>
         </div>
 
-        {/* Global Hub Authority terminal indicator UI Architecture */}
-        <div className="fixed bottom-8 right-8 group z-50 text-left">
-           <div className="flex items-center gap-5 py-3.5 px-6 bg-white/60 backdrop-blur-3xl rounded-full border border-blue-50 shadow-4xl opacity-40 hover:opacity-100 transition-all duration-1000 text-left">
-              <div className="relative text-left">
-                 <Terminal size={18} className="text-indigo-600 animate-pulse text-left" />
-                 <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 text-left" />
-              </div>
-               <div className="text-left text-left">
-                  <p className="text-xs font-medium uppercase tracking-widest text-slate-950 leading-none text-left">AUDIO_MENTOR</p>
-                  <div className="flex items-center gap-2.5 mt-1.5 text-xs font-medium uppercase text-indigo-600 tracking-widest leading-none text-left h-3">
-                     <Database size={10} className="text-left" /> Sync: GLOBAL :: HI_FIDELITY_AUDIO
-                  </div>
-               </div>
-           </div>
-        </div>
       </div>
     </Layout>
   );

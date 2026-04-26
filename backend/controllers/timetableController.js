@@ -43,7 +43,7 @@ const updateTimeSlot = async (req, res) => {
     const slot = await Timetable.findOneAndUpdate(
       { _id: id, userId: req.user._id },
       { $set: updates },
-      { new: true }
+      { returnDocument: 'after' }
     );
     
     if (!slot) {

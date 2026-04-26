@@ -39,6 +39,7 @@ import AdminSettings from './views/AdminSettings';
 import AdminApprovals from './views/AdminApprovals';
 import ForgotPassword from './views/ForgotPassword';
 import ResetPassword from './views/ResetPassword';
+import VerifyOTP from './views/VerifyOTP';
 import NationalMerit from './views/NationalMerit';
 import ForumPage from './views/ForumPage';
 import ForumThreadPage from './views/ForumThreadPage';
@@ -72,6 +73,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify" element={<VerifyOTP />} />
           <Route path="/signup" element={<Navigate to="/register" replace />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -94,6 +96,7 @@ function App() {
           <Route path="/social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
           <Route path="/voice-tutor" element={<ProtectedRoute><VoiceTutor /></ProtectedRoute>} />
           <Route path="/school-dashboard" element={<ProtectedRoute allowedRoles={['schoolAdmin', 'superadmin']}><SchoolManagement /></ProtectedRoute>} />
+          <Route path="/admin/schools" element={<ProtectedRoute allowedRoles={['superadmin']}><SchoolManagement /></ProtectedRoute>} />
           
           <Route path="/tutor-dashboard" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorDashboard /></ProtectedRoute>} />
           <Route path="/tutor-workspace" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorWorkspace /></ProtectedRoute>} />

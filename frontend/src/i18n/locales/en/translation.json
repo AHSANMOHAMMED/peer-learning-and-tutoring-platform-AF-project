@@ -26,7 +26,7 @@
     "login": "Login",
     "login_title": "Welcome Back",
     "register": "Join Aura",
-    "register_title": "Initialize Learning",
+    "register_title": "Create Your Account",
     "joining_as": "Joining as",
     "student": "Student",
     "tutor": "Tutor",
@@ -44,25 +44,25 @@
     "cancel": "Cancel",
     "search": "Search Resources...",
     "load_more": "Load More Content",
-    "loading": "Syncing Data...",
+    "loading": "Loading Data...",
     "success": "Operation Successful",
-    "error": "Transmission Failed"
+    "error": "Connection Failed"
   },
   "dashboard": {
     "welcome": "Welcome back, {{name}}",
-    "student_hub": "Student Insights HUB",
-    "tutor_hub": "Educator Command Center",
-    "parent_hub": "Parental Insight HUB",
+    "student_hub": "Student Dashboard",
+    "tutor_hub": "Educator Console",
+    "parent_hub": "Parent Dashboard",
     "parent": {
       "management_center": "MANAGEMENT CENTER",
       "title": "Parental Insight HUB",
       "subtitle": "Monitor, Manage, and Master your child's learning journey.",
       "secure_tutors": "Secure Tutors",
       "link_student": "Link Student",
-      "fleet": "Your Fleet",
-      "priority_matrix": "Priority Matrix",
-      "growth_projection": "Growth Projection",
-      "session_fleet": "Session Fleet",
+      "fleet": "Your Family",
+      "priority_matrix": "Priority Tasks",
+      "growth_projection": "Academic Progress",
+      "session_fleet": "Lesson Schedule",
       "grades": "Academic Grades",
       "mentorship_hub": "Mentorship Hub",
       "knowledge_level": "Knowledge Level",
@@ -72,35 +72,35 @@
     }
   },
   "gamification": {
-    "hub_title": "Scholastic Honors HUB",
-    "intelligence_title": "Mastery Intelligence",
-    "total_merit": "Total Merit",
-    "level_progression": "Level Progression",
-    "network_engagement": "Network Engagement",
-    "social_sphere": "Social Command Sphere",
+    "hub_title": "Academic Mastery Hub",
+    "intelligence_title": "Learning Insights",
+    "total_merit": "Total points",
+    "level_progression": "Level Progress",
+    "network_engagement": "Community Engagement",
+    "social_sphere": "Social Network",
     "honor_badges": "Honor Badges"
   },
   "marketplace": {
-    "hub_title": "Knowledge Marketplace HUB",
-    "inventory_title": "Scholastic Inventory",
-    "elite_syncs": "Elite Synchronizations",
-    "control_matrix": "Global Control Matrix"
+    "hub_title": "Marketplace",
+    "inventory_title": "Available Resources",
+    "elite_syncs": "Premium Lessons",
+    "control_matrix": "Management Console"
   },
   "smart_match": {
-    "engine_title": "Neural Matching Engine",
-    "calibrate_title": "Calibrate Your Future Path",
-    "probability_core": "Neural Probability Core"
+    "engine_title": "Smart Matching System",
+    "calibrate_title": "Customize Your Path",
+    "probability_core": "Match Accuracy"
   },
   "ai_homework": {
-    "assistant_core": "Neural Assistant Core",
-    "mastery_title": "AI Homework Mastery",
-    "cognitive_focus": "Cognitive Focus",
+    "assistant_core": "AI Assistant",
+    "mastery_title": "AI Learning Assistant",
+    "cognitive_focus": "Subject Focus",
     "academic_tier": "Academic Tier"
   },
   "bookings": {
-    "command_center": "Schedule Command Center",
-    "session_inventory": "Session Inventory",
-    "operational_agenda": "Live Operational Agenda"
+    "command_center": "Schedule Hub",
+    "session_inventory": "Session List",
+    "operational_agenda": "Daily Schedule"
   },
   "common": {
     "welcome_back": "Welcome Back"

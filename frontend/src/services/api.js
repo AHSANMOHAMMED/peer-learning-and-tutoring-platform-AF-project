@@ -111,4 +111,22 @@ export const messageApi = {
   deleteConversation: (id) => api.delete(`/messages/conversations/${id}`).then((res) => res.data)
 };
 
+export const socialApi = {
+  getFeed: (params) => api.get('/social/feed', { params }).then((res) => res.data),
+  createPost: (data) => api.post('/social/post', data).then((res) => res.data),
+  follow: (userId) => api.post(`/social/follow/${userId}`).then((res) => res.data),
+  unfollow: (userId) => api.post(`/social/unfollow/${userId}`).then((res) => res.data),
+  like: (postId) => api.post(`/social/like/${postId}`).then((res) => res.data),
+  getRecommendations: () => api.get('/social/recommendations').then((res) => res.data)
+};
+
+export const schoolApi = {
+  verifySchoolCode: (code) => api.get(`/schools/verify/${code}`).then((res) => res.data),
+  getAll: (params) => api.get('/schools', { params }).then((res) => res.data),
+  getById: (id) => api.get(`/schools/${id}`).then((res) => res.data),
+  create: (data) => api.post('/schools', data).then((res) => res.data),
+  update: (id, data) => api.put(`/schools/${id}`, data).then((res) => res.data),
+  delete: (id) => api.delete(`/schools/${id}`).then((res) => res.data)
+};
+
 export default api;

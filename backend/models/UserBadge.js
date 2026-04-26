@@ -81,6 +81,24 @@ userBadgeSchema.statics.awardBadge = async function(userId, badgeId, metadata = 
       }
     });
   }
+
+  // Create social milestone post
+  try {
+    const Post = mongoose.model('Post');
+    await Post.create({
+      author: userId,
+      type: 'badge',
+      content: `Earned the "${badge.name}" badge!`,
+      metadata: {
+        badgeId: badge._id,
+        badgeName: badge.name
+      },
+      isAutomated: true,
+      visibility: 'public'
+    });
+  } catch (socialError) {
+    console.error('Failed to create social milestone post:', socialError);
+  }
   
   // Add badge to user's badges array
   const User = mongoose.model('User');

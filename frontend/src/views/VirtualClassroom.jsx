@@ -43,7 +43,7 @@ const VirtualClassroom = ({
   const [isInVR, setIsInVR] = useState(false);
   const [selectedView, setSelectedView] = useState('theater'); 
   const avatarsRef = useRef(new Map());
-  const [syncStatus, setSyncStatus] = useState(99.98);
+  const [connectionQuality, setConnectionQuality] = useState(99.98);
   const [isCapturingAI, setIsCapturingAI] = useState(false);
   const [aiExplanation, setAiExplanation] = useState(null);
   const [showAIResult, setShowAIResult] = useState(false);
@@ -137,7 +137,7 @@ const VirtualClassroom = ({
     }
   };
 
-  const createHolographicEnvironment = (scene, viewType) => {
+  const createVirtualEnvironment = (scene, viewType) => {
     const existing = scene.getObjectByName('environment');
     if (existing) scene.remove(existing);
 
@@ -218,7 +218,7 @@ const VirtualClassroom = ({
     });
   };
 
-  const createLuminousAvatar = (p) => {
+  const createStudentAvatar = (p) => {
     const group = new THREE.Group();
     const bodyGeo = new THREE.OctahedronGeometry(0.6, 0);
     const bodyMat = new THREE.MeshStandardMaterial({ color: p.color, metalness: 0.5, roughness: 0.2, emissive: p.color, emissiveIntensity: 0.5 });
@@ -331,7 +331,7 @@ const VirtualClassroom = ({
          {/* Left Side Audio/Video Controls */}
          <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20 space-y-4">
             {[
-               { icon: Mic, label: 'Audit', color: 'text-indigo-600' },
+               { icon: Mic, label: 'Audio', color: 'text-indigo-600' },
                { icon: Video, label: 'Video', color: 'text-emerald-600' },
                { icon: Maximize2, label: 'Expand', color: 'text-slate-700' }
             ].map((btn, i) => (
@@ -368,7 +368,7 @@ const VirtualClassroom = ({
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                </h4>
                <div className="space-y-3 flex-1 overflow-y-auto no-scrollbar">
-                  {/* Instructor Node */}
+                  {/* Instructor Access */}
                   <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
                      <div className="flex items-center gap-3">
                         <div className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white rounded-xl font-bold shadow-sm">T</div>
@@ -394,7 +394,7 @@ const VirtualClassroom = ({
       {/* Bottom Tool Bar */}
       <div className="relative z-20 px-8 py-4 bg-white/80 backdrop-blur-3xl border-t border-slate-200 flex items-center justify-center gap-8 shadow-sm">
          <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-xl">
-            {['Theater', 'Lecture', 'Matrix'].map(mode => (
+            {['Theater', 'Lecture', 'Class'].map(mode => (
                <button 
                   key={mode} 
                   onClick={() => setSelectedView(mode.toLowerCase())}

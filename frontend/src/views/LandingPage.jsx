@@ -51,7 +51,12 @@ const TrustedTicker = () => {
             <div className="flex -space-x-3">
                {[1,2,3,4].map(i => (
                   <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
-                     <img src={`/images/srilankan_tutor_${i % 2 === 0 ? 'female' : 'male'}_17758327${i % 2 === 0 ? '44468' : '26155'}.png`} alt="" className="w-full h-full object-cover" />
+                     {/* Using verified tutor assets from public directory */}
+                     <img 
+                        src={i % 2 === 0 ? "/images/tutor-female.png" : "/images/tutor-male.png"} 
+                        alt="Aura Mentor" 
+                        className="w-full h-full object-cover" 
+                     />
                   </div>
                ))}
             </div>
@@ -104,30 +109,80 @@ const LandingPage = () => {
       
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 md:px-10 overflow-hidden relative">
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#e8f6fa] rounded-full blur-3xl -z-10" />
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-gradient-to-br from-[#e8f6fa] to-[#00a8cc]/10 rounded-full blur-[120px] -z-10 animate-pulse" />
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-widest mb-6 border border-blue-100">
-               <Sparkles size={14} /> The Future of Learning
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/80 backdrop-blur-sm text-blue-600 text-xs font-bold uppercase tracking-widest mb-8 border border-blue-100/50 shadow-sm">
+               <Sparkles size={14} className="animate-spin-slow" /> The Future of Learning
             </div>
-            <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-6 tracking-tight">
-              Master your <span className="text-[#00a8cc]">A/Levels</span><br />with top mentors.
+            <h1 className="text-6xl lg:text-8xl font-black text-slate-900 leading-[1.05] mb-8 tracking-tighter">
+              Master your <span className="bg-gradient-to-r from-[#00a8cc] to-indigo-600 bg-clip-text text-transparent">A/Levels</span><br />with elite mentors.
             </h1>
-            <p className="text-lg text-slate-500 max-w-lg mb-10 font-medium leading-relaxed">
-               Sri Lanka's premier destination for academic excellence. Connect with verified university students and ace your exams together.
+            <p className="text-xl text-slate-500 max-w-xl mb-12 font-medium leading-relaxed">
+               Sri Lanka's premier destination for academic excellence. Connect with verified university students, master complex concepts, and ace your exams together.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/register" className="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-[#00a8cc] transition-colors flex items-center gap-2 shadow-soft">
-                Get Started <ArrowRight size={18} />
+            <div className="flex flex-wrap gap-5">
+              <Link to="/register" className="px-10 py-5 bg-slate-900 text-white font-bold rounded-2xl hover:bg-[#00a8cc] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-xl shadow-slate-900/10">
+                Get Started <ArrowRight size={20} />
               </Link>
-              <button className="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-2">
-                 <Play size={18} /> Watch Demo
+              <button className="px-10 py-5 bg-white text-slate-700 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2 shadow-sm">
+                 <Play size={20} className="fill-slate-700" /> Watch Demo
               </button>
             </div>
-          </div>
-          <div className="relative hidden lg:block">
-            <img src="/images/aura_luminous_hero.png" alt="Students learning" className="w-full h-auto drop-shadow-2xl" />
-          </div>
+            
+            <div className="mt-12 flex items-center gap-6">
+               <div className="flex -space-x-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-md">
+                       <img src={`/images/tutor-${i % 2 === 0 ? 'female' : 'male'}.png`} alt="Tutor" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+               </div>
+               <div className="text-sm font-medium text-slate-500">
+                  <span className="font-bold text-slate-800">500+</span> Verified Mentors <br/> From top universities
+               </div>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+            className="relative hidden lg:block"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10 h-1/4 bottom-0 translate-y-1/2" />
+            <motion.img 
+              animate={{ y: [0, -20, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              src="/images/aura_luminous_hero.png" 
+              alt="Students learning" 
+              className="w-full h-auto drop-shadow-[0_35px_35px_rgba(0,168,204,0.15)] rounded-[40px]" 
+            />
+            
+            {/* Floating UI Elements */}
+            <motion.div 
+               animate={{ y: [0, 15, 0] }}
+               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+               className="absolute top-1/4 -left-12 p-6 bg-white rounded-3xl shadow-2xl border border-slate-100 z-20 max-w-[200px]"
+            >
+               <div className="flex items-center gap-3 mb-2">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Session</span>
+               </div>
+               <p className="text-xs font-bold text-slate-800">Combined Maths: Integration</p>
+               <div className="mt-3 flex items-center justify-between">
+                  <div className="flex -space-x-2">
+                     <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white" />
+                     <div className="w-6 h-6 rounded-full bg-slate-300 border-2 border-white" />
+                  </div>
+                  <span className="text-[10px] font-bold text-[#00a8cc]">+12 others</span>
+               </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -173,7 +228,7 @@ const LandingPage = () => {
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                {[
                   { name: 'Combined Mathematics', desc: 'Pure & Applied Units', icon: Trophy, bg: 'bg-blue-50 text-blue-600' },
-                  { name: 'Biological Sciences', desc: 'Medical Trajectory Hub', icon: Heart, bg: 'bg-rose-50 text-rose-600' },
+                  { name: 'Biological Sciences', desc: 'Medical Sciences Platform', icon: Heart, bg: 'bg-rose-50 text-rose-600' },
                   { name: 'Physical Sciences', desc: 'Physics & Chemistry Mastery', icon: Database, bg: 'bg-purple-50 text-purple-600' },
                   { name: 'Commercial Stream', desc: 'Accounting & Business', icon: Cpu, bg: 'bg-emerald-50 text-emerald-600' }
                ].map((sub, i) => (
@@ -204,7 +259,7 @@ const LandingPage = () => {
             {[
               { n: 'Kasun Perera', s: 'Combined Mathematics Specialist', u: 'UOM / Royal', r: '4.9', img: '/images/tutor-male.png' },
               { n: 'Tharushi Silva', s: 'Biological Sciences Mentor', u: 'UOC / Visakha', r: '5.0', img: '/images/tutor-female.png' },
-              { n: 'Dulani Peiris', s: 'Physical Sciences Expert', u: 'UOP / Musaeus', r: '4.8', img: '/images/srilankan_tutor_female_1775832744468.png' }
+              { n: 'Dulani Peiris', s: 'Physical Sciences Expert', u: 'UOP / Musaeus', r: '4.8', img: '/images/tutor-female.png' }
             ].map((tutor, i) => (
               <div key={i} className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm hover:shadow-soft transition-shadow flex items-start gap-6 cursor-pointer group">
                 <img src={tutor.img} className="w-20 h-20 rounded-2xl object-cover bg-slate-50" alt={tutor.n} />

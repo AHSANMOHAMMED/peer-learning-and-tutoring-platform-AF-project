@@ -35,7 +35,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *       200:
  *         description: List of available tutors
  */
-router.post('/', authenticate, registerTutor);
+router.post('/', authenticate, authorize(['tutor', 'mentor']), registerTutor);
 router.get('/', getTutors);
 
 /**

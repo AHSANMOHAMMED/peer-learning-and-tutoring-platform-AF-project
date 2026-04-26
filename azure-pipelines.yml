@@ -1,0 +1,101 @@
+trigger:
+  - main
+  - develop
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - name: azureSubscription
+    value: 'PeerLearn-Azure-Subscription'
+  - name: resourceGroup
+    value: 'PeerLearn-RG'
+  - name: appServiceName
+    value: 'peerlearn-app'
+  - name: nodeVersion
+    value: '18.x'
+
+stages:
+  - stage: Test
+    displayName: 'Run Tests & Lint'
+    jobs:
+      - job: BackendTest
+        displayName: 'Backend Tests'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(nodeVersion)
+          - script: |
+              cd backend
+              npm install
+              npm test
+            displayName: 'Run Backend Tests'
+          
+      - job: FrontendTest
+        displayName: 'Frontend Tests & Build'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(nodeVersion)
+          - script: |
+              cd frontend
+              npm install
+              npm run build
+            displayName: 'Build Frontend'
+
+  - stage: Build
+    displayName: 'Build & Push Docker Images'
+    jobs:
+      - job: DockerBuild
+        displayName: 'Build Docker Images'
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: '$(dockerRegistryServiceConnection)'
+              repository: 'peerlearn/backend'
+              command: 'buildAndPush'
+              Dockerfile: '**/backend/Dockerfile'
+              tags: |
+                $(Build.BuildId)
+                latest
+          - task: Docker@2
+            inputs:
+              containerRegistry: '$(dockerRegistryServiceConnection)'
+              repository: 'peerlearn/frontend'
+              command: 'buildAndPush'
+              Dockerfile: '**/frontend/Dockerfile'
+              tags: |
+                $(Build.BuildId)
+                latest
+
+  - stage: Deploy
+    displayName: 'Deploy to Azure App Service'
+    dependsOn: 
+      - Test
+      - Build
+    jobs:
+      - deployment: DeployBackend
+        displayName: 'Deploy Backend'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebAppContainer@1
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appName: '$(appServiceName)-backend'
+                    imageName: 'peerlearn.azurecr.io/peerlearn/backend:latest'
+                    
+      - deployment: DeployFrontend
+        displayName: 'Deploy Frontend'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebAppContainer@1
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appName: '$(appServiceName)-frontend'
+                    imageName: 'peerlearn.azurecr.io/peerlearn/frontend:latest'

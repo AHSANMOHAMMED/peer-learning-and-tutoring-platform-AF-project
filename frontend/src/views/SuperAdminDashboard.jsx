@@ -13,17 +13,7 @@ import {
 import Layout from '../components/Layout';
 import { useAnalytics } from '../controllers/useAnalytics';
 import { cn } from '../utils/cn';
-import api from '../services/api';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.98, y: 15 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
+import { systemApi } from '../services/api';
 
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
@@ -37,8 +27,7 @@ const SuperAdminDashboard = () => {
 
   const checkHealth = async () => {
     try {
-      const { data } = await api.get('/health'); // standard healthcheck
-      setHealthStatus(data);
+      const { data } = await systemApi.getPulse();      setHealthStatus(data);
     } catch(err) {
       // Fallback if the endpoint is different
       setHealthStatus({ status: 'UP', mongo: 'CONNECTED', responseTime: '12ms' });

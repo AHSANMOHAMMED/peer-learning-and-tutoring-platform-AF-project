@@ -209,7 +209,7 @@ router.get('/leaderboard/nearby', authenticate, async (req, res) => {
  */
 router.get('/stats', authenticate, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['websiteAdmin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -290,7 +290,7 @@ router.post('/award-points', [
   body('reason').trim()
 ], async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['websiteAdmin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -415,6 +415,59 @@ router.post('/attempt', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error submitting attempt:', error);
     res.status(500).json({ success: false, message: 'Failed to record attempt' });
+  }
+});
+
+router.post('/init-profiles', authenticate, authorize('superadmin'), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const UserGamification = require('../models/UserGamification');
+    
+    const users = await User.find();
+    let created = 0;
+    let existing = 0;
+    
+    for (const user of users) {
+      const profile = await UserGamification.findOne({ user: user._id });
+      if (!profile) {
+        await UserGamification.create({
+          user: user._id,
+          points: { total: 100, earnedThisMonth: 50, earnedThisWeek: 20, lifetime: 100 },
+          level: { current: 2, title: 'Learner', progress: 10, pointsToNextLevel: 1500 },
+          badges: [],
+          streaks: { current: 3, longest: 5, lastActivity: new Date(), streakType: 'daily' },
+          stats: {
+            totalSessions: 5,
+            peerSessions: 2,
+            groupSessions: 1,
+            lectureSessions: 2,
+            totalHours: 10,
+            coursesCompleted: 1,
+            coursesInProgress: 2,
+            studentsHelped: 0,
+            hoursTutored: 0,
+            averageRating: 0,
+            totalReviews: 0
+          }
+        });
+        created++;
+      } else {
+        existing++;
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Initialized gamification profiles`,
+      data: { created, existing, total: users.length }
+    });
+  } catch (error) {
+    console.error('Error initializing profiles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to initialize profiles',
+      error: error.message
+    });
   }
 });
 

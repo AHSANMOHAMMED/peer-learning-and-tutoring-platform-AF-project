@@ -9,13 +9,21 @@ exports.getAllSchools = async (req, res) => {
     const { district, status, search } = req.query;
     const query = {};
 
-    if (district) query['address.district'] = district;
-    if (status) query.status = status;
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { code: { $regex: search, $options: 'i' } }
-      ];
+    // Role-based filtering: schoolAdmin can only see their own school
+    if (req.user.role === 'schoolAdmin') {
+      if (!req.user.school) {
+        return res.status(403).json({ success: false, message: 'School admin not linked to any school' });
+      }
+      query._id = req.user.school;
+    } else {
+      if (district) query['address.district'] = district;
+      if (status) query.status = status;
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { code: { $regex: search, $options: 'i' } }
+        ];
+      }
     }
 
     const schools = await School.find(query)

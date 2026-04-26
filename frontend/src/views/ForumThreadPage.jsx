@@ -12,7 +12,7 @@ import { useAuth } from '../controllers/useAuth';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
+import { questionApi, answerApi } from '../services/api';
 
 const ForumThreadPage = () => {
   const { id } = useParams();
@@ -33,8 +33,8 @@ const ForumThreadPage = () => {
     try {
       setLoading(true);
       const [qRes, aRes] = await Promise.all([
-        api.get(`/questions/${id}`),
-        api.get(`/answers/question/${id}`)
+        questionApi.getById(id),
+        answerApi.getAll({ questionId: id })
       ]);
       
       if (qRes.data.question) setQuestion(qRes.data.question);
@@ -53,8 +53,7 @@ const ForumThreadPage = () => {
     
     try {
       setSubmitting(true);
-      const res = await api.post(`/answers/question/${id}`, { body: answerDraft });
-      if (res.data) {
+      const res = await answerApi.create({ body: answerDraft, questionId: id });      if (res.data) {
         toast.success('Your contribution has been published');
         setAnswers([...answers, res.data]);
         setAnswerDraft('');
@@ -68,10 +67,7 @@ const ForumThreadPage = () => {
 
   const handleMarkAsCorrect = async (answerId) => {
     try {
-      const res = await api.put(`/answers/${answerId}/status`, { 
-        status: 'correct',
-        tutorComment: 'Marked as correct by a verified educator.'
-      });
+      const res = await answerApi.update(answerId, { status: 'correct', tutorComment: 'Marked as correct by a verified educator.' });
       if (res.data) {
         toast.success('Answer marked as the definitive solution');
         setAnswers(prev => prev.map(a => a._id === answerId ? res.data : a));
@@ -84,7 +80,7 @@ const ForumThreadPage = () => {
   const handleDeleteAnswer = async (answerId) => {
     if (!window.confirm('Delete this response?')) return;
     try {
-      await api.delete(`/answers/${answerId}`);
+       await answerApi.delete(answerId);
       toast.success('Response removed');
       setAnswers(prev => prev.filter(a => a._id !== answerId));
     } catch (error) {

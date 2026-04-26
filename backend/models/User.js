@@ -6,11 +6,11 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: false }, // Optional for Google OAuth users
   googleId: { type: String, unique: true, sparse: true }, // Google OAuth ID
-  role: { 
-    type: String, 
-    enum: ['student', 'tutor', 'parent', 'admin', 'superadmin', 'moderator', 'schoolAdmin'], 
-    default: 'student' 
-  },
+role: { 
+  type: String, 
+  enum: ['student', 'tutor', 'mentor', 'parent', 'websiteAdmin', 'superadmin', 'moderator', 'schoolAdmin', 'demo'], 
+  default: 'student' 
+},
   district: { 
     type: String, 
     enum: [

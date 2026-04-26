@@ -18,13 +18,13 @@ const TutorHeatmap = ({ data }) => {
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-4">
             <div className="text-left space-y-4">
                <h3 className="text-3xl font-medium uppercase tracking-tighter flex items-center gap-6 px-0 text-white leading-none">
-                  <Activity className="text-indigo-500 shadow-glow" size={36} /> Temporal Mastery Matrix
+                  <Activity className="text-indigo-500 shadow-glow" size={36} /> Availability Analytics
                </h3>
-               <p className="text-base font-medium text-gray-800 uppercase tracking-normal leading-none ml-[0.5em]">Synchronizing availability nodes across 168 temporal cycles</p>
+               <p className="text-base font-medium text-gray-800 uppercase tracking-normal leading-none ml-[0.5em]">Analyzing weekly availability patterns</p>
             </div>
             <div className="flex items-center gap-6 px-10 py-4 bg-black/60 rounded-full border-2 border-white/5 shadow-inner backdrop-blur-3xl shrink-0">
                <Signal size={18} className="text-emerald-500" />
-               <span className="text-sm font-medium text-gray-800 uppercase tracking-normal leading-none pt-0.5">High-Fidelity Sync</span>
+               <span className="text-sm font-medium text-gray-800 uppercase tracking-normal leading-none pt-0.5">Real-time Updates</span>
             </div>
          </div>
 
@@ -53,7 +53,7 @@ const TutorHeatmap = ({ data }) => {
                                  value === 2 && "bg-indigo-500/50 border-white/20 shadow-glow shadow-indigo-500/10",
                                  value === 3 && "bg-white border-white shadow-glow shadow-white/40"
                               )}
-                              title={`${day} ${hourIndex}:00 - node status: ${value === 3 ? 'critical_sync' : value > 0 ? 'active' : 'void'}`} 
+                              title={`${day} ${hourIndex}:00 - status: ${value === 3 ? 'booked' : value > 0 ? 'available' : 'unavailable'}`} 
                            />
                         );
                      })}
@@ -80,7 +80,7 @@ const TutorHeatmap = ({ data }) => {
 
             <div className="px-8 py-4 bg-indigo-600/10 border-2 border-indigo-500/20 rounded-full flex items-center gap-4 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-1000 cursor-default">
                <Binary size={16} />
-               <span className="text-sm font-medium uppercase tracking-normal">Temporal Engine: Online</span>
+               <span className="text-sm font-medium uppercase tracking-normal">Platform Status: Active</span>
             </div>
          </div>
       </div>

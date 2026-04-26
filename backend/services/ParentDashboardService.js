@@ -288,7 +288,13 @@ class ParentDashboardService {
           ? sessions.reduce((sum, s) => sum + (s.rating || 0), 0) / sessions.length
           : 0,
         dailyActivity: this.calculateDailyActivity(sessions, days),
-        improvement: this.calculateImprovement(sessions)
+        improvement: this.calculateImprovement(sessions),
+        // Mocked history for charts until more granular tracking is in place
+        history: Array.from({ length: 4 }, (_, i) => ({
+          week: `W${i + 1}`,
+          completionRate: Math.floor(Math.random() * 40) + 60, // 60-100%
+          averageScore: Math.floor(Math.random() * 30) + 70   // 70-100%
+        }))
       };
 
       return progress;

@@ -30,7 +30,13 @@ const userSchema = new mongoose.Schema({
       'Physical Sciences', 
       'Arts Stream', 
       'Technology Stream', 
-      'O/L General'
+      'O/L General',
+      'O/L',
+      'Maths',
+      'Science',
+      'Arts',
+      'Commerce',
+      'Tech'
     ] 
   },
   grade: { type: String }, // e.g., 'Grade 11', 'A/L 2025'
@@ -75,8 +81,27 @@ const userSchema = new mongoose.Schema({
     questionsAsked: { type: Number, default: 0 },
     answersGiven: { type: Number, default: 0 },
     bestAnswers: { type: Number, default: 0 }
+  },
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  school: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'School',
+    index: true
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for full name or username
+userSchema.virtual('name').get(function() {
+  if (this.profile?.firstName) {
+    return `${this.profile.firstName} ${this.profile.lastName || ''}`.trim();
+  }
+  return this.username;
+});
 
 // Hash password before saving (skip for OAuth users)
 userSchema.pre('save', async function() {

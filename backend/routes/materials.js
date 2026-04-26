@@ -12,7 +12,7 @@ const { protect, authorize } = require('../middleware/auth');
 router.post('/', protect, uploadMaterial);
 router.get('/', protect, getMaterials);
 router.get('/:id', protect, getMaterialById);
-router.put('/:id/moderate', protect, authorize('admin', 'moderator'), moderateMaterial);
+router.put('/:id/moderate', protect, authorize('admin', 'moderator', 'superadmin'), moderateMaterial);
 router.delete('/:id', protect, deleteMaterial);
 
 module.exports = router;

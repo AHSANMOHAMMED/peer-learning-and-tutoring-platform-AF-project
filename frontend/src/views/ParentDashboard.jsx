@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Activity, TrendingUp, Target, Calendar, CheckCircle2, ShieldCheck, Award, MessageCircle, Clock, Plus, X, Send } from 'lucide-react';
+import { Users, Activity, TrendingUp, Target, Calendar, CheckCircle2, ShieldCheck, Award, MessageCircle, Clock, Plus, X, Send, Mic } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Layout from '../components/Layout';
 import StatCard from '../components/StatCard';
@@ -19,7 +19,7 @@ const ParentDashboard = () => {
   const { user } = useAuth();
   const [student, setStudent] = useState(null);
   const [summary, setSummary] = useState(null);
-  const [livePulseData, setLivePulseData] = useState([]);
+  const [liveEngagementData, setLiveEngagementData] = useState([]);
   
   // Linking State
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -51,9 +51,9 @@ const ParentDashboard = () => {
 
          const progressRes = await parentApi.getStudentProgress(firstChild._id, { timeRange: '30d' });
          if (progressRes.success && progressRes.data?.history) {
-            setLivePulseData(progressRes.data.history.map((h, i) => ({
+            setLiveEngagementData(progressRes.data.history.map((h, i) => ({
                name: `W${i+1}`,
-               sync: h.completionRate || 0,
+               engagement: h.completionRate || 0,
                mastery: h.averageScore || 0
             })));
          }
@@ -149,7 +149,7 @@ const ParentDashboard = () => {
      }
   };
 
-  const displayPulseData = livePulseData.length > 0 ? livePulseData : [];
+  const displayEngagementData = liveEngagementData.length > 0 ? liveEngagementData : [];
 
   return (
     <Layout userRole="parent">
@@ -240,19 +240,19 @@ const ParentDashboard = () => {
                    <div className="flex items-center gap-4">
                       <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100"><Activity size={22} /></div>
                       <div>
-                         <h2 className="text-xl font-black text-slate-800 tracking-tight">Academic Momentum</h2>
+                         <h2 className="text-xl font-black text-slate-800 tracking-tight">Academic Engagement</h2>
                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Performance Analytics</p>
                       </div>
                    </div>
                    <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      LIVE_ACTIVITY
+                      REALTIME_METRICS
                    </div>
                 </div>
                 <div className="h-72">
                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={displayPulseData}>
+                      <AreaChart data={displayEngagementData}>
                          <defs>
-                            <linearGradient id="colorSyncParent" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorEngagementParent" x1="0" y1="0" x2="0" y2="1">
                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                             </linearGradient>
@@ -261,7 +261,7 @@ const ParentDashboard = () => {
                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94a3b8', fontWeight: 700 }} dy={10} />
                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94a3b8', fontWeight: 700 }} dx={-10} />
                          <Tooltip contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '20px' }} />
-                         <Area type="monotone" dataKey="sync" stroke="#2563eb" strokeWidth={5} fillOpacity={1} fill="url(#colorSyncParent)" />
+                         <Area type="monotone" dataKey="engagement" stroke="#2563eb" strokeWidth={5} fillOpacity={1} fill="url(#colorEngagementParent)" />
                          <Area type="monotone" dataKey="mastery" stroke="#10b981" fillOpacity={0} strokeWidth={3} strokeDasharray="6 6" />
                       </AreaChart>
                    </ResponsiveContainer>
@@ -273,7 +273,7 @@ const ParentDashboard = () => {
                    </div>
                    <div className="flex items-center gap-3">
                        <span className="w-2.5 h-2.5 rounded-full border-2 border-emerald-500 border-dashed"></span>
-                       <span className="text-xs font-black uppercase tracking-widest text-slate-400">Mastery Benchmarks</span>
+                       <span className="text-xs font-black uppercase tracking-widest text-slate-400">Academic Progress</span>
                    </div>
                 </div>
              </motion.div>

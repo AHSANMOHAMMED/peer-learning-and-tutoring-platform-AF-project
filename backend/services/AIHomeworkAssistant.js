@@ -58,6 +58,11 @@ class AIHomeworkAssistant {
         Explain physical and human geography, maps, and the geography of Sri Lanka clearly.
         Help students understand the relationship between humans and their environment.`,
 
+      commerce: `You are an expert Commerce and Business Studies tutor for Sri Lankan A/L students in the Commercial Stream.
+        Help with Accounting, Business Studies, and Economics concepts.
+        Use real-world examples from the Sri Lankan business environment.
+        Explain financial statements, business law, and economic principles clearly.`,
+
       general: `You are a helpful educational assistant for Sri Lankan students (Grades 6-13).
         Guide students to answers rather than just providing them.
         Be encouraging, patient, and culturally aware of the Sri Lankan academic environment.`
@@ -171,7 +176,13 @@ class AIHomeworkAssistant {
           subject: session.subject || 'general',
           grade: session.grade,
           topic: session.topic,
-          messageHistory: session.messages.map(m => ({ role: m.role, content: m.content })),
+          messageHistory: session.messages
+            .map(m => ({ role: m.role, content: m.content }))
+            .filter(m => {
+              // Filter out broken [LIMITED MODE] fallback responses from history
+              const text = typeof m.content === 'string' ? m.content : (m.content?.text || '');
+              return !text.includes('[LIMITED MODE]');
+            }),
           conceptsCovered: new Set(session.conceptsCovered || []),
           hintsGiven: session.hintsGiven || 0,
           understandingChecks: session.understandingChecks || 0
@@ -334,96 +345,135 @@ class AIHomeworkAssistant {
   }
 
   /**
-   * Call OpenAI API
+   * Call AI with automatic model fallback and retry
    */
   async callAI(systemPrompt, messages) {
-    try {
-      // 1. Try Google Gemini first if key exists
-      if (this.geminiKey) {
-        return await this.callGemini(systemPrompt, messages);
+    // 1. Try Gemini models with fallback chain
+    if (this.geminiKey) {
+      const geminiModels = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+      
+      for (const model of geminiModels) {
+        try {
+          return await this.callGemini(systemPrompt, messages, model);
+        } catch (error) {
+          const status = error.response?.status;
+          const errorMsg = error.response?.data?.error?.message || error.message;
+          console.warn(`Gemini [${model}] failed (${status || 'ERR'}): ${errorMsg.substring(0, 100)}`);
+          
+          // If rate limited, try next model immediately
+          if (status === 429 || status === 503) continue;
+          // For other errors, also try next model
+          continue;
+        }
       }
-
-      // 2. Try OpenAI if key exists
-      if (this.openAIKey) {
-        return await this.callOpenAI(systemPrompt, messages);
-      }
-
-      // 3. Last resort: High-quality subject-aware fallback (not the generic mock)
-      return this.generateSubjectAwareFallback(messages);
-    } catch (error) {
-      console.error('Core AI Call Error:', error);
-      return this.generateSubjectAwareFallback(messages);
     }
+
+    // 2. Try OpenAI if key exists
+    if (this.openAIKey) {
+      try {
+        return await this.callOpenAI(systemPrompt, messages);
+      } catch (error) {
+        console.warn('OpenAI fallback failed:', error.message);
+      }
+    }
+
+    // 3. Last resort: subject-aware local fallback
+    console.warn('All AI providers failed, using local fallback');
+    return this.generateSubjectAwareFallback(messages);
   }
 
   /**
-   * Call Google Gemini API
+   * Call Google Gemini API with retry support
    */
-  async callGemini(systemPrompt, messages) {
-    try {
-      // Use standard gemini-1.5-flash model which is stable in v1beta
-      const modelName = 'gemini-1.5-flash';
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.geminiKey}`;
-      
-      // Map history to Gemini format (supporting Multimodal)
-      const contents = messages.map(msg => {
-        const parts = [];
+  async callGemini(systemPrompt, messages, modelName = 'gemini-2.5-flash') {
+    const maxRetries = 2;
+    let lastError;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          // Exponential backoff: 1s, 2s
+          await new Promise(r => setTimeout(r, attempt * 1000));
+        }
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.geminiKey}`;
         
-        // Add text part
-        let textContent = '';
-        if (typeof msg.content === 'object' && msg.content !== null) {
-          textContent = msg.content.text || '';
-        } else {
-          textContent = msg.content;
+        // Map history to Gemini format (supporting Multimodal)
+        const contents = messages.map(msg => {
+          const parts = [];
+          
+          let textContent = '';
+          if (typeof msg.content === 'object' && msg.content !== null) {
+            textContent = msg.content.text || '';
+          } else {
+            textContent = msg.content || '';
+          }
+          parts.push({ text: textContent });
+
+          // Add image part if exists
+          const imageData = msg.image || (typeof msg.content === 'object' && msg.content !== null ? msg.content.image : null);
+          if (imageData) {
+            const base64Data = imageData.data.includes('base64,') 
+              ? imageData.data.split('base64,')[1] 
+              : imageData.data;
+
+            parts.push({
+              inline_data: {
+                mime_type: imageData.mimeType || 'image/jpeg',
+                data: base64Data
+              }
+            });
+          }
+
+          return {
+            role: msg.role === 'assistant' ? 'model' : 'user',
+            parts
+          };
+        });
+
+        // Gemini requires first message to be 'user' role - filter out leading model messages
+        while (contents.length > 0 && contents[0].role === 'model') {
+          contents.shift();
         }
 
-        // If it's the first message, prepend system instructions for context
-        if (msg.role === 'user' && messages.indexOf(msg) === 0) {
-           textContent = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\nSTUDENT QUERY:\n${textContent}`;
-        }
-        parts.push({ text: textContent });
-
-        // Add image part if exists in content object or directly
-        const imageData = msg.image || (typeof msg.content === 'object' && msg.content !== null ? msg.content.image : null);
-        if (imageData) {
-          // Verify base64 data doesn't include prefix if already separate
-          const base64Data = imageData.data.includes('base64,') 
-            ? imageData.data.split('base64,')[1] 
-            : imageData.data;
-
-          parts.push({
-            inline_data: {
-              mime_type: imageData.mimeType || 'image/jpeg',
-              data: base64Data
-            }
-          });
+        // If no user messages remain, wrap the original query
+        if (contents.length === 0) {
+          contents.push({ role: 'user', parts: [{ text: 'Hello, I need help.' }] });
         }
 
-        return {
-          role: msg.role === 'assistant' ? 'model' : 'user',
-          parts
-        };
-      });
+        const response = await axios.post(geminiUrl, {
+          system_instruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: contents,
+          generationConfig: {
+            temperature: this.temperature,
+            maxOutputTokens: this.maxTokens,
+            topP: 0.95,
+            topK: 40
+          }
+        }, {
+          timeout: 30000 // 30 second timeout
+        });
 
-      const response = await axios.post(geminiUrl, {
-        contents: contents,
-        generationConfig: {
-          temperature: this.temperature,
-          maxOutputTokens: this.maxTokens,
-          topP: 0.95,
-          topK: 40
+        if (response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          return response.data.candidates[0].content.parts[0].text;
         }
-      });
-
-      if (response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return response.data.candidates[0].content.parts[0].text;
+        
+        throw new Error('Unexpected Gemini API response format');
+      } catch (error) {
+        lastError = error;
+        const status = error.response?.status;
+        
+        // Only retry on 503 (overloaded) - not on 429 (quota) or 404 (model not found)
+        if (status === 503 && attempt < maxRetries) {
+          continue;
+        }
+        break;
       }
-      
-      throw new Error('Unexpected Gemini API response format');
-    } catch (error) {
-      console.error('Gemini API Error details:', error.response?.data || error.message);
-      throw error;
     }
+
+    throw lastError;
   }
 
   /**
@@ -674,7 +724,7 @@ class AIHomeworkAssistant {
             endedAt: new Date()
           }
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
       
       // Clean up memory

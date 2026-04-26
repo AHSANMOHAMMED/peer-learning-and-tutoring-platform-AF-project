@@ -212,7 +212,7 @@ class SchoolService {
       const school = await School.findByIdAndUpdate(
         schoolId,
         { $set: settings },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       return school;
@@ -243,7 +243,7 @@ class SchoolService {
             'subscription.endDate': new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
           }
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       return school;

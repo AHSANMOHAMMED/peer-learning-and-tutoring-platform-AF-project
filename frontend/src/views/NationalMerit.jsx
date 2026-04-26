@@ -118,7 +118,7 @@ const NationalMerit = () => {
           {loading ? (
              <div className="py-24 flex flex-col items-center gap-4 text-slate-400">
                 <Loader2 className="animate-spin" size={48} />
-                <p className="font-bold uppercase tracking-widest text-xs">Synchronizing Global Data...</p>
+                <p className="font-bold uppercase tracking-widest text-xs">Loading National Data...</p>
              </div>
           ) : (
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

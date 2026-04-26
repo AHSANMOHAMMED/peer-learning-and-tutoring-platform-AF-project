@@ -181,7 +181,7 @@ const TutorDashboard = () => {
            </div>
 
            <div className="p-6 rounded-2xl bg-[#cbf2fc] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">${totalEarnings}</h3>
+              <h3 className="text-4xl font-bold text-slate-800 mb-2">LKR {totalEarnings}</h3>
               <p className="text-[15px] font-medium text-slate-700">Total Earnings</p>
               <DollarSign size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
            </div>
@@ -295,7 +295,7 @@ const TutorDashboard = () => {
                      <div className="flex items-start gap-4">
                         <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0"><DollarSign size={18} className="text-amber-500" /></div>
                         <div>
-                           <p className="font-bold text-slate-800 leading-tight">${booking.price || '50'}</p>
+                           <p className="font-bold text-slate-800 leading-tight">LKR {booking.price || '5000'}</p>
                            <p className="text-[13px] text-slate-400 mt-1">Session fee</p>
                         </div>
                      </div>

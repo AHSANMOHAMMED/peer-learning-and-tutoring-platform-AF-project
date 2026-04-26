@@ -21,29 +21,29 @@ const {
 const router = express.Router();
 
 // Admin dashboard statistics
-router.get('/statistics', authenticate, authorize('admin', 'superadmin'), getDashboardStatistics);
+router.get('/statistics', authenticate, authorize('websiteAdmin', 'superadmin'), getDashboardStatistics);
 
 // User management
-router.get('/users', authenticate, authorize('admin', 'superadmin'), getAllUsersAdmin);
-router.post('/users', authenticate, authorize('admin', 'superadmin'), createUser);
-router.get('/users/:id', authenticate, authorize('admin', 'superadmin'), getUserById);
-router.put('/users/:id', authenticate, authorize('admin', 'superadmin'), updateUser);
-router.delete('/users/:id', authenticate, authorize('admin', 'superadmin'), deleteUser);
-router.put('/users/:id/status', authenticate, authorize('admin', 'superadmin'), toggleUserStatus);
-router.put('/users/:id/role', authenticate, authorize('admin', 'superadmin'), changeUserRole);
-router.post('/users/bulk', authenticate, authorize('admin', 'superadmin'), bulkUserOperations);
+router.get('/users', authenticate, authorize('websiteAdmin', 'superadmin'), getAllUsersAdmin);
+router.post('/users', authenticate, authorize('websiteAdmin', 'superadmin'), createUser);
+router.get('/users/:id', authenticate, authorize('websiteAdmin', 'superadmin'), getUserById);
+router.put('/users/:id', authenticate, authorize('websiteAdmin', 'superadmin'), updateUser);
+router.delete('/users/:id', authenticate, authorize('websiteAdmin', 'superadmin'), deleteUser);
+router.put('/users/:id/status', authenticate, authorize('websiteAdmin', 'superadmin'), toggleUserStatus);
+router.put('/users/:id/role', authenticate, authorize('websiteAdmin', 'superadmin'), changeUserRole);
+router.post('/users/bulk', authenticate, authorize('websiteAdmin', 'superadmin'), bulkUserOperations);
 
 // Tutor management
-router.get('/tutors/pending', authenticate, authorize('admin', 'superadmin'), getPendingTutors);
-router.put('/tutors/:id/approve', authenticate, authorize('admin', 'superadmin'), approveTutor);
-router.put('/tutors/:id/reject', authenticate, authorize('admin', 'superadmin'), rejectTutor);
+router.get('/tutors/pending', authenticate, authorize('websiteAdmin', 'superadmin'), getPendingTutors);
+router.put('/tutors/:id/approve', authenticate, authorize('websiteAdmin', 'superadmin'), approveTutor);
+router.put('/tutors/:id/reject', authenticate, authorize('websiteAdmin', 'superadmin'), rejectTutor);
 
 // Material management
-router.get('/materials/pending', authenticate, authorize('admin', 'superadmin'), getPendingMaterials);
+router.get('/materials/pending', authenticate, authorize('websiteAdmin', 'superadmin'), getPendingMaterials);
 
 // System operations
-router.post('/broadcast', authenticate, authorize('admin', 'superadmin'), broadcastNotification);
-router.post('/rotate-keys', authenticate, authorize('admin', 'superadmin'), rotateAccessKeys);
+router.post('/broadcast', authenticate, authorize('websiteAdmin', 'superadmin'), broadcastNotification);
+router.post('/rotate-keys', authenticate, authorize('websiteAdmin', 'superadmin'), rotateAccessKeys);
 
 module.exports = router;
 

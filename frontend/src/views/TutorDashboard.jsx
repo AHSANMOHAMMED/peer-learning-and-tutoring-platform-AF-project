@@ -9,7 +9,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';
 import { useBookings } from '../controllers/useBookings';
 import { useTutors } from '../controllers/useTutors';
-import api, { homeworkApi } from '../services/api';
+import { homeworkApi, questionApi } from '../services/api';
 import { toast } from 'react-hot-toast';
 
 const TutorDashboard = () => {
@@ -40,8 +40,8 @@ const TutorDashboard = () => {
   const fetchUnansweredQuestions = async () => {
     try {
       setLoadingQA(true);
-      const res = await api.get('/questions?unanswered=true&limit=5');
-      setUnansweredQuestions(res.data.questions || res.data || []);
+      const res = await questionApi.getAll({ unanswered: true, limit: 5 });
+       setUnansweredQuestions(Array.isArray(res) ? res : (res.data || res || []));
     } catch (err) {
       console.error('QA fetch error:', err);
     } finally {

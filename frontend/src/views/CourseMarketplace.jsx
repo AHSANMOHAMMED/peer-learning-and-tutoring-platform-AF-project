@@ -6,7 +6,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { marketplaceApi } from '../services/api';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 
@@ -154,8 +154,8 @@ const CourseMarketplace = () => {
   const fetchInitialData = async () => {
     try {
       const [featuredRes, categoriesRes] = await Promise.all([
-        api.get('/marketplace/featured?limit=4'),
-        api.get('/marketplace/categories')
+        marketplaceApi.getAll({ featured: true, limit: 4 }),
+        marketplaceApi.getAll({ categories: true })
       ]);
       if (featuredRes.data.success) setFeatured(featuredRes.data.data.courses);
       if (categoriesRes.data.success) setCategories(featuredRes.data.data.categories || []);
@@ -176,7 +176,15 @@ const CourseMarketplace = () => {
       if (filters.sortBy) params.append('sortBy', filters.sortBy);
       params.append('page', pagination.current.toString());
 
-      const response = await api.get(`/marketplace/search?${params.toString()}`);
+      const response = await marketplaceApi.getAll({ 
+        search: params.get('q'),
+        subject: params.get('subject'),
+        grade: params.get('grade'),
+        minPrice: params.get('minPrice'),
+        maxPrice: params.get('maxPrice'),
+        page: pagination.current,
+        sortBy: filters.sortBy
+      });
       if (response.data.success) {
         setCourses(response.data.data.courses);
         setPagination(response.data.data.pagination);

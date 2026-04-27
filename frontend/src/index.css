@@ -29,6 +29,99 @@
   }
 }
 
+@keyframes bubble-float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+  }
+}
+
+@keyframes bubble-pop {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+@keyframes bubble-burst {
+  0% {
+    opacity: 0.95;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--burst-x), var(--burst-y), 0) scale(0.35);
+  }
+}
+
+@keyframes score-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-34px) scale(1.1);
+  }
+}
+
+@keyframes tap-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 24px 70px rgba(236, 72, 153, 0.28);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 30px 90px rgba(108, 99, 255, 0.34);
+  }
+}
+
+@keyframes tap-ripple {
+  0% {
+    opacity: 0.65;
+    transform: translate(-50%, -50%) scale(0.18);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.9);
+  }
+}
+
+@keyframes tap-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.85);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -46px) scale(1.15);
+  }
+}
+
+@keyframes urgency-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
 @layer components {
   /* Clean Mentoos/EduCare Cards */
   .clean-card {

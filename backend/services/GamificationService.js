@@ -33,125 +33,145 @@ class GamificationService {
    * Initialize default badges
    */
   async initializeDefaultBadges() {
-    const count = await Badge.countDocuments();
-    if (count > 0) return;
+    try {
+      const count = await Badge.countDocuments();
+      if (count > 0) return;
 
-    const defaultBadges = [
-      // Activity Badges - Sessions
-      {
-        name: 'First Steps',
-        description: 'Complete your first learning session',
-        category: 'activity',
-        tier: 1, // bronze
-        rarity: 'common',
-        icon: '/badges/first-session.svg',
-        criteria: {
-          type: 'points',
-          value: 100
+      const defaultBadges = [
+        // Activity Badges - Sessions
+        {
+          name: 'First Steps',
+          description: 'Complete your first learning session',
+          category: 'activity',
+          tier: 1, // bronze
+          rarity: 'common',
+          icon: '/badges/first-session.svg',
+          criteria: {
+            type: 'points',
+            value: 100
+          },
+          pointsAwarded: 100
         },
-        pointsAwarded: 100
-      },
-      {
-        name: 'Session Starter',
-        description: 'Complete 10 learning sessions',
-        category: 'activity',
-        tier: 2, // silver
-        rarity: 'uncommon',
-        icon: '/badges/sessions-10.svg',
-        criteria: {
-          type: 'points',
-          value: 200
+        {
+          name: 'Session Starter',
+          description: 'Complete 10 learning sessions',
+          category: 'activity',
+          tier: 2, // silver
+          rarity: 'uncommon',
+          icon: '/badges/sessions-10.svg',
+          criteria: {
+            type: 'points',
+            value: 200
+          },
+          pointsAwarded: 200
         },
-        pointsAwarded: 200
-      },
-      {
-        name: 'Session Master',
-        description: 'Complete 50 learning sessions',
-        category: 'activity',
-        tier: 3, // gold
-        rarity: 'rare',
-        icon: '/badges/sessions-50.svg',
-        criteria: {
-          type: 'points',
-          value: 500
+        {
+          name: 'Session Master',
+          description: 'Complete 50 learning sessions',
+          category: 'activity',
+          tier: 3, // gold
+          rarity: 'rare',
+          icon: '/badges/sessions-50.svg',
+          criteria: {
+            type: 'points',
+            value: 500
+          },
+          pointsAwarded: 500
         },
-        pointsAwarded: 500
-      },
 
-      // Milestone Badges - Streaks
-      {
-        name: '7-Day Streak',
-        description: 'Maintain a 7-day learning streak',
-        category: 'milestone',
-        tier: 1,
-        rarity: 'common',
-        icon: '/badges/streak-7.svg',
-        criteria: {
-          type: 'streak',
-          value: 7
+        // Milestone Badges - Streaks
+        {
+          name: '7-Day Streak',
+          description: 'Maintain a 7-day learning streak',
+          category: 'milestone',
+          tier: 1,
+          rarity: 'common',
+          icon: '/badges/streak-7.svg',
+          criteria: {
+            type: 'streak',
+            value: 7
+          },
+          pointsAwarded: 150
         },
-        pointsAwarded: 150
-      },
-      {
-        name: '30-Day Champion',
-        description: 'Maintain a 30-day learning streak',
-        category: 'milestone',
-        tier: 2,
-        rarity: 'uncommon',
-        icon: '/badges/streak-30.svg',
-        criteria: {
-          type: 'streak',
-          value: 30
+        {
+          name: '30-Day Champion',
+          description: 'Maintain a 30-day learning streak',
+          category: 'milestone',
+          tier: 2,
+          rarity: 'uncommon',
+          icon: '/badges/streak-30.svg',
+          criteria: {
+            type: 'streak',
+            value: 30
+          },
+          pointsAwarded: 500
         },
-        pointsAwarded: 500
-      },
 
-      // Subject Mastery - Courses
-      {
-        name: 'Course Enthusiast',
-        description: 'Complete 5 courses',
-        category: 'subject_mastery',
-        tier: 1,
-        rarity: 'common',
-        icon: '/badges/courses-5.svg',
-        criteria: {
-          type: 'custom',
-          value: 5
+        // Subject Mastery - Courses
+        {
+          name: 'Course Enthusiast',
+          description: 'Complete 5 courses',
+          category: 'subject_mastery',
+          tier: 1,
+          rarity: 'common',
+          icon: '/badges/courses-5.svg',
+          criteria: {
+            type: 'custom',
+            value: 5
+          },
+          pointsAwarded: 300
         },
-        pointsAwarded: 300
-      },
 
-      // Community Badges - Tutoring
-      {
-        name: 'Helpful Hand',
-        description: 'Help 5 students as a peer tutor',
-        category: 'community',
-        tier: 1,
-        rarity: 'common',
-        icon: '/badges/help-5.svg',
-        criteria: {
-          type: 'custom',
-          value: 5
-        },
-        pointsAwarded: 200
+        // Community Badges - Tutoring
+        {
+          name: 'Helpful Hand',
+          description: 'Help 5 students as a peer tutor',
+          category: 'community',
+          tier: 1,
+          rarity: 'common',
+          icon: '/badges/help-5.svg',
+          criteria: {
+            type: 'custom',
+            value: 5
+          },
+          pointsAwarded: 200
+        }
+      ];
+
+      await Badge.insertMany(defaultBadges, { ordered: false });
+      console.log('Default badges initialized');
+    } catch (error) {
+      if (error.code === 11000) {
+        console.log('Default badges already initialized (duplicate key)');
+      } else {
+        console.error('Error initializing default badges:', error);
       }
-    ];
-
-    await Badge.insertMany(defaultBadges);
-    console.log('Default badges initialized');
+    }
   }
 
   /**
    * Get or create user gamification profile
    */
   async getUserGamification(userId) {
-    let gamification = await UserGamification.findOne({ user: userId });
-    
-    if (!gamification) {
-      gamification = await UserGamification.create({ user: userId });
+    try {
+      // Use findOneAndUpdate with upsert for atomic get-or-create to avoid race conditions
+      return await UserGamification.findOneAndUpdate(
+        { user: userId },
+        { $setOnInsert: { user: userId } },
+        { 
+          upsert: true, 
+          returnDocument: 'after', 
+          setDefaultsOnInsert: true,
+          runValidators: true
+        }
+      );
+    } catch (error) {
+      // If a duplicate key error still occurs during upsert, fetch the existing document
+      if (error.code === 11000) {
+        return await UserGamification.findOne({ user: userId });
+      }
+      throw error;
     }
-    
-    return gamification;
   }
 
   /**
@@ -481,7 +501,7 @@ class GamificationService {
     })
       .sort({ 'points.lifetime': -1 })
       .limit(5)
-      .populate('user', 'name');
+      .populate('user', 'username profile');
     
     return {
       points: gamification.points,
@@ -496,10 +516,10 @@ class GamificationService {
         progressPercentage: gamification.level.progress
       },
       nearbyLeaderboard: nearbyUsers.map((u, i) => ({
-        rank: ranking.global - 2 + i,
-        name: u.user.name,
-        points: u.points.lifetime,
-        isCurrentUser: u.user._id.toString() === userId.toString()
+        rank: (ranking.global || 0) - 2 + i,
+        name: u.user ? (u.user.profile?.firstName ? `${u.user.profile.firstName} ${u.user.profile.lastName || ''}`.trim() : u.user.username) : 'Anonymous Operator',
+        points: u.points?.lifetime || 0,
+        isCurrentUser: u.user ? u.user._id.toString() === userId.toString() : false
       }))
     };
   }

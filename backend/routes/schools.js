@@ -1,43 +1,55 @@
 const express = require('express');
 const router = express.Router();
+const { 
+  getAllSchools, 
+  getSchoolById, 
+  getSchoolByCode,
+  createSchool, 
+  updateSchool, 
+  deleteSchool 
+} = require('../controllers/schoolController');
 const { authenticate, authorize } = require('../middleware/auth');
 
 /**
- * @route   GET /api/schools
- * @desc    Get all schools/institutions
+ * @route   GET /api/schools/verify/:code
+ * @desc    Verify school code and get basic data
  * @access  Public
  */
-router.get('/', async (req, res) => {
-  try {
-    // Placeholder for school listing
-    res.json({
-      success: true,
-      data: [],
-      message: 'School management feature coming soon'
-    });
-  } catch (error) {
-    console.error('Error fetching schools:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch schools' });
-  }
-});
+router.get('/verify/:code', getSchoolByCode);
+
+/**
+ * @route   GET /api/schools
+ * @desc    Get all schools
+ * @access  Private (Admin/SuperAdmin)
+ */
+router.get('/', authenticate, authorize(['admin', 'superadmin']), getAllSchools);
+
+/**
+ * @route   GET /api/schools/:id
+ * @desc    Get school by ID
+ * @access  Private (Admin/SuperAdmin/SchoolAdmin)
+ */
+router.get('/:id', authenticate, authorize(['admin', 'superadmin', 'schoolAdmin']), getSchoolById);
 
 /**
  * @route   POST /api/schools
- * @desc    Register a new school
- * @access  Private (Admin only)
+ * @desc    Provision a new school
+ * @access  Private (SuperAdmin)
  */
-router.post('/', [authenticate, authorize(['admin'])], async (req, res) => {
-  try {
-    // Placeholder for school creation
-    res.status(201).json({
-      success: true,
-      message: 'School created successfully',
-      data: req.body
-    });
-  } catch (error) {
-    console.error('Error creating school:', error);
-    res.status(500).json({ success: false, message: 'Failed to create school' });
-  }
-});
+router.post('/', authenticate, authorize(['superadmin']), createSchool);
+
+/**
+ * @route   PUT /api/schools/:id
+ * @desc    Update school configuration
+ * @access  Private (SuperAdmin/SchoolAdmin)
+ */
+router.put('/:id', authenticate, authorize(['superadmin', 'schoolAdmin']), updateSchool);
+
+/**
+ * @route   DELETE /api/schools/:id
+ * @desc    Decommission a school
+ * @access  Private (SuperAdmin)
+ */
+router.delete('/:id', authenticate, authorize(['superadmin']), deleteSchool);
 
 module.exports = router;

@@ -39,7 +39,7 @@ exports.updateReportStatus = async (req, res) => {
         moderatorId: req.user.id,
         moderatorAction 
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!report) return res.status(404).json({ message: 'Report not found' });
     res.json(report);

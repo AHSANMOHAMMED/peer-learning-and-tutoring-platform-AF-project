@@ -26,7 +26,7 @@
     "login": "පිවිසෙන්න",
     "login_title": "නැවතත් සාදරයෙන් පිළිගනිමු",
     "register": "Aura හා එක්වන්න",
-    "register_title": "ඉගෙනීම ආරම්භ කරන්න",
+    "register_title": "ඔබේ ගිණුම සාදන්න",
     "joining_as": "එක්වන්නේ",
     "student": "ශිෂ්‍යයා",
     "tutor": "ගුරුවරයා",
@@ -44,25 +44,25 @@
     "cancel": "අවලංගු කරන්න",
     "search": "සොයන්න...",
     "load_more": "තවත් පෙන්වන්න",
-    "loading": "දත්ත සමමුහුර්ත වෙමින් පවතී...",
+    "loading": "දත්ත පූරණය වෙමින් පවතී...",
     "success": "සාර්ථකයි",
     "error": "දෝෂයකි"
   },
   "dashboard": {
     "welcome": "ආයුබෝවන්, {{name}}",
-    "student_hub": "ශිෂ්‍ය තොරතුරු මධ්‍යස්ථානය",
-    "tutor_hub": "ගුරු උපදෙස් මධ්‍යස්ථානය",
-    "parent_hub": "මව්පිය තොරතුරු මධ්‍යස්ථානය",
+    "student_hub": "ශිෂ්‍ය පුවරුව",
+    "tutor_hub": "ගුරු පුවරුව",
+    "parent_hub": "මව්පිය පුවරුව",
     "parent": {
       "management_center": "කළමනාකරණ මධ්‍යස්ථානය",
       "title": "මව්පිය තොරතුරු මධ්‍යස්ථානය",
       "subtitle": "ඔබේ දරුවාගේ ඉගෙනීමේ ගමන නිරීක්ෂණය සහ කළමනාකරණය කරන්න.",
       "secure_tutors": "ගුරුවරුන් සොයන්න",
       "link_student": "දරුවා සම්බන්ධ කරන්න",
-      "fleet": "ඔබේ දරුවෝ",
-      "priority_matrix": "ප්‍රමුඛතා මාලාව",
-      "growth_projection": "වර්ධන ප්‍රක්ෂේපණය",
-      "session_fleet": "පාඩම් මාලාව",
+      "fleet": "ඔබේ දරුවන්",
+      "priority_matrix": "ප්‍රමුඛතා කටයුතු",
+      "growth_projection": "අධ්‍යයන ප්‍රගතිය",
+      "session_fleet": "පාඩම් කාලසටහන",
       "grades": "අධ්‍යයන ශ්‍රේණි",
       "mentorship_hub": "උපදේශන මධ්‍යස්ථානය",
       "knowledge_level": "දැනුම මට්ටම",
@@ -72,35 +72,35 @@
     }
   },
   "gamification": {
-    "hub_title": "ශාස්ත්‍රීය සම්මාන මධ්‍යස්ථානය",
-    "intelligence_title": "ප්‍රවීණතා බුද්ධිය",
-    "total_merit": "මුළු කුසලතා",
-    "level_progression": "මට්ටම් ප්‍රගතිය",
-    "network_engagement": "ජාල නියැලීම",
-    "social_sphere": "සමාජ විධාන ක්ෂේත්‍රය",
+    "hub_title": "අධ්‍යයන ප්‍රවීණතා මධ්‍යස්ථානය",
+    "intelligence_title": "අධ්‍යයන තොරතුරු",
+    "total_merit": "මුළු ලකුණු",
+    "level_progression": "ප්‍රගතිය",
+    "network_engagement": "ප්‍රජා සහභාගීත්වය",
+    "social_sphere": "සමාජ ජාලය",
     "honor_badges": "ගෞරව ලාංඡන"
   },
   "marketplace": {
-    "hub_title": "දැනුම වෙළඳපොළ මධ්‍යස්ථානය",
-    "inventory_title": "ශාස්ත්‍රීය තොගය",
-    "elite_syncs": "ප්‍රභූ සමමුහුර්තකරණයන්",
-    "control_matrix": "ගෝලීය පාලන මාලාව"
+    "hub_title": "වෙළඳපොළ",
+    "inventory_title": "අධ්‍යයන ද්‍රව්‍ය",
+    "elite_syncs": "ප්‍රමුඛ පාඩම්",
+    "control_matrix": "කළමනාකරණ පුවරුව"
   },
   "smart_match": {
-    "engine_title": "ස්නායුක ගැලපුම් එන්ජිම",
-    "calibrate_title": "ඔබේ අනාගත මාවත ක්‍රමාංකනය කරන්න",
-    "probability_core": "ස්නායුක සම්භාවිතා මධ්‍යය"
+    "engine_title": "බුද්ධිමත් ගැලපුම් පද්ධතිය",
+    "calibrate_title": "ඔබේ මාවත තෝරාගන්න",
+    "probability_core": "ගැලපුම් නිරවද්‍යතාවය"
   },
   "ai_homework": {
-    "assistant_core": "ස්නායුක සහකාර මධ්‍යය",
-    "mastery_title": "AI ගෙදර වැඩ ප්‍රවීණතාවය",
-    "cognitive_focus": "සංජානන අවධානය",
+    "assistant_core": "AI සහායකයා",
+    "mastery_title": "AI ඉගෙනුම් සහායකයා",
+    "cognitive_focus": "විෂය අවධානය",
     "academic_tier": "ශාස්ත්‍රීය ස්ථරය"
   },
   "bookings": {
-    "command_center": "කාලසටහන් විධාන මධ්‍යස්ථානය",
-    "session_inventory": "පාඩම් තොගය",
-    "operational_agenda": "සජීවී මෙහෙයුම් න්‍යාය පත්‍රය"
+    "command_center": "කාලසටහන් කේන්ද්‍රය",
+    "session_inventory": "පාඩම් ලැයිස්තුව",
+    "operational_agenda": "දෛනික කාලසටහන"
   },
   "common": {
     "welcome_back": "නැවතත් සාදරයෙන් පිළිගනිමු"

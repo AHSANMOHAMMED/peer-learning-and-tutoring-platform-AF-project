@@ -25,6 +25,10 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (!user.isVerified && location.pathname !== '/verify') {
+    return <Navigate to="/verify" state={{ from: location }} replace />;
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // If user role is not allowed, redirect to their default dashboard
     const defaultDashboards = {

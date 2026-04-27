@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 
-const Whiteboard = () => {
+const Whiteboard = ({ sessionId, socket }) => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState('#6366f1');
@@ -48,8 +48,29 @@ const Whiteboard = () => {
 
     updateSize();
     window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
+
+    // Socket listeners for real-time collaboration
+    if (socket) {
+      socket.emit('join_session', sessionId);
+      
+      socket.on('draw_receive', (data) => {
+        const { x, y, lastX, lastY, color: remoteColor, width: remoteWidth, tool: remoteTool } = data;
+        const remoteCtx = canvasRef.current.getContext('2d');
+        
+        remoteCtx.beginPath();
+        remoteCtx.strokeStyle = remoteTool === 'eraser' ? '#020617' : remoteColor;
+        remoteCtx.lineWidth = remoteWidth;
+        remoteCtx.moveTo(lastX, lastY);
+        remoteCtx.lineTo(x, y);
+        remoteCtx.stroke();
+      });
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      if (socket) socket.off('draw_receive');
+    };
+  }, [sessionId, socket]);
 
   const drawGrid = (ctx) => {
     const w = ctx.canvas.width;
@@ -71,14 +92,17 @@ const Whiteboard = () => {
     }
   };
 
+  const lastPos = useRef({ x: 0, y: 0 });
+
   const startDrawing = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
+    lastPos.current = { x: offsetX, y: offsetY };
     const ctx = canvasRef.current.getContext('2d');
     ctx.beginPath();
     ctx.moveTo(offsetX, offsetY);
     setIsDrawing(true);
     
-    // Neural stroke glow
+    // Board stroke glow
     ctx.shadowBlur = 10;
     ctx.shadowColor = color;
   };
@@ -92,6 +116,22 @@ const Whiteboard = () => {
     ctx.lineWidth = lineWidth;
     ctx.lineTo(offsetX, offsetY);
     ctx.stroke();
+
+    // Emit to socket
+    if (socket) {
+      socket.emit('draw', {
+        sessionId,
+        x: offsetX,
+        y: offsetY,
+        lastX: lastPos.current.x,
+        lastY: lastPos.current.y,
+        color,
+        width: lineWidth,
+        tool
+      });
+    }
+    
+    lastPos.current = { x: offsetX, y: offsetY };
   };
 
   const stopDrawing = () => {
@@ -112,22 +152,22 @@ const Whiteboard = () => {
   const downloadCanvas = () => {
     const canvas = canvasRef.current;
     const link = document.createElement('a');
-    link.download = 'neural-manifest.png';
+    link.download = 'whiteboard-export.png';
     link.href = canvas.toDataURL();
     link.click();
   };
 
   const tools = [
-    { id: 'pencil', icon: MousePointer2, label: 'Neural Trace' },
-    { id: 'eraser', icon: Eraser, label: 'Void Protocol' },
-    { id: 'text', icon: Type, label: 'Cognitive Label' },
+    { id: 'pencil', icon: MousePointer2, label: 'Pen Tool' },
+    { id: 'eraser', icon: Eraser, label: 'Clear Ink' },
+    { id: 'text', icon: Type, label: 'Text Input' },
   ];
 
   const controlColors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ffffff'];
 
   return (
     <div className="w-full h-full min-h-[700px] bg-[#020617] rounded-[4.5rem] border-2 border-white/5 shadow-5xl relative overflow-hidden flex flex-col group">
-      {/* Neural Grid Overlay */}
+      {/* Grid Overlay */}
       <div className="absolute inset-0 pointer-events-none z-0">
          <div className="cinematic-scanlines opacity-10" />
       </div>
@@ -139,7 +179,7 @@ const Whiteboard = () => {
                <Zap className="text-indigo-400 shadow-glow" size={32} />
             </div>
             <div className="text-left">
-               <h3 className="text-3xl font-medium uppercase tracking-tighter text-white leading-none">Neural Canvas</h3>
+               <h3 className="text-3xl font-medium uppercase tracking-tighter text-white leading-none">Interactive Board</h3>
                <div className="flex items-center gap-4 mt-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-glow shadow-emerald-500/50" />
                   <span className="text-sm font-medium uppercase text-gray-800 tracking-normal">Active Manifest Synchronization</span>
@@ -244,7 +284,7 @@ const Whiteboard = () => {
                  <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-40" />
               </div>
               <div className="text-left">
-                 <p className="text-sm font-medium uppercase tracking-normal text-gray-800">Neural Canvas Engine</p>
+                 <p className="text-sm font-medium uppercase tracking-normal text-gray-800">Whiteboard Performance</p>
                  <div className="flex items-center gap-4 mt-2 text-xs font-medium uppercase text-indigo-500 tracking-widest">
                     <Maximize2 size={12} /> Resolution Optimized :: Tier XII Sync
                  </div>

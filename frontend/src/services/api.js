@@ -40,6 +40,18 @@ export const learningGamesApi = {
   getLeaderboard: (params) => api.get('/gamification/leaderboard', { params }).then((res) => res.data)
 };
 
+export const breakTimeGamesApi = {
+  getActiveGames: () => api.get('/games').then((res) => res.data)
+};
+
+export const adminGamesApi = {
+  getAll: () => api.get('/admin/games').then((res) => res.data),
+  getById: (id) => api.get(`/admin/games/${id}`).then((res) => res.data),
+  updateTimer: (id, timerSeconds) => api.put(`/admin/games/${id}/timer`, { timerSeconds }).then((res) => res.data),
+  updateStatus: (id, isActive) => api.put(`/admin/games/${id}/status`, { isActive }).then((res) => res.data),
+  delete: (id) => api.delete(`/admin/games/${id}`).then((res) => res.data)
+};
+
 export const notificationApi = {
   getNotifications: (params) => api.get('/notifications', { params }).then((res) => res.data),
   markAsRead: (id) => api.put(`/notifications/${id}/read`).then((res) => res.data),
@@ -109,6 +121,24 @@ export const messageApi = {
   getUnreadCount: () => api.get('/messages/unread-count').then((res) => res.data),
   archiveConversation: (id) => api.post(`/messages/conversations/${id}/archive`).then((res) => res.data),
   deleteConversation: (id) => api.delete(`/messages/conversations/${id}`).then((res) => res.data)
+};
+
+export const socialApi = {
+  getFeed: (params) => api.get('/social/feed', { params }).then((res) => res.data),
+  createPost: (data) => api.post('/social/post', data).then((res) => res.data),
+  follow: (userId) => api.post(`/social/follow/${userId}`).then((res) => res.data),
+  unfollow: (userId) => api.post(`/social/unfollow/${userId}`).then((res) => res.data),
+  like: (postId) => api.post(`/social/like/${postId}`).then((res) => res.data),
+  getRecommendations: () => api.get('/social/recommendations').then((res) => res.data)
+};
+
+export const schoolApi = {
+  verifySchoolCode: (code) => api.get(`/schools/verify/${code}`).then((res) => res.data),
+  getAll: (params) => api.get('/schools', { params }).then((res) => res.data),
+  getById: (id) => api.get(`/schools/${id}`).then((res) => res.data),
+  create: (data) => api.post('/schools', data).then((res) => res.data),
+  update: (id, data) => api.put(`/schools/${id}`, data).then((res) => res.data),
+  delete: (id) => api.delete(`/schools/${id}`).then((res) => res.data)
 };
 
 export default api;

@@ -114,7 +114,7 @@ const ForumThreadPage = () => {
               className="flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest transition-all group"
             >
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-              Back to Hub
+              Back to Forum
             </button>
             <div className="flex items-center gap-3">
                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{answers.length} Responses</span>
@@ -179,7 +179,7 @@ const ForumThreadPage = () => {
              <div className="flex items-center gap-4">
                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Expert & Peer Insights</h3>
                 <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs font-black text-slate-400">{answers.length} Node Responses</span>
+                <span className="text-xs font-black text-slate-400">{answers.length} Community Responses</span>
              </div>
 
              <div className="space-y-6">
@@ -236,7 +236,7 @@ const ForumThreadPage = () => {
                               <div className="flex items-center justify-between pt-6 border-t border-slate-100">
                                  <div className="flex items-center gap-4">
                                     <button className="flex items-center gap-2 text-slate-400 hover:text-indigo-600 transition-all font-black text-[10px] uppercase">
-                                       <MessageCircle size={14} /> Reply
+                                       <MessageSquare size={14} /> Reply
                                     </button>
                                     <button className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-all font-black text-[10px] uppercase">
                                        Share
@@ -302,7 +302,7 @@ const ForumThreadPage = () => {
                           type="submit"
                           className="px-12 py-5 bg-slate-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-600 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
                         >
-                           {submitting ? 'Publishing...' : 'Broadcast Response'}
+                           {submitting ? 'Publishing...' : 'Post Response'}
                            <Send size={18} />
                         </button>
                      </div>
@@ -313,7 +313,7 @@ const ForumThreadPage = () => {
 
           {user?.role === 'parent' && (
             <div className="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100 text-center">
-               <p className="text-indigo-600 font-bold text-sm">Parent View: Monitoring child's academic discourse. Response protocols disabled.</p>
+               <p className="text-indigo-600 font-bold text-sm">Parent View: Monitoring child's academic activity. Commenting is disabled.</p>
             </div>
           )}
 

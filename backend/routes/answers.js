@@ -67,7 +67,7 @@ router.post('/question/:questionId', authenticate, async (req, res) => {
 
 router.put('/:id', authenticate, async (req, res) => {
   try {
-    const answer = await Answer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const answer = await Answer.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     if (!answer) {
       return res.status(404).json({ error: 'Answer not found' });
     }

@@ -11,7 +11,7 @@ const { body, param, validationResult } = require('express-validator');
  */
 router.post('/start', [
   authenticate,
-  body('subject').isIn(['mathematics', 'physics', 'chemistry', 'biology', 'science', 'english', 'history', 'geography', 'general']),
+  body('subject').isIn(['mathematics', 'physics', 'chemistry', 'biology', 'biological_sciences', 'science', 'english', 'history', 'geography', 'commerce', 'general']),
   body('topic').optional().trim(),
   body('grade').notEmpty().trim()
 ], async (req, res) => {
@@ -59,9 +59,9 @@ router.post('/start', [
 router.post('/:sessionId/message', [
   authenticate,
   param('sessionId').isMongoId(),
-  body('message').optional().trim(),
-  body('image').optional().isObject(),
-  body('voiceNote').optional()
+  body('message').optional({ values: 'falsy' }).trim(),
+  body('image').optional({ values: 'falsy' }).isObject(),
+  body('voiceNote').optional({ values: 'falsy' })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

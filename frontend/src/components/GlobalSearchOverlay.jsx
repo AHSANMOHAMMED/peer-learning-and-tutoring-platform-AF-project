@@ -25,7 +25,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../utils/cn';
 
-const NeuralSearchOverlay = ({ isOpen, onClose }) => {
+const GlobalSearchOverlay = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const inputRef = useRef(null);
@@ -38,11 +38,11 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const searchResults = [
-    { id: 'tutors', title: 'Find Mentors', icon: Users, path: '/tutors', description: 'Access top-tier university nodes across Sri Lanka.' },
-    { id: 'forum', title: 'Knowledge Hub', icon: MessageSquare, path: '/qa', description: 'Synchronize resolutions with the peer collective.' },
+    { id: 'tutors', title: 'Find Mentors', icon: Users, path: '/tutors', description: 'Access top-tier academic educators across Sri Lanka.' },
+    { id: 'forum', title: 'Knowledge Hub', icon: MessageSquare, path: '/qa', description: 'Collaborate and share insights with the community.' },
     { id: 'ai', title: 'Aura AI Solver', icon: Sparkles, path: '/ai-homework', description: 'Real-time scholastic problem resolution engine.' },
     { id: 'merit', title: 'Achievement Vault', icon: Trophy, path: '/merit', description: 'Review your merit badges and scholastic credentials.' },
-    { id: 'planner', title: 'Sync Planner', icon: Calendar, path: '/bookings', description: 'Manage your adaptive scholastic roadmap.' }
+    { id: 'planner', title: 'Study Planner', icon: Calendar, path: '/bookings', description: 'Manage your personalized academic roadmap.' }
   ].filter(item => item.title.toLowerCase().includes(query.toLowerCase()) || 
                    item.description.toLowerCase().includes(query.toLowerCase()));
 
@@ -75,10 +75,10 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
              <div className="px-12 py-6 border-b border-blue-50 flex items-center justify-between">
                 <div className="flex items-center gap-6">
                    <div className="p-3 bg-blue-500/10 rounded-xl"><Activity size={18} className="text-blue-600" /></div>
-                   <span className="text-sm font-medium uppercase text-slate-400 tracking-normal">Aura_Hub_Navigator :: ACTIVE</span>
+                   <span className="text-sm font-medium uppercase text-slate-400 tracking-normal">Aura Platform Navigator :: ACTIVE</span>
                 </div>
                 <div className="flex items-center gap-4 text-xs font-medium text-slate-500 uppercase tracking-normal bg-slate-50 px-6 py-2 rounded-full border border-slate-100 shadow-inner">
-                   ESC to Terminate
+                   ESC to Close
                 </div>
              </div>
 
@@ -93,7 +93,7 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
                      type="text"
                      value={query}
                      onChange={(e) => setQuery(e.target.value)}
-                     placeholder="Enter Neural Query..."
+                     placeholder="Search the platform..."
                      className="w-full bg-white border-2 border-blue-50 rounded-[3rem] pl-28 pr-12 py-9 text-4xl font-medium text-slate-900 placeholder:text-slate-200 outline-none focus:border-blue-500 focus:shadow-xl transition-all duration-700 shadow-inner"
                    />
                    <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-4 py-3 px-6 bg-slate-100 rounded-2xl border border-slate-200 text-slate-400 font-medium text-[12px] uppercase tracking-widest">
@@ -101,7 +101,7 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
                    </div>
                 </div>
 
-                {/* Results Matrix */}
+                {/* Search Results */}
                 <div className="space-y-6">
                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-normal ml-10">Target Hub Jumps</h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -127,7 +127,7 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
                       {searchResults.length === 0 && (
                         <div className="col-span-full py-20 text-center space-y-6 bg-slate-50/50 rounded-[4rem] border-2 border-dashed border-slate-100">
                            <Binary size={60} className="mx-auto text-slate-200" />
-                           <p className="text-base font-medium text-slate-400 uppercase tracking-normal">No sync nodes found for this query.</p>
+                           <p className="text-base font-medium text-slate-400 uppercase tracking-normal">No search results found for this query.</p>
                         </div>
                       )}
                    </div>
@@ -140,11 +140,11 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
                          <BadgeCheck size={14} className="text-emerald-500" /> SL-Registry Verified
                       </div>
                       <div className="flex items-center gap-4 text-xs font-medium text-slate-400 uppercase tracking-normal">
-                         <Signal size={14} className="text-blue-500" /> Latency: 12ms
+                         <Signal size={14} className="text-blue-500" /> System Status: Optimal
                       </div>
                    </div>
                    <div className="text-xs font-medium text-blue-500 uppercase tracking-normal">
-                      Aura Hub Navigator  :: Matrix Prime
+                      Aura Platform Navigator  :: Control Console
                    </div>
                 </div>
              </div>
@@ -155,4 +155,4 @@ const NeuralSearchOverlay = ({ isOpen, onClose }) => {
   );
 };
 
-export default NeuralSearchOverlay;
+export default GlobalSearchOverlay;

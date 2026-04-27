@@ -17,6 +17,8 @@ const Timetable = require('../models/Timetable');
 const Badge = require('../models/Badge');
 const UserBadge = require('../models/UserBadge');
 const PointTransaction = require('../models/PointTransaction');
+const FeatureFlag = require('../models/FeatureFlag');
+const School = require('../models/School');
 
 const seedUsers = [
   {
@@ -72,6 +74,28 @@ const seedUsers = [
     password: 'admin123',
     role: 'superadmin',
     profile: { firstName: 'System', lastName: 'Administrator', bio: 'Platform Admin' }
+  },
+  {
+    username: 'admin_user',
+    email: 'adminuser@peerlearn.lk',
+    password: 'admin123',
+    role: 'admin',
+    profile: { firstName: 'Admin', lastName: 'User', bio: 'Platform administrator with full management access.' }
+  },
+  {
+    username: 'mod_user',
+    email: 'mod@peerlearn.lk',
+    password: 'password123',
+    role: 'moderator',
+    profile: { firstName: 'Mod', lastName: 'Fernando', bio: 'Content moderator for the platform.' }
+  },
+  {
+    username: 'school_admin',
+    email: 'school@peerlearn.lk',
+    password: 'password123',
+    role: 'schoolAdmin',
+    district: 'Colombo',
+    profile: { firstName: 'School', lastName: 'Admin', bio: 'Royal College school administrator.' }
   }
 ];
 
@@ -81,23 +105,33 @@ const seedBadges = [
   { name: 'Moratuwa Material', description: 'Earned 10,000 points in Combined Mathematics', icon: '⚙️', category: 'subject_mastery', rarity: 'epic', tier: 4, criteria: { type: 'points', value: 10000, subject: 'Combined Mathematics' } }
 ];
 
+const seedSchools = [
+  { name: 'Royal College', code: 'RC001', email: 'info@royalcollege.lk', type: 'government', levels: ['secondary', 'advanced_level'], grades: [6,7,8,9,10,11,12,13], address: { city: 'Colombo', district: 'Colombo' }, status: 'active' },
+  { name: 'Visakha Vidyalaya', code: 'VV001', email: 'info@visakhav.lk', type: 'government', levels: ['secondary', 'advanced_level'], grades: [6,7,8,9,10,11,12,13], address: { city: 'Colombo', district: 'Colombo' }, status: 'active' },
+  { name: 'Ananda College', code: 'AC001', email: 'info@ananda.lk', type: 'government', levels: ['secondary', 'advanced_level'], grades: [6,7,8,9,10,11,12,13], address: { city: 'Colombo', district: 'Colombo' }, status: 'active' }
+];
+
 const seedDatabase = async () => {
   try {
     const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/peerlearn';
     await mongoose.connect(mongoUri);
-    console.log('MongoDB Connected. Nuking comprehensive seed architecture...');
+    console.log('MongoDB Connected. Executing Master Seeding Protocol...');
 
     await Promise.all([
       User.deleteMany({}), Tutor.deleteMany({}), Booking.deleteMany({}),
       Material.deleteMany({}), Report.deleteMany({}), Question.deleteMany({}),
       Answer.deleteMany({}), Vote.deleteMany({}), Timetable.deleteMany({}),
-      Badge.deleteMany({}), UserBadge.deleteMany({}), PointTransaction.deleteMany({})
+      Badge.deleteMany({}), UserBadge.deleteMany({}), PointTransaction.deleteMany({}),
+      FeatureFlag.deleteMany({}), School.deleteMany({})
     ]);
 
     // 1. Badges
     const createdBadges = await Badge.insertMany(seedBadges);
 
-    // 2. Users
+    // 2. Schools
+    await School.insertMany(seedSchools);
+
+    // 3. Users
     const createdUsers = [];
     for (const userData of seedUsers) {
       const user = await User.create(userData);
@@ -105,12 +139,21 @@ const seedDatabase = async () => {
     }
     const [nimal, kamal, ruwanthi, dinithi, amil, admin] = createdUsers;
 
-    // 3. Gamification Transactions & User Badges
+    // 4. Feature Flags (Admin Default Setup)
+    const flags = [
+      { key: 'aiHomeworkEnabled', name: 'AI Homework Assistant', description: 'Enables multimodal AI homework support across the platform.', enabled: true, createdBy: admin._id },
+      { key: 'voiceTutorEnabled', name: 'Voice Mentor API', description: 'Enables hands-free voice tutoring features.', enabled: true, createdBy: admin._id },
+      { key: 'vrClassroomEnabled', name: 'Virtual VR Classroom', description: 'Enables 3D/VR virtual classroom environments.', enabled: true, createdBy: admin._id },
+      { key: 'gamificationEnabled', name: 'Academic Gamification', description: 'Enables badge and point system.', enabled: true, createdBy: admin._id }
+    ];
+    await FeatureFlag.insertMany(flags);
+
+    // 5. Gamification Transactions & User Badges
     await UserBadge.create({ user: nimal._id, badge: createdBadges[0]._id, awardedAt: new Date() });
     await PointTransaction.create({ user: nimal._id, action: 'daily_login', points: 5, subjectType: 'Course' });
     await PointTransaction.create({ user: kamal._id, action: 'answer_upvote_received', points: 10, subjectType: 'Answer' });
 
-    // 4. Tutor Profiles
+    // 6. Tutor Profiles
     const tutor1 = await Tutor.create({
       userId: kamal._id, subjects: ['Combined Mathematics', 'Physical Sciences'], alStream: 'Combined Mathematics',
       bio: 'B.Sc Engineering at Moratuwa. Specializes in Pure Maths.',
@@ -125,7 +168,7 @@ const seedDatabase = async () => {
       experience: 3, rating: 4.9, reviewCount: 42, verificationStatus: 'approved', hourlyRate: 1500, isFeatured: false
     });
 
-    // 5. Questions & Answers
+    // 7. Questions & Answers
     const q1 = await Question.create({
       title: 'How to solve 2022 A/L Combined Mathematics Integration Problem?',
       body: 'I am struggling with the substitution method on the second part of the essay question. Can someone explain?',
@@ -153,7 +196,7 @@ const seedDatabase = async () => {
     });
     await q2.updateAnswerCount();
 
-    // 6. Timetables
+    // 8. Timetables
     await Timetable.create({
       userId: nimal._id, title: 'Combined Mathematics Revision', dayOfWeek: 1, startTime: '16:00', endTime: '18:00',
       type: 'study', description: 'Past paper module 1', isAvailable: false, color: '#3b82f6'
@@ -163,7 +206,7 @@ const seedDatabase = async () => {
       type: 'tutoring', description: 'With Dr. Dinithi', isAvailable: false, color: '#10b981'
     });
 
-    // 7. Bookings
+    // 9. Bookings
     await Booking.create({
       tutorId: tutor1._id, studentId: nimal._id, date: new Date(Date.now() + 86400000),
       startTime: '16:00', endTime: '18:00', status: 'confirmed', subject: 'Maths Integration',
@@ -175,14 +218,14 @@ const seedDatabase = async () => {
       meetingUrl: '/session/kranz-1', price: 3000, paymentStatus: 'paid'
     });
 
-    // 8. Materials
+    // 10. Materials
     await Material.create({
       title: 'Moratuwa Engineering Physics Notes', description: 'Targeted for A/L 2025 Physics.',
       fileUrl: '/uploads/physics.pdf', fileType: 'pdf', uploaderId: tutor1._id, subject: 'Physical Sciences',
       grade: 'A/L 2025', price: 500, isApproved: true, moderationStatus: 'approved', tags: ['A/L', 'Physics']
     });
 
-    console.log('Successfully seeded Sri Lankan localized platform ecosystem!');
+    console.log('Successfully seeded Sri Lankan localized platform ecosystem with master configuration!');
     process.exit(0);
   } catch (err) {
     console.error('Seeding Error:', err);

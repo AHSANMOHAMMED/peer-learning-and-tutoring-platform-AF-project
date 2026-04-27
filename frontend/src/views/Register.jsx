@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../controllers/useAuth';
+import { schoolApi } from '../services/api';
 import { UserPlus, Mail, Lock, User, AlertCircle, Loader2, ArrowRight, ShieldCheck, Key } from 'lucide-react';
 import { cn } from '../utils/cn';
+import debounce from 'lodash/debounce';
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -12,15 +14,37 @@ const Register = () => {
     email: '',
     password: '',
     role: 'student',
+    schoolCode: '',
     profile: {
       firstName: '',
       lastName: ''
     }
   });
   const [otp, setOtp] = useState('');
+  const [verifiedSchool, setVerifiedSchool] = useState(null);
+  const [verifying, setVerifying] = useState(false);
   
   const { register, verifyOTP, loading, error } = useAuth();
   const navigate = useNavigate();
+
+  const verifySchool = useCallback(
+    debounce(async (code) => {
+      setVerifying(true);
+      try {
+        const res = await schoolApi.verifySchoolCode(code);
+        if (res.success) {
+          setVerifiedSchool(res.data.school);
+        } else {
+          setVerifiedSchool(null);
+        }
+      } catch (err) {
+        setVerifiedSchool(null);
+      } finally {
+        setVerifying(false);
+      }
+    }, 500),
+    []
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -212,6 +236,50 @@ const Register = () => {
                      </div>
                    </motion.div>
                  )}
+
+                 {/* Institutional Link */}
+                 <div className="pt-2 animate-in fade-in duration-700">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">
+                       Institutional Code <span className="text-slate-400 font-medium lowercase italic">(Optional)</span>
+                    </label>
+                    <div className="relative group">
+                       <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00a8cc] transition-colors" size={18} />
+                       <input
+                          type="text" 
+                          name="schoolCode" 
+                          value={formData.schoolCode || ''} 
+                          onChange={(e) => {
+                             const val = e.target.value.toUpperCase();
+                             setFormData({...formData, schoolCode: val});
+                             if (val.length >= 3) {
+                                verifySchool(val);
+                             } else {
+                                setVerifiedSchool(null);
+                             }
+                          }}
+                          className={cn(
+                             "w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#00a8cc] focus:bg-white outline-none transition-all font-bold tracking-widest text-slate-800",
+                             verifiedSchool && "border-emerald-500 bg-emerald-50/30 focus:border-emerald-500"
+                          )}
+                          placeholder="ROYAL-COL" 
+                       />
+                       {verifying && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-[#00a8cc] animate-spin" size={18} />}
+                    </div>
+                    {verifiedSchool && (
+                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-2 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                             <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+                                <ShieldCheck size={16} />
+                             </div>
+                             <div className="text-left">
+                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">Verified Institution</p>
+                                <p className="text-xs font-bold text-emerald-900 mt-1">{verifiedSchool.name}</p>
+                             </div>
+                          </div>
+                          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{verifiedSchool.district}</span>
+                       </motion.div>
+                    )}
+                 </div>
 
                  <button
                    type="submit" disabled={loading}

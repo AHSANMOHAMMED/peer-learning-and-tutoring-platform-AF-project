@@ -171,7 +171,7 @@ const markNotificationAsRead = async (notificationId, userId) => {
     const notification = await Notification.findOneAndUpdate(
       { _id: notificationId, recipientId: userId },
       { isRead: true, readAt: new Date() },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!notification) {

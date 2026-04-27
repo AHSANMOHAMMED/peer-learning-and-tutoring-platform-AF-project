@@ -11,7 +11,7 @@ const { body, validationResult } = require('express-validator');
  */
 router.get('/', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'moderator'].includes(req.user.role)) {
+    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -68,7 +68,7 @@ router.get('/my-flags', authenticate, async (req, res) => {
  */
 router.get('/:key', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'moderator'].includes(req.user.role)) {
+    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -115,7 +115,7 @@ router.post('/', [
   body('targeting').optional().isObject()
 ], async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['admin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -156,7 +156,7 @@ router.post('/', [
  */
 router.put('/:id', authenticate, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['admin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -189,7 +189,7 @@ router.put('/:id', authenticate, async (req, res) => {
  */
 router.post('/:id/toggle', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'moderator'].includes(req.user.role)) {
+    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -222,7 +222,7 @@ router.post('/:id/toggle', authenticate, async (req, res) => {
  */
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['admin', 'superadmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -254,7 +254,7 @@ router.delete('/:id', authenticate, async (req, res) => {
  */
 router.get('/:id/analytics', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'moderator'].includes(req.user.role)) {
+    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
-
+import { bookingApi } from '../services/api';
 
 export const useBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -11,8 +10,8 @@ export const useBookings = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/bookings');
-      setBookings(data);
+      const data = await bookingApi.getAll();
+      setBookings(data || []);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch bookings');
@@ -26,7 +25,7 @@ export const useBookings = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/bookings', bookingData);
+      const data = await bookingApi.create(bookingData);
       setBookings((prev) => [...prev, data]);
       return data;
     } catch (err) {
@@ -41,7 +40,7 @@ export const useBookings = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put(`/bookings/${id}`, { status });
+      const data = await bookingApi.updateStatus(id, { status });
       setBookings((prev) => prev.map((b) => b._id === id ? data : b));
       return data;
     } catch (err) {
@@ -54,7 +53,7 @@ export const useBookings = () => {
 
   const updateWhiteboard = useCallback(async (id, whiteboardData) => {
     try {
-      await api.put(`/bookings/${id}/whiteboard`, { whiteboardData });
+      await bookingApi.updateWhiteboard(id, { whiteboardData });
     } catch (err) {
       console.error('Failed to update whiteboard:', err);
     }

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
+import { parentApi } from '../services/api';
 
 export const useParentLinks = () => {
   const [linkRequests, setLinkRequests] = useState([]);
@@ -7,15 +7,11 @@ export const useParentLinks = () => {
   const [error, setError] = useState(null);
 
   // --- Parent Side ---
-
   const linkParentToStudent = useCallback(async ({ studentEmail, relationship }) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/parent/link-student', {
-        studentEmail,
-        relationship
-      });
+      const data = await parentApi.linkStudent({ studentEmail, relationship });
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send link request');
@@ -29,9 +25,11 @@ export const useParentLinks = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/parent/link-requests');
+      const data = await parentApi.getLinkRequests();
       if (data.success) {
-        setLinkRequests(data.data.requests);
+        setLinkRequests(data.data.requests || []);
+      } else {
+        setLinkRequests(data || []);
       }
       return data.data?.requests || [];
     } catch (err) {
@@ -43,14 +41,15 @@ export const useParentLinks = () => {
   }, []);
 
   // --- Student Side ---
-
   const fetchStudentLinkRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/parent/student/link-requests');
+      const data = await parentApi.getStudentLinkRequests();
       if (data.success) {
-        setLinkRequests(data.data.requests);
+        setLinkRequests(data.data.requests || []);
+      } else {
+        setLinkRequests(data || []);
       }
       return data.data?.requests || [];
     } catch (err) {
@@ -65,10 +64,7 @@ export const useParentLinks = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post(`/parent/student/respond-link/${linkId}`, {
-        approve,
-        permissions
-      });
+      const data = await parentApi.respondToLink(linkId, { approve, permissions });
       if (data.success) {
         setLinkRequests((prev) => prev.filter((r) => r._id !== linkId));
       }

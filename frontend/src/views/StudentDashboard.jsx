@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Calendar, ChevronRight, CheckCircle2, Clock, Flame, Percent, Sparkles, BookOpen, Users, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Calendar, ChevronRight, CheckCircle2, Clock, Flame, Percent, Sparkles, BookOpen, Users, Zap, ArrowRight, ShieldCheck, Gamepad2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 import Layout from '../components/Layout';
@@ -196,6 +196,28 @@ const StudentDashboard = () => {
               </div>
            </div>
 
+        </div>
+
+        <div className="mb-6 rounded-3xl bg-white p-6 shadow-soft border border-cyan-100">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                <Gamepad2 size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Refresh Zone</h2>
+                <p className="mt-1 max-w-2xl text-sm font-medium text-slate-500">
+                  Take a short reset with Tic Tac Toe, Memory Cards, Bubble Pop, Tap Speed, or a quick puzzle.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/refresh-zone')}
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#00a8cc] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#008ba8] active:scale-95"
+            >
+              Start Break <ArrowRight size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Bottom Section */}

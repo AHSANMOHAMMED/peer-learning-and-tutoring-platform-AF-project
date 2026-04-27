@@ -14,7 +14,8 @@ import {
   LogOut,
   Users,
   X,
-  CreditCard
+  CreditCard,
+  Gamepad2
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useAuth } from '../controllers/useAuth';
@@ -46,6 +47,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
             { title: 'Student Management', icon: Users, path: '/admin/users' },
             { title: 'Tutor Management', icon: Briefcase, path: '/admin/approvals' },
             { title: 'Session Management', icon: Video, path: '/bookings' },
+            { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
             { title: 'Payment Management', icon: CreditCard, path: '/admin/payments' },
             { title: 'Admin Settings', icon: Settings, path: '/admin/settings' },
           ],
@@ -58,6 +60,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
             { title: 'User Management', icon: Users, path: '/admin/users' },
             { title: 'Tutor Approvals', icon: Briefcase, path: '/admin/approvals' },
             { title: 'All Sessions', icon: Video, path: '/bookings' },
+            { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
             { title: 'Moderation', icon: FileText, path: '/moderation' },
             { title: 'Admin Settings', icon: Settings, path: '/admin/settings' },
           ],
@@ -112,6 +115,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
             { title: 'My Assignments', icon: Briefcase, path: '/ai-homework' },
             { title: 'My Sessions', icon: Video, path: '/bookings' },
             { title: 'Browse Tutors', icon: FileText, path: '/tutors' },
+            { title: 'Break Time Games', icon: Gamepad2, path: '/refresh-zone' },
           ],
           settings: settingsNav
         };

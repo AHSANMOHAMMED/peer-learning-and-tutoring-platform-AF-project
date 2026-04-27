@@ -36,7 +36,7 @@ const NationalMerit = () => {
         try {
            setLoading(true);
            const [studentRes, districtRes] = await Promise.all([
-              api.get(`/gamification/leaderboard?type=global&limit=10&subject=${selectedStream}`),
+              gamificationApi.getLeaderboard({ type: "global", limit: 10, subject: selectedStream }),
               api.get('/gamification/leaderboard/districts')
            ]);
 

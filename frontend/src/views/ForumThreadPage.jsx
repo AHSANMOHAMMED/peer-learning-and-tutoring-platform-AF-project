@@ -33,8 +33,8 @@ const ForumThreadPage = () => {
     try {
       setLoading(true);
       const [qRes, aRes] = await Promise.all([
-        api.get(`/questions/${id}`),
-        api.get(`/answers/question/${id}`)
+        questionApi.getById(id),
+        answerApi.getAll({ questionId: id })
       ]);
       
       if (qRes.data.question) setQuestion(qRes.data.question);
@@ -53,7 +53,7 @@ const ForumThreadPage = () => {
     
     try {
       setSubmitting(true);
-      const res = await api.post(`/answers/question/${id}`, { body: answerDraft });
+      const res = await answerApi.create({ ...answerDraft, questionId: id });
       if (res.data) {
         toast.success('Your contribution has been published');
         setAnswers([...answers, res.data]);

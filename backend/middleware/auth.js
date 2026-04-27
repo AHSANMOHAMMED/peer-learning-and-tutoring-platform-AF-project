@@ -38,10 +38,34 @@ const authorize = (...roles) => {
 };
 
 const admin = (req, res, next) => {
-  if (req.user && (req.user.role === 'admin' || req.user.role === 'superadmin')) {
+  if (req.user && (req.user.role === 'websiteAdmin' || req.user.role === 'admin' || req.user.role === 'superadmin')) {
     next();
   } else {
     res.status(403).json({ message: 'Not authorized as an admin' });
+  }
+};
+
+const mentor = (req, res, next) => {
+  if (req.user && (req.user.role === 'mentor' || req.user.role === 'tutor')) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as a mentor' });
+  }
+};
+
+const schoolAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'schoolAdmin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as a school admin' });
+  }
+};
+
+const demo = (req, res, next) => {
+  if (req.user && req.user.role === 'demo') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as a demo user' });
   }
 };
 
@@ -53,4 +77,4 @@ const superAdmin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, authenticate: protect, authorize, admin, superAdmin };
+module.exports = { protect, authenticate: protect, authorize, admin, superAdmin, mentor, schoolAdmin, demo };

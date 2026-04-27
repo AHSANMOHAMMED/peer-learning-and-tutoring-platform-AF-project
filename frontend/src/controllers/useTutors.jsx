@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
+import { tutorApi } from '../services/api';
 
 
 export const useTutors = () => {
@@ -11,7 +11,7 @@ export const useTutors = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/tutors');
+      const data = await tutorApi.getAll();
       setTutors(data);
       return data;
     } catch (err) {
@@ -26,7 +26,7 @@ export const useTutors = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/tutors/all');
+      const data = await tutorApi.getAllAdmin();
       setTutors(data);
       return data;
     } catch (err) {
@@ -41,7 +41,7 @@ export const useTutors = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/tutors', tutorData);
+      const data = await tutorApi.register(tutorData);
       setTutors((prev) => [...prev, data]);
       return data;
     } catch (err) {
@@ -56,7 +56,7 @@ export const useTutors = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get(`/tutors/${id}`);
+      const data = await tutorApi.getProfile(id);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to get tutor profile');
@@ -70,7 +70,7 @@ export const useTutors = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get(`/tutors/user/${userId}`);
+      const data = await tutorApi.getByUserId(userId);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to get tutor by User ID');
@@ -84,7 +84,7 @@ export const useTutors = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put(`/tutors/${id}/moderate`, { status });
+      const data = await tutorApi.moderate(id, { verificationStatus: status });
       setTutors((prev) => prev.map((t) => t._id === id ? data : t));
       return data;
     } catch (err) {

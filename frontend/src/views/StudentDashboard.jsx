@@ -9,7 +9,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';
 import { useTutors } from '../controllers/useTutors';
 import { useBookings } from '../controllers/useBookings';
-import api from '../services/api';
+import { gamificationApi, groupsApi } from '../services/api';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -32,9 +32,13 @@ const StudentDashboard = () => {
 
   const fetchGameCatalog = async () => {
     try {
-      const res = await api.get('/gamification/catalog');
-      if (res.data.success) {
-        setGameCatalog(res.data.data.catalog || []);
+      const data = await gamificationApi.getCatalog();
+      if (data.success) {
+        setGameCatalog(data.data.catalog || []);
+      } else if (data.catalog) {
+        setGameCatalog(data.catalog);
+      } else {
+        setGameCatalog(data || []);
       }
     } catch (err) {
       console.error('Game catalog fetch error:', err);
@@ -46,9 +50,11 @@ const StudentDashboard = () => {
   const fetchGamification = async () => {
     try {
       setLoadingGamification(true);
-      const res = await api.get('/gamification/profile');
-      if (res.data.success) {
-        setGamificationProfile(res.data.data);
+      const data = await gamificationApi.getProfile();
+      if (data.success) {
+        setGamificationProfile(data.data);
+      } else {
+        setGamificationProfile(data || null);
       }
     } catch (err) {
       console.error('Gamification fetch error:', err);
@@ -59,9 +65,11 @@ const StudentDashboard = () => {
 
   const fetchMyGroups = async () => {
     try {
-      const res = await api.get('/groups/my-rooms');
-      if (res.data.success) {
-        setMyGroups(res.data.data?.groupRooms || res.data.data || []);
+      const data = await groupsApi.getMyRooms();
+      if (data.success) {
+        setMyGroups(data.data?.groupRooms || data.data || []);
+      } else {
+        setMyGroups(data || []);
       }
     } catch (err) {
       console.error('Groups fetch error:', err);

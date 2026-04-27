@@ -27,10 +27,14 @@ class CacheService {
       this.client = redis.createClient({
         url: process.env.REDIS_URL,
         socket: {
+          connectTimeout: 1000,
           reconnectStrategy: (retries) => {
+            if (process.env.NODE_ENV !== 'production') {
+              return false;
+            }
+
             if (retries > 10) {
-              console.error('Max Redis reconnection attempts reached');
-              return new Error('Max reconnection attempts');
+              return new Error('Max Redis reconnection attempts');
             }
             return Math.min(retries * 100, 3000);
           }
@@ -38,7 +42,11 @@ class CacheService {
       });
 
       this.client.on('error', (err) => {
-        console.error('Redis Client Error:', err);
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Redis Client Error:', err);
+        } else {
+          console.warn('Redis unavailable; caching disabled.');
+        }
         this.isConnected = false;
       });
 
@@ -54,8 +62,13 @@ class CacheService {
 
       await this.client.connect();
     } catch (error) {
-      console.error('Redis initialization error:', error);
+      if (process.env.NODE_ENV === 'production') {
+        console.error('Redis initialization error:', error);
+      } else {
+        console.warn('Redis unavailable; caching disabled.');
+      }
       this.isConnected = false;
+      this.client = null;
     }
   }
 

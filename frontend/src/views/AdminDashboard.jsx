@@ -5,7 +5,7 @@ import {
   Users, Briefcase, Video, Clock, MessageSquare, 
   CircleDollarSign, Calendar as CalendarIcon, 
   ShieldCheck, AlertTriangle, Settings, ChevronRight,
-  TrendingUp, Activity, FileText
+  TrendingUp, Activity, FileText, Gamepad2
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -31,14 +31,14 @@ const AdminDashboard = () => {
   const { tutors, fetchTutors } = useTutors();
   const { reports, fetchReports } = useReports();
   const { analytics, fetchAnalytics } = useAnalytics();
-  const { linkRequests, fetchLinkRequests } = useParentLinks();
+  const { linkRequests, fetchParentLinkRequests } = useParentLinks();
 
   useEffect(() => {
-    fetchTutors();
-    fetchReports();
-    fetchAnalytics();
-    fetchLinkRequests();
-  }, [fetchTutors, fetchReports, fetchAnalytics, fetchLinkRequests]);
+    fetchTutors().catch((err) => console.error('Tutor fetch error:', err));
+    fetchReports().catch((err) => console.error('Reports fetch error:', err));
+    fetchAnalytics().catch((err) => console.error('Analytics fetch error:', err));
+    fetchParentLinkRequests().catch((err) => console.error('Parent link requests fetch error:', err));
+  }, [fetchTutors, fetchReports, fetchAnalytics, fetchParentLinkRequests]);
 
   const pendingTutorsCount = tutors.filter(t => t.verificationStatus === 'pending').length;
   const pendingReportsCount = reports.filter(r => r.status === 'pending' || r.status === 'open').length;
@@ -209,6 +209,13 @@ const AdminDashboard = () => {
                         <span className="text-sm font-bold text-slate-700">Moderation Hub</span>
                       </div>
                       <ChevronRight size={16} className="text-slate-300 group-hover:text-rose-500" />
+                    </button>
+                    <button onClick={() => navigate('/admin/games')} className="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-100 hover:border-cyan-200 hover:bg-cyan-50 rounded-2xl transition-all group">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-white rounded-lg text-cyan-500 shadow-sm group-hover:scale-110 transition-transform"><Gamepad2 size={18} /></div>
+                        <span className="text-sm font-bold text-slate-700">Game Management</span>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-300 group-hover:text-cyan-500" />
                     </button>
                     <button onClick={() => navigate('/admin/settings')} className="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-100 hover:border-slate-300 hover:bg-slate-100 rounded-2xl transition-all group">
                       <div className="flex items-center gap-4">

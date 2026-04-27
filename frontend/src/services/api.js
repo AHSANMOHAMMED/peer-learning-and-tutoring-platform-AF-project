@@ -40,6 +40,18 @@ export const learningGamesApi = {
   getLeaderboard: (params) => api.get('/gamification/leaderboard', { params }).then((res) => res.data)
 };
 
+export const breakTimeGamesApi = {
+  getActiveGames: () => api.get('/games').then((res) => res.data)
+};
+
+export const adminGamesApi = {
+  getAll: () => api.get('/admin/games').then((res) => res.data),
+  getById: (id) => api.get(`/admin/games/${id}`).then((res) => res.data),
+  updateTimer: (id, timerSeconds) => api.put(`/admin/games/${id}/timer`, { timerSeconds }).then((res) => res.data),
+  updateStatus: (id, isActive) => api.put(`/admin/games/${id}/status`, { isActive }).then((res) => res.data),
+  delete: (id) => api.delete(`/admin/games/${id}`).then((res) => res.data)
+};
+
 export const notificationApi = {
   getNotifications: (params) => api.get('/notifications', { params }).then((res) => res.data),
   markAsRead: (id) => api.put(`/notifications/${id}/read`).then((res) => res.data),

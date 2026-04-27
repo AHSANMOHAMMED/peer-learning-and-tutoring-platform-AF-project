@@ -34,9 +34,11 @@ import AttemptQuestionPage from './views/AttemptQuestionPage';
 import ProfileView from './views/ProfileView';
 import ProfileSetup from './views/ProfileSetup';
 import LearningGamesPage from './views/LearningGamesPage';
+import RefreshZone from './views/RefreshZone';
 import AuthCallback from './views/AuthCallback';
 import AdminSettings from './views/AdminSettings';
 import AdminApprovals from './views/AdminApprovals';
+import AdminGameManagement from './views/AdminGameManagement';
 import ForgotPassword from './views/ForgotPassword';
 import ResetPassword from './views/ResetPassword';
 import VerifyOTP from './views/VerifyOTP';
@@ -105,6 +107,7 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><UserManagement /></ProtectedRoute>} />
           <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminApprovals /></ProtectedRoute>} />
+          <Route path="/admin/games" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminGameManagement /></ProtectedRoute>} />
           <Route path="/admin/parent-links" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><ParentLinkManager /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute allowedRoles={['admin', 'moderator', 'superadmin']}><ModerationHub /></ProtectedRoute>} />
@@ -119,6 +122,9 @@ function App() {
           <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
           <Route path="/games" element={<ProtectedRoute><LearningGamesPage /></ProtectedRoute>} />
           <Route path="/games/:gameId" element={<ProtectedRoute><LearningGamesPage /></ProtectedRoute>} />
+          <Route path="/refresh-zone" element={<ProtectedRoute><RefreshZone /></ProtectedRoute>} />
+          <Route path="/refresh-zone/:gameId" element={<ProtectedRoute><RefreshZone /></ProtectedRoute>} />
+          <Route path="/break-time-games" element={<ProtectedRoute><RefreshZone /></ProtectedRoute>} />
           <Route path="/merit" element={<ProtectedRoute><NationalMerit /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" />} />

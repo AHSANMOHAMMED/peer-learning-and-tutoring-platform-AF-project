@@ -17,11 +17,25 @@ const {
   broadcastNotification,
   rotateAccessKeys
 } = require('../controllers/adminController');
+const {
+  getAdminGames,
+  getAdminGameById,
+  updateGameTimer,
+  updateGameStatus,
+  deleteGame
+} = require('../controllers/breakTimeGameController');
 
 const router = express.Router();
 
 // Admin dashboard statistics
 router.get('/statistics', authenticate, authorize('admin', 'superadmin'), getDashboardStatistics);
+
+// Break Time Games management
+router.get('/games', authenticate, authorize('admin', 'superadmin'), getAdminGames);
+router.get('/games/:id', authenticate, authorize('admin', 'superadmin'), getAdminGameById);
+router.put('/games/:id/timer', authenticate, authorize('admin', 'superadmin'), updateGameTimer);
+router.put('/games/:id/status', authenticate, authorize('admin', 'superadmin'), updateGameStatus);
+router.delete('/games/:id', authenticate, authorize('admin', 'superadmin'), deleteGame);
 
 // User management
 router.get('/users', authenticate, authorize('admin', 'superadmin'), getAllUsersAdmin);

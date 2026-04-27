@@ -101,6 +101,7 @@ app.use('/api/feature-flags', require('./routes/featureFlags'));
 app.use('/api/certificates', require('./routes/certificates'));
 app.use('/api/ai-homework', require('./routes/aiHomework'));
 app.use('/api/gamification', require('./routes/gamification'));
+app.use('/api/games', require('./routes/breakTimeGames'));
 app.use('/api/marketplace', require('./routes/marketplace'));
 app.use('/api', require('./routes/parentModeration'));
 app.use('/api/personalization', require('./routes/personalization'));

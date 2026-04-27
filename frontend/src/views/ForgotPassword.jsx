@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, ArrowRight, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import Layout from '../components/Layout';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 const ForgotPassword = () => {
@@ -15,7 +16,7 @@ const ForgotPassword = () => {
     setLoading(true);
     setError('');
     try {
-      await api.post('/auth/forgot-password', { email });
+       await api.post('/auth/forgot-password', { email });
       setSent(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send reset link');

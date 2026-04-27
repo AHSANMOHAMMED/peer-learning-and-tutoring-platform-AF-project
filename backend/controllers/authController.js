@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const UserGamification = require('../models/UserGamification');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
@@ -39,10 +40,65 @@ exports.registerUser = async (req, res) => {
       }
     }
 
-    const user = await User.create({ 
-      username, email, password, role, profile, 
-      district, stream, grade, school: schoolId,
-      authProvider: 'local' 
+const user = await User.create({ 
+  username, email, password, role, profile, 
+  district, stream, grade, school: schoolId,
+  authProvider: 'local' 
+});
+
+// Initialize gamification profile for all users including demo
+await UserGamification.create({
+  user: user._id,
+  points: { total: 0, earnedThisMonth: 0, earnedThisWeek: 0, lifetime: 0 },
+  level: { current: 1, title: 'Beginner', progress: 0, pointsToNextLevel: 1000 },
+  streaks: { current: 0, longest: 0, lastActivity: null, streakType: 'daily' },
+  stats: {
+    totalSessions: 0,
+    peerSessions: 0,
+    groupSessions: 0,
+    lectureSessions: 0,
+    totalHours: 0,
+    coursesCompleted: 0,
+    coursesInProgress: 0,
+    studentsHelped: 0,
+    hoursTutored: 0,
+    averageRating: 0,
+    totalReviews: 0
+  },
+  preferences: {
+    showBadgesOnProfile: true,
+    streakNotifications: true,
+    levelUpNotifications: true,
+    shareAchievements: true
+  }
+});
+
+    // Initialize gamification profile for all new users (including demo)
+    await UserGamification.create({
+      user: user._id,
+      points: { total: 0, earnedThisMonth: 0, earnedThisWeek: 0, lifetime: 0 },
+      level: { current: 1, title: 'Beginner', progress: 0, pointsToNextLevel: 1000 },
+      badges: [],
+      streaks: { current: 0, longest: 0, lastActivity: null, streakType: 'daily' },
+      stats: {
+        totalSessions: 0,
+        peerSessions: 0,
+        groupSessions: 0,
+        lectureSessions: 0,
+        totalHours: 0,
+        coursesCompleted: 0,
+        coursesInProgress: 0,
+        studentsHelped: 0,
+        hoursTutored: 0,
+        averageRating: 0,
+        totalReviews: 0
+      },
+      preferences: {
+        showBadgesOnProfile: true,
+        streakNotifications: true,
+        levelUpNotifications: true,
+        shareAchievements: true
+      }
     });
 
     // Send OTP for email verification

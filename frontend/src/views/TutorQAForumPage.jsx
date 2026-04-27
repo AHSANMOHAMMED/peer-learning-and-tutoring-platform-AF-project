@@ -10,6 +10,7 @@ import { useAuth } from '../controllers/useAuth';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
+import { questionApi, answerApi } from '../services/api';
 
 const TutorQAForumPage = () => {
   const { user } = useAuth();
@@ -28,8 +29,7 @@ const TutorQAForumPage = () => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/questions');
-        const questionArray = res.data.questions || res.data || [];
+        const res = await questionApi.getAll();        const questionArray = res.data.questions || res.data || [];
         // Normalize backend data to match UI expectations
         const formatted = questionArray.map(q => ({
            id: q._id,
@@ -87,11 +87,7 @@ const TutorQAForumPage = () => {
     if (!answerDraft.trim() || !selectedId) return;
     try {
       setLoading(true);
-      const res = await api.post(`/answers/question/${selectedId}`, {
-        body: answerDraft,
-        marks: marksDraft ? Number(marksDraft) : undefined,
-        tutorComment: feedbackDraft
-      });
+      const res = await answerApi.create({ body: answerDraft, questionId: selectedId });
 
       if (res.data) {
         // Update local state to show the answer immediately

@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, BookOpen, History, X, Lightbulb, Target, Brain, Cpu, Zap, Activity, ShieldCheck, Layers, ChevronRight, User, Maximize2, RefreshCw, ArrowUpRight, Camera, Image, Loader2, Mic } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
-import Layout from '../components/Layout';
-import VoiceRecorder from '../components/VoiceRecorder';
 import { useAuth } from '../controllers/useAuth';
-import { cn } from '../utils/cn';
+import { aiApi } from '../services/api';
+import Layout from '../components/Layout';
+import ReactMarkdown from 'react-markdown';
 
 const AIHomeworkChat = () => {
   const { user } = useAuth();
@@ -65,8 +64,7 @@ const AIHomeworkChat = () => {
 
   const fetchSessionHistory = async () => {
     try {
-      const response = await api.get('/ai-homework/sessions/history');
-      if (response.data.success) {
+      const response = await aiApi.homeworkHistory();      if (response.data.success) {
         setSessionHistory(response.data.data.sessions);
       }
     } catch (error) {
@@ -77,7 +75,7 @@ const AIHomeworkChat = () => {
   const startSession = async () => {
     try {
       setIsLoading(true);
-      const response = await api.post('/ai-homework/start', { subject, grade, topic: '' });
+       const response = await aiApi.homeworkHelp({ subject, grade, topic: '' });
 
       if (response.data.success) {
         setSessionId(response.data.data.sessionId);
@@ -113,10 +111,7 @@ const AIHomeworkChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post(`/ai-homework/${sessionId}/message`, { 
-        message: userMessage,
-        image: currentImage 
-      });
+      const response = await aiApi.homeworkHelp({ action: 'sendMessage', sessionId, message: newMessage });
       if (response.data.success) {
         setMessages((prev) => [...prev, {
           role: 'assistant',
@@ -143,18 +138,16 @@ const AIHomeworkChat = () => {
 
     setIsUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      const res = await api.post('/ai-homework/upload-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      if (res.data.success) {
-        setSelectedImage({
-          mimeType: res.data.data.mimeType,
-          data: res.data.data.base64
-        });
-        toast.success('Image processed for AI Vision');
-      }
+       const formData = new FormData();
+       formData.append('image', file);
+       const res = await aiApi.homeworkImageUpload(formData);
+       if (res.data.success) {
+         setSelectedImage({
+           mimeType: res.data.data.mimeType,
+           data: res.data.data.base64
+         });
+         toast.success('Image processed for AI Vision');
+       }
     } catch (err) {
       toast.error('Failed to upload image');
       setImagePreview(null);
@@ -166,7 +159,7 @@ const AIHomeworkChat = () => {
   const endSession = async () => {
     if (!sessionId) return;
     try {
-      await api.post(`/ai-homework/${sessionId}/end`);
+       await aiApi.homeworkHelp({ action: 'endSession', sessionId });
       setSessionId(null);
       setMessages([]);
       setShowSetup(true);
@@ -428,10 +421,7 @@ const AIHomeworkChat = () => {
                     reader.readAsDataURL(audioBlob);
                     reader.onloadend = async () => {
                       const base64Audio = reader.result.split(',')[1];
-                      const res = await api.post(`/ai-homework/${sessionId}/message`, {
-                        message: '[Voice Note] Please listen to this audio and help me with what I am asking.',
-                        image: { mimeType: 'audio/webm', data: base64Audio }
-                      });
+                      const res = await aiApi.homeworkHelp({ action: 'sendMessage', sessionId, message: text, stream: true });
                       if (res.data.success) {
                         setMessages(prev => [...prev, {
                           role: 'assistant', content: res.data.data.content, timestamp: new Date(), metadata: res.data.data

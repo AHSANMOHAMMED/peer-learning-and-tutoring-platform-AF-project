@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Mail, Key, ArrowRight, ShieldCheck } from 'lucide-react';
+import Layout from '../components/Layout';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 const ResetPassword = () => {
@@ -30,7 +32,7 @@ const ResetPassword = () => {
     setLoading(true);
     setError('');
     try {
-      await api.post('/auth/reset-password', { token, password });
+       await api.post('/auth/reset-password', { token, password });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {

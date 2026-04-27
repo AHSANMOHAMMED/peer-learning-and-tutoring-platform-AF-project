@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
-import { useAuth } from '../controllers/useAuth';
-import api from '../services/api';
+import { userManagementApi } from '../services/api';
+import { cn } from '../utils/cn';
 
 const ProfileView = () => {
   const { user, refreshUser } = useAuth();
@@ -53,10 +53,9 @@ const ProfileView = () => {
     
     try {
       setIsSaving(true);
-      const response = await api.put('/users/profile', {
+      const response = await userManagementApi.updateProfile({
         profile: { ...form, grade: form.grade ? parseInt(form.grade) : undefined }
-      });
-      if (response.data.success) {
+      });      if (response.data.success) {
         toast.success('Profile updated successfully');
         await refreshUser();
         setIsEditing(false);

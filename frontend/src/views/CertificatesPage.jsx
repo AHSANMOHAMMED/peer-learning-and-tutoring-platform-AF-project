@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import api from '../services/api';
+import { certificateApi } from '../services/api';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 
@@ -126,7 +126,7 @@ const CertificatesPage = () => {
 
   const fetchCertificates = async () => {
     try {
-      const response = await api.get('/certificates/my-certificates');
+      const response = await certificateApi.getAll({ my: true });
       if (response.data.success) {
         setCertificates(response.data.data.certificates);
       }

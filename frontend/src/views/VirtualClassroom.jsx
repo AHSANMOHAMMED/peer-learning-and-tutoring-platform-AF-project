@@ -22,8 +22,8 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import api from '../services/api';
 import { cn } from '../utils/cn';
+import { aiApi } from '../services/api';
 
 const VirtualClassroom = ({
   roomId = 'Session-01',
@@ -255,23 +255,13 @@ const VirtualClassroom = ({
       const base64Data = dataUrl.split(',')[1];
 
       // 2. Start a dummy session or unique "Virtual Classroom Context" session
-      const startRes = await api.post('/ai-homework/start', { 
-        subject: 'general', 
-        grade: 'all', 
-        topic: `Classroom Snapshot: ${roomId}` 
-      });
+      const startRes = await aiApi.homeworkHelp({ subject, grade, topic: '' });
 
       if (startRes.data.success) {
         const sessionId = startRes.data.data.sessionId;
 
         // 3. Send image to AI
-        const aiRes = await api.post(`/ai-homework/${sessionId}/message`, {
-          message: "Analyze this classroom view and explain what is being shown or discussed. If there are slides, summarize them. Provide 100% accurate insights.",
-          image: {
-            mimeType: 'image/jpeg',
-            data: base64Data
-          }
-        });
+        const aiRes = await aiApi.homeworkHelp({ action: 'sendMessage', sessionId, message: question });
 
         if (aiRes.data.success) {
           setAiExplanation(aiRes.data.data.content);

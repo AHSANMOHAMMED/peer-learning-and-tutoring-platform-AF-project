@@ -12,7 +12,7 @@ import { useAuth } from '../controllers/useAuth';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
+import { questionApi } from '../services/api';
 
 const ForumPage = () => {
   const { user } = useAuth();
@@ -41,8 +41,8 @@ const ForumPage = () => {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/questions');
-      if (res.data.questions) {
+      const res = await questionApi.getAll();
+      if (res.questions) {
         setQuestions(res.data.questions);
       }
     } catch (error) {
@@ -56,7 +56,7 @@ const ForumPage = () => {
   const handleCreateQuestion = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/questions', {
+      const res = await questionApi.create({
         ...newQuestion,
         tags: newQuestion.tags.split(',').map(tag => tag.trim())
       });

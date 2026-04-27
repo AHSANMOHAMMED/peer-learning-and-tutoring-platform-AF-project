@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
-
+import { reportApi } from '../services/api';
 
 export const useReports = () => {
   const [reports, setReports] = useState([]);
@@ -11,8 +10,8 @@ export const useReports = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/reports');
-      setReports(data);
+      const data = await reportApi.getAll();
+      setReports(data || []);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch reports');
@@ -26,7 +25,7 @@ export const useReports = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/reports', reportData);
+      const data = await reportApi.create(reportData);
       setReports((prev) => [data, ...prev]);
       return data;
     } catch (err) {
@@ -41,7 +40,7 @@ export const useReports = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.patch(`/reports/${id}/status`, { status, moderatorAction });
+      const data = await reportApi.moderate(id, { status, moderatorAction });
       setReports((prev) => prev.map((r) => r._id === id ? data : r));
       return data;
     } catch (err) {

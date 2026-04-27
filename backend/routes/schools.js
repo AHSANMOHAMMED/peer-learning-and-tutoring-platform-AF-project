@@ -52,4 +52,48 @@ router.put('/:id', authenticate, authorize(['superadmin', 'schoolAdmin']), updat
  */
 router.delete('/:id', authenticate, authorize(['superadmin']), deleteSchool);
 
+/**
+ * @route   GET /api/schools/:id/users
+ * @desc    Get all users in a school
+ * @access  Private (SchoolAdmin)
+ */
+router.get('/:id/users', authenticate, authorize(['schoolAdmin']), async (req, res) => {
+  try {
+    const schoolId = req.params.id;
+    // Verify school admin is linked to this school
+    if (req.user.school.toString() !== schoolId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to access this school' });
+    }
+    const users = await User.find({ school: schoolId }).select('-password');
+    res.json({ success: true, data: { users } });
+  } catch (error) {
+    console.error('Get school users error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch school users' });
+  }
+});
+
+/**
+ * @route   POST /api/schools/:id/users
+ * @desc    Add user to school
+ * @access  Private (SchoolAdmin)
+ */
+router.post('/:id/users', authenticate, authorize(['schoolAdmin']), async (req, res) => {
+  try {
+    const schoolId = req.params.id;
+    // Verify school admin is linked to this school
+    if (req.user.school.toString() !== schoolId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to access this school' });
+    }
+    const { userId } = req.body;
+    const user = await User.findByIdAndUpdate(userId, { school: schoolId }, { new: true });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ success: true, message: 'User added to school', data: { user } });
+  } catch (error) {
+    console.error('Add user to school error:', error);
+    res.status(500).json({ success: false, message: 'Failed to add user to school' });
+  }
+});
+
 module.exports = router;

@@ -95,6 +95,9 @@ app.use('/api/groups', require('./routes/groups'));
 // Lecture/Course Routes
 app.use('/api/lectures', require('./routes/lectures'));
 
+// Mentor Routes
+app.use('/api/mentors', require('./routes/mentors'));
+
 // Phase 3-6 Advanced Routes
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/feature-flags', require('./routes/featureFlags'));

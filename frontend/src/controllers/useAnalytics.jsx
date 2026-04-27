@@ -1,21 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { systemApi } from '../services/api';
 
 
 export const useAnalytics = () => {
@@ -27,7 +11,7 @@ export const useAnalytics = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/system/analytics');
+      const data = await systemApi.getAnalytics();
       setAnalytics(data);
       return data;
     } catch (err) {
@@ -42,7 +26,7 @@ export const useAnalytics = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/system/pulse');
+      const data = await systemApi.getPulse();
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch pulse stats');

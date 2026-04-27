@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
+import { featureFlagApi } from '../services/api';
 
 export const useFeatureFlags = () => {
   const [flags, setFlags] = useState([]);
@@ -10,9 +10,11 @@ export const useFeatureFlags = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/feature-flags');
+      const data = await featureFlagApi.getAll();
       if (data.success) {
-        setFlags(data.data.flags);
+        setFlags(data.data.flags || []);
+      } else {
+        setFlags(data || []);
       }
       return data;
     } catch (err) {
@@ -27,7 +29,7 @@ export const useFeatureFlags = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post(`/feature-flags/${id}/toggle`);
+      const data = await featureFlagApi.toggle(id);
       if (data.success) {
         setFlags((prev) => prev.map((f) => f._id === id ? { ...f, enabled: !f.enabled } : f));
       }
@@ -44,7 +46,7 @@ export const useFeatureFlags = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/feature-flags', flagData);
+      const data = await featureFlagApi.create(flagData);
       if (data.success) {
         setFlags((prev) => [...prev, data.data.flag]);
       }
@@ -61,7 +63,7 @@ export const useFeatureFlags = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.delete(`/feature-flags/${id}`);
+      const data = await featureFlagApi.delete(id);
       if (data.success) {
         setFlags((prev) => prev.filter((f) => f._id !== id));
       }
@@ -79,8 +81,8 @@ export const useFeatureFlags = () => {
     loading, 
     error, 
     fetchFlags, 
-    toggleFlag,
-    createFlag,
+    toggleFlag, 
+    createFlag, 
     deleteFlag
   };
 };

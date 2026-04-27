@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
+import { adminApi } from '../services/api';
 
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -11,11 +11,12 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams(filters);
-      const { data } = await api.get(`/admin/users?${params.toString()}`);
+      const data = await adminApi.getAllUsers(filters);
       if (data.success) {
-        setUsers(data.data.users);
-        setPagination(data.data.pagination);
+        setUsers(data.data.users || []);
+        setPagination(data.data.pagination || { page: 1, limit: 20, total: 0, pages: 0 });
+      } else {
+        setUsers(data || []);
       }
       return data;
     } catch (err) {
@@ -30,7 +31,7 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put(`/admin/users/${id}/status`, { isActive, reason });
+      const data = await adminApi.toggleUserStatus(id, { isActive, reason });
       if (data.success) {
         setUsers((prev) => prev.map((u) => u._id === id ? { ...u, isActive } : u));
       }
@@ -47,7 +48,7 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put(`/admin/users/${id}/role`, { role, reason });
+      const data = await adminApi.changeUserRole(id, { role, reason });
       if (data.success) {
         setUsers((prev) => prev.map((u) => u._id === id ? { ...u, role } : u));
       }
@@ -64,9 +65,9 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/admin/users/bulk', { userIds, operation, data: extraData });
+      const data = await adminApi.bulkOperations({ userIds, operation, data: extraData });
       if (data.success) {
-        await fetchUsers(pagination); // Refresh current view
+        await fetchUsers(pagination);
       }
       return data;
     } catch (err) {
@@ -81,7 +82,7 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/admin/users', userData);
+      const data = await adminApi.createUser(userData);
       if (data.success) {
         setUsers(prev => [data.data.user, ...prev]);
         setPagination(prev => ({ ...prev, total: prev.total + 1 }));
@@ -99,7 +100,7 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get(`/admin/users/${id}`);
+      const data = await adminApi.getUserById(id);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch user details');
@@ -113,7 +114,7 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put(`/admin/users/${id}`, updateData);
+      const data = await adminApi.updateUser(id, updateData);
       if (data.success) {
         setUsers(prev => prev.map(u => u._id === id ? { ...u, ...data.data.user } : u));
       }
@@ -130,7 +131,7 @@ export const useUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.delete(`/admin/users/${id}`);
+      const data = await adminApi.deleteUser(id);
       if (data.success) {
         setUsers(prev => prev.filter(u => u._id !== id));
         setPagination(prev => ({ ...prev, total: prev.total - 1 }));

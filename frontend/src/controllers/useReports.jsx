@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
-
+import { reportApi } from '../services/api';
 
 export const useReports = () => {
   const [reports, setReports] = useState([]);
@@ -11,7 +10,7 @@ export const useReports = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/moderation/reports');
+      const data = await reportApi.getAll();
       const reportList = data.data?.reports || data.reports || data.data || data || [];
       setReports(Array.isArray(reportList) ? reportList : []);
       return reportList;
@@ -28,7 +27,7 @@ export const useReports = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/moderation/reports', reportData);
+      const data = await reportApi.create(reportData);
       setReports((prev) => [data, ...prev]);
       return data;
     } catch (err) {
@@ -44,7 +43,7 @@ export const useReports = () => {
     setError(null);
     try {
       const action = status === 'dismissed' ? 'dismiss' : 'resolve';
-      const { data } = await api.put(`/moderation/reports/${id}/${action}`, { moderatorAction });
+      const data = await reportApi.moderate(id, action, moderatorAction);
       setReports((prev) => prev.map((r) => r._id === id ? data : r));
       return data;
     } catch (err) {

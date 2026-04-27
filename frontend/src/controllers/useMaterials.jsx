@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
-
+import { materialApi } from '../services/api';
 
 export const useMaterials = () => {
   const [materials, setMaterials] = useState([]);
@@ -11,8 +10,8 @@ export const useMaterials = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/materials');
-      setMaterials(data);
+      const data = await materialApi.getAll();
+      setMaterials(data || []);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch materials');
@@ -26,7 +25,7 @@ export const useMaterials = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post('/materials', materialData);
+      const data = await materialApi.upload(materialData);
       setMaterials((prev) => [...prev, data]);
       return data;
     } catch (err) {
@@ -41,7 +40,7 @@ export const useMaterials = () => {
     setLoading(true);
     setError(null);
     try {
-      await api.delete(`/materials/${id}`);
+      await materialApi.delete(id);
       setMaterials((prev) => prev.filter((m) => m._id !== id));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete material');
@@ -55,7 +54,9 @@ export const useMaterials = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put(`/materials/${id}/moderate`, { status });
+      const data = status === 'approved' 
+        ? await materialApi.approve(id)
+        : await materialApi.reject(id, '');
       setMaterials((prev) => prev.map((m) => m._id === id ? data : m));
       return data;
     } catch (err) {

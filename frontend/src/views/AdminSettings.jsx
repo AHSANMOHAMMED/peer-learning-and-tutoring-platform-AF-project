@@ -32,7 +32,7 @@ import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { useFeatureFlags } from '../controllers/useFeatureFlags';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
+import { featureFlagApi, systemApi, adminApi } from '../services/api';
 
 const AdminSettings = () => {
   const [activeCategory, setActiveCategory] = useState('platform');
@@ -62,7 +62,7 @@ const AdminSettings = () => {
     fetchFlags();
     const checkHealth = async () => {
       try {
-        const { data } = await api.get('/health');
+        const { data } = await systemApi.getPulse();
         setHealthStatus(data);
         if (data.cpu) setCpuLoad(parseFloat(data.cpu));
         if (data.memory) setRamUsage(data.memory.heapUsed / 100); // Scaled for display
@@ -136,8 +136,7 @@ const AdminSettings = () => {
     }
     setFetching(true);
     try {
-      const { data } = await api.post('/admin/broadcast', broadcastData);
-      addLog(`Global broadcast dispatched: ${broadcastData.targetRole}`, 'NOTIF');
+      const { data } = await adminApi.broadcastNotification(broadcastData);      addLog(`Global broadcast dispatched: ${broadcastData.targetRole}`, 'NOTIF');
       toast.success(data.message);
       setBroadcastData({ ...broadcastData, message: '', title: '' });
     } catch (err) {
@@ -151,7 +150,7 @@ const AdminSettings = () => {
     if (!window.confirm('WARNING: Rotating access keys may cause temporary API disruptions. Proceed?')) return;
     setFetching(true);
     try {
-      const { data } = await api.post('/admin/rotate-keys');
+      const { data } =       await adminApi.rotateAccessKeys();
       addLog(`Security credentials rotated: ID ${data.data.keyPairId}`, 'SECURE');
       toast.success('Platform access keys rotated and distributed');
     } catch (err) {

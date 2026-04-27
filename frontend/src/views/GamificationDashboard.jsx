@@ -6,7 +6,7 @@ import {
   ShieldCheck, ArrowUpRight, GraduationCap
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import api from '../services/api';
+import { gamificationApi } from '../services/api';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 
@@ -27,16 +27,22 @@ const GamificationDashboard = () => {
     try {
       setLoading(true);
       const [profileRes, badgesRes] = await Promise.all([
-        api.get('/gamification/profile'),
-        api.get('/gamification/badges/my')
+        gamificationApi.getProfile(),
+        gamificationApi.getMyBadges()
       ]);
-
-      if (profileRes.data.success) {
-        setProfile(profileRes.data.data);
+      
+      if (profileRes.success) {
+        setProfile(profileRes.data);
+      } else {
+        setProfile(profileRes || null);
       }
-      if (badgesRes.data.success) {
-        setBadges(badgesRes.data.data.badges);
+      
+      if (badgesRes.success) {
+        setBadges(badgesRes.data?.badges || badgesRes.data || []);
+      } else {
+        setBadges(badgesRes || []);
       }
+      
       await fetchLeaderboard('global');
     } catch (error) {
       console.error('Error fetching gamification data:', error);
@@ -47,9 +53,9 @@ const GamificationDashboard = () => {
 
   const fetchLeaderboard = async (type) => {
     try {
-      const res = await api.get(`/gamification/leaderboard?type=${type}&limit=20`);
-      if (res.data.success) {
-        setLeaderboard(res.data.data.leaderboard);
+      const res = await gamificationApi.getLeaderboard({ type, limit: 20 });
+      if (res.success) {
+        setLeaderboard(res.data?.leaderboard || res.data || []);
         setLeaderboardType(type);
       }
     } catch (error) {

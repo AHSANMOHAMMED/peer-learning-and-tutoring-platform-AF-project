@@ -1,39 +1,39 @@
 # Multi-stage Dockerfile for Peer Learning Platform
 
 # ==========================================
-# Stage 1: Build Client
+# Stage 1: Build Client (Frontend)
 # ==========================================
 FROM node:18-alpine AS client-builder
 
-WORKDIR /app/client
+WORKDIR /app/frontend
 
-# Copy client package files
-COPY client/package*.json ./
+# Copy frontend package files
+COPY frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy client source
-COPY client/ ./
+# Copy frontend source
+COPY frontend/ ./
 
 # Build production bundle
 RUN npm run build
 
 # ==========================================
-# Stage 2: Build Server
+# Stage 2: Build Server (Backend)
 # ==========================================
 FROM node:18-alpine AS server-builder
 
-WORKDIR /app/server
+WORKDIR /app/backend
 
-# Copy server package files
-COPY server/package*.json ./
+# Copy backend package files
+COPY backend/package*.json ./
 
-# Install dependencies
+# Install dependencies (production only)
 RUN npm ci --only=production
 
-# Copy server source
-COPY server/ ./
+# Copy backend source
+COPY backend/ ./
 
 # ==========================================
 # Stage 3: Production Image
@@ -48,11 +48,11 @@ RUN apk update && apk upgrade && \
 # Create app directory
 WORKDIR /app
 
-# Copy server from builder
-COPY --from=server-builder /app/server ./server
+# Copy built client from builder to backend's public directory
+COPY --from=client-builder /app/frontend/dist ./backend/public
 
-# Copy built client from builder
-COPY --from=client-builder /app/client/dist ./server/public
+# Copy server from builder
+COPY --from=server-builder /app/backend ./backend
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -64,8 +64,8 @@ RUN chown -R nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
-# Set working directory to server
-WORKDIR /app/server
+# Set working directory to backend
+WORKDIR /app/backend
 
 # Expose port
 EXPOSE 5000

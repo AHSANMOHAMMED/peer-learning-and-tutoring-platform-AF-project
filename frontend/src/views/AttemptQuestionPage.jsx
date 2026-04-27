@@ -1,32 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
-  Send,
-  CheckCircle,
-  HelpCircle,
-  Award,
-  BookOpen,
-  ChevronRight,
-  Target,
-  Zap,
-  ShieldCheck,
-  Signal,
-  ArrowUpRight,
-  Sparkles,
-  Book,
-  Activity,
-  BadgeCheck,
-  RefreshCw,
-  Search,
-  Star,
-  GraduationCap
+  Send, Loader2, ArrowLeft, ExternalLink, CheckCircle, AlertCircle,
+  MessageCircle, Code, Book, Trophy, ChevronRight, Star, ThumbsUp,
+  Trash2, Edit2, MoreVertical, Flag, Share2, Download, Filter,
+  Search, Plus, Eye, EyeOff, Calendar, Clock, User, BookOpen,
+  GraduationCap, Sparkles, ArrowRight, MessageSquare, SearchIcon,
+  Filter as FilterIcon, X, Check, AlertTriangle, Shield,
+  Award, Bell, Settings, Briefcase, Phone, Mail, MapPin, Tag, 
+  Hash, Link as LinkIcon, Copy, Play, Pause, Volume2,
+  VolumeX, Maximize, Minimize, Upload, Image as ImageIcon,
+  FileText, Video as VideoIcon, File, Folder, FolderOpen,
+  FolderPlus, FolderMinus, ChevronDown, ChevronUp,
+  ChevronLeft, ChevronRight as ChevronRight2,
+  MoreHorizontal, PlusCircle, Pencil, Trash as Trash2Icon,
+  Copy as CopyIcon, Download as DownloadIcon
 } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../controllers/useAuth';
 import Layout from '../components/Layout';
-import api from '../services/api';
-import { toast } from 'react-hot-toast';
 import { cn } from '../utils/cn';
+import { toast } from 'react-hot-toast';
+import { qaApi, answerApi } from '../services/api';
+import ReactMarkdown from 'react-markdown';
 
 const AttemptQuestionPage = () => {
   const { id } = useParams();
@@ -44,7 +40,7 @@ const AttemptQuestionPage = () => {
 
   const fetchQuestion = async () => {
     try {
-      const res = await api.get(`/qa/questions/${id}`);
+      const res = await qaApi.getById(id);
       if (res.data.success) {
         setQuestion(res.data.data);
       }
@@ -65,16 +61,16 @@ const AttemptQuestionPage = () => {
       return;
     }
 
-    try {
-      const res = await api.post('/qa/submissions', {
-        questionId: question._id,
-        questionTitle: question.title,
-        subject: question.subject,
-        grade: question.grade,
-        type: question.type,
-        answer: finalAnswer,
-        points: question.points
-      });
+     try {
+       const res = await answerApi.create({ 
+         questionId: id,
+         questionTitle: question.title,
+         subject: question.subject,
+         grade: question.grade,
+         type: question.type,
+         answer: finalAnswer,
+         points: question.points
+       });
 
       if (res.data.success) {
         setResult(res.data.data);

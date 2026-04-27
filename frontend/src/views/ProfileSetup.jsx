@@ -14,11 +14,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../controllers/useAuth';
-import api from '../services/api';
 import { cn } from '../utils/cn';
 
 const ProfileSetup = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -66,18 +65,16 @@ const ProfileSetup = () => {
 
     setLoading(true);
     try {
-      const response = await api.put('/auth/profile', {
+      setLoading(true);
+      const profileData = {
         grade: form.grade,
-        stream: form.stream || 'Other',
         district: form.district,
-        role: form.role
-      });
-
-      if (response.data.success) {
-        toast.success('Profile setup complete!');
-        await refreshUser();
-        navigate('/dashboard');
-      }
+        stream: parseInt(form.grade) >= 11 ? form.stream : undefined
+      };
+      await updateProfile(profileData);
+      toast.success('Profile setup complete!');
+      await refreshUser();
+      navigate('/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Setup failed');
     } finally {

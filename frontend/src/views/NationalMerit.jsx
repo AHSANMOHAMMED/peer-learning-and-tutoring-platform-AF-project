@@ -10,7 +10,6 @@ import {
   Loader2
 } from 'lucide-react';
 import Layout from '../components/Layout';
-import api from '../services/api';
 import { cn } from '../utils/cn';
 
 const NationalMerit = () => {
@@ -36,8 +35,8 @@ const NationalMerit = () => {
         try {
            setLoading(true);
            const [studentRes, districtRes] = await Promise.all([
-              api.get(`/gamification/leaderboard?type=global&limit=10&subject=${selectedStream}`),
-              api.get('/gamification/leaderboard/districts')
+              gamificationApi.getLeaderboard({ type: "global", limit: 10, subject: selectedStream }),
+              gamificationApi.getDistrictLeaderboard()
            ]);
 
            if (studentRes.data.success) {

@@ -133,8 +133,16 @@ const seedDatabase = async () => {
 
     // 3. Users
     const createdUsers = [];
+    const otpCode = '123456';
+    const otpExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    
     for (const userData of seedUsers) {
-      const user = await User.create(userData);
+      const user = await User.create({
+        ...userData,
+        otpCode,
+        otpExpiry,
+        isVerified: true
+      });
       createdUsers.push(user);
     }
     const [nimal, kamal, ruwanthi, dinithi, amil, admin] = createdUsers;
@@ -168,7 +176,7 @@ const seedDatabase = async () => {
       experience: 3, rating: 4.9, reviewCount: 42, verificationStatus: 'approved', hourlyRate: 1500, isFeatured: false
     });
 
-    // 7. Questions & Answers
+    // 7. Questions & Answers (English, Sinhala, Tamil)
     const q1 = await Question.create({
       title: 'How to solve 2022 A/L Combined Mathematics Integration Problem?',
       body: 'I am struggling with the substitution method on the second part of the essay question. Can someone explain?',
@@ -176,25 +184,53 @@ const seedDatabase = async () => {
       subject: 'Combined Mathematics', grade: 13, author: nimal._id, difficulty: 'Hard'
     });
 
-    const a1 = await Answer.create({
+    await Answer.create({
       body: 'The trick is to use u = tan(x/2). This will simplify the denominator significantly. I have attached the steps.',
       question: q1._id, author: kamal._id, isAccepted: true, upvotes: 12
     });
-    await q1.updateAnswerCount();
-    await Vote.create({ user: ruwanthi._id, targetType: 'answer', targetId: a1._id, voteType: 'up' });
 
     const q2 = await Question.create({
       title: 'Differences between C3 and C4 pathways in Photosynthesis?',
       body: 'What are the main morphological differences shown in leaf anatomy for A/L Biology?',
       tags: ['A/L', 'Biology', 'Botany'],
-      subject: 'O/L General', grade: 12, author: ruwanthi._id, difficulty: 'Medium'
+      subject: 'Biological Sciences', grade: 12, author: ruwanthi._id, difficulty: 'Medium'
     });
 
-    const a2 = await Answer.create({
+    await Answer.create({
       body: 'C4 plants exhibit Kranz anatomy, where the mesophyll cells are clustered around the bundle-sheath cells. This prevents photorespiration.',
       question: q2._id, author: dinithi._id, isAccepted: false, upvotes: 5
     });
+
+    // Sinhala Question
+    const q3 = await Question.create({
+      title: 'අනුකලනය (Integration) මූලික සිද්ධාන්ත මොනවාද?',
+      body: 'අනුකලනය ආරම්භ කිරීමේදී දැනගත යුතු වැදගත්ම සූත්‍ර මොනවාද? කරුණාකර පැහැදිලි කරන්න.',
+      tags: ['Maths', 'Sinhala', 'Pure Maths'],
+      subject: 'Combined Mathematics', grade: 12, author: nimal._id, difficulty: 'Easy'
+    });
+
+    await Answer.create({
+      body: 'මූලිකවම ඔබ x^n, sin(x), cos(x) වැනි මූලික ශ්‍රිතවල අනුකලිත දැනගත යුතුය. එමෙන්ම අනුකලන නියතය (c) යෙදීමට අමතක නොකරන්න.',
+      question: q3._id, author: kamal._id, isAccepted: true, upvotes: 8
+    });
+
+    // Tamil Question
+    const q4 = await Question.create({
+      title: 'ஒளித்தொகுப்பின் முக்கியத்துவம் என்ன?',
+      body: 'தாவரங்களில் ஒளித்தொகுப்பு எவ்வாறு நடைபெறுகிறது? அதன் முக்கிய படிகளை விளக்குக.',
+      tags: ['Biology', 'Tamil', 'Science'],
+      subject: 'Biological Sciences', grade: 11, author: ruwanthi._id, difficulty: 'Medium'
+    });
+
+    await Answer.create({
+      body: 'ஒளித்தொகுப்பு இரு நிலைகளில் நடைபெறுகிறது: ஒளி சார்ந்த வினை மற்றும் ஒளி சாரா வினை (கல்வின் வட்டம்).',
+      question: q4._id, author: dinithi._id, isAccepted: true, upvotes: 10
+    });
+
+    await q1.updateAnswerCount();
     await q2.updateAnswerCount();
+    await q3.updateAnswerCount();
+    await q4.updateAnswerCount();
 
     // 8. Timetables
     await Timetable.create({

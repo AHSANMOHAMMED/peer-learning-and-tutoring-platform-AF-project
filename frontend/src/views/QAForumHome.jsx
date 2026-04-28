@@ -28,12 +28,19 @@ const QAForumHome = () => {
 
   const subjects = ['Mathematics', 'Science', 'History', 'English', 'ICT'];
 
+  const userGrade = useMemo(() => {
+    if (!user?.grade) return 'all';
+    const gradeStr = user.grade.toString();
+    if (gradeStr.includes('A/L')) return '12';
+    if (gradeStr.includes('O/L')) return '11';
+    const match = gradeStr.match(/\d+/);
+    return match ? match[0] : 'all';
+  }, [user]);
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const userGrade = user?.profile?.grade?.toString().match(/\d+/)?.[0] || '10';
-        
         let data;
         if (viewMode === 'Feed') {
           data = await questionApi.getAll({ grade: userGrade });
@@ -71,17 +78,26 @@ const QAForumHome = () => {
     [questions, selectedId]
   );
 
+  const [subjectFilter, setSubjectFilter] = useState('All Subjects');
+
   const filteredQuestions = useMemo(() => {
-    if (filter === 'All') return questions;
-    return questions.filter(q => q.status === filter);
-  }, [questions, filter]);
+    let result = questions;
+    if (filter !== 'All') {
+      result = result.filter(q => q.status === filter);
+    }
+    if (subjectFilter !== 'All Subjects') {
+      result = result.filter(q => q.subject === subjectFilter);
+    }
+    return result;
+  }, [questions, filter, subjectFilter]);
 
   const handlePostQuestion = async () => {
     if (!newTitle.trim() || !newBody.trim()) return toast.error("Please fill all fields");
     
     const token = localStorage.getItem('token');
     try {
-       const data = await questionApi.create({ title: newTitle, content: newBody, subject: newSubject, grade: 10, tags: [] });
+       const detectedGrade = userGrade === 'all' ? 11 : parseInt(userGrade);
+       const data = await questionApi.create({ title: newTitle, content: newBody, subject: newSubject, grade: detectedGrade, tags: [] });
 
        if (data) {
           const newQ = {
@@ -177,11 +193,24 @@ const QAForumHome = () => {
                      <button onClick={() => setViewMode('Feed')} className={cn("flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", viewMode === 'Feed' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:bg-slate-50")}>Feed</button>
                      <button onClick={() => setViewMode('MyQuestions')} className={cn("flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", viewMode === 'MyQuestions' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:bg-slate-50")}>My Posts</button>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-4">
                      <button onClick={() => setFilter('All')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'All' ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-500")}>All</button>
                      <button onClick={() => setFilter('Pending')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-slate-50 text-slate-500")}>Pending</button>
                      <button onClick={() => setFilter('Resolved')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'Resolved' ? "bg-emerald-100 text-emerald-700" : "bg-slate-50 text-slate-500")}>Resolved</button>
                   </div>
+                  <select 
+                     value={subjectFilter} 
+                     onChange={(e) => setSubjectFilter(e.target.value)}
+                     className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#00a8cc] transition-colors"
+                  >
+                     <option>All Subjects</option>
+                     <option>Combined Mathematics</option>
+                     <option>Biological Sciences</option>
+                     <option>Sinhala</option>
+                     <option>Tamil</option>
+                     <option>English</option>
+                     <option>ICT</option>
+                  </select>
               </div>
 
               <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -209,6 +238,9 @@ const QAForumHome = () => {
                                  <div className="flex items-center gap-2">
                                     <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 uppercase">{q.student?.[0] || 'S'}</div>
                                     <span className="text-[10px] font-bold text-slate-500">{q.student}</span>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400 font-black uppercase tracking-tight">
+                                       {/[අ-ෆ]/.test(q.title + q.body) ? 'SI' : /[அ-ஹ]/.test(q.title + q.body) ? 'TA' : 'EN'}
+                                    </span>
                                  </div>
                                  <span className={cn(
                                     "text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1",

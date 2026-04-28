@@ -16,6 +16,25 @@ import { useAnalytics } from '../controllers/useAnalytics';
 import { cn } from '../utils/cn';
 import { systemApi } from '../services/api';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.5 }
+  }
+};
+
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
   const { analytics, fetchAnalytics, loading } = useAnalytics();
@@ -77,7 +96,12 @@ const SuperAdminDashboard = () => {
            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-50 blur-[150px]" />
         </div>
 
-        <div className="relative z-10 space-y-10">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="relative z-10 space-y-10"
+        >
           {/* Hero Dashboard Access */}
           <div className="relative overflow-hidden rounded-3xl bg-white p-8 md:p-12 border border-slate-200 shadow-sm group">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50 blur-[80px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
@@ -263,7 +287,7 @@ const SuperAdminDashboard = () => {
                 </motion.div>
              </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </DashboardShell>
   );

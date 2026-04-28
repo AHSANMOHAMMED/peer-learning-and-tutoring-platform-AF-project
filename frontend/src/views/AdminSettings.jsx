@@ -30,11 +30,13 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
+import { useAuth } from '../controllers/useAuth';
 import { useFeatureFlags } from '../controllers/useFeatureFlags';
 import { toast } from 'react-hot-toast';
 import { featureFlagApi, systemApi, adminApi } from '../services/api';
 
 const AdminSettings = () => {
+  const { user: currentUser } = useAuth();
   const [activeCategory, setActiveCategory] = useState('platform');
   const [cpuLoad, setCpuLoad] = useState(12.4);
   const [ramUsage, setRamUsage] = useState(2.8);
@@ -192,7 +194,7 @@ const AdminSettings = () => {
   };
 
   return (
-    <Layout userRole="admin">
+    <Layout userRole={currentUser?.role || 'admin'}>
       <div className="min-h-screen bg-[#fafafc] text-slate-900 selection:bg-indigo-500/10 overflow-x-hidden relative text-left p-6 md:p-8">
         <motion.div 
           className="relative z-10 max-w-[1440px] mx-auto space-y-8 text-left"

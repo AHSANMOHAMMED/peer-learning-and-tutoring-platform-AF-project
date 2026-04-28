@@ -6,6 +6,8 @@ import { useAuth } from '../controllers/useAuth';
 import { aiApi } from '../services/api';
 import Layout from '../components/Layout';
 import ReactMarkdown from 'react-markdown';
+import { cn } from '../utils/cn';
+import VoiceRecorder from '../components/VoiceRecorder';
 
 const AIHomeworkChat = () => {
   const { user } = useAuth();
@@ -111,7 +113,12 @@ const AIHomeworkChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await aiApi.homeworkHelp({ action: 'sendMessage', sessionId, message: newMessage });
+      const response = await aiApi.homeworkHelp({ 
+        action: 'sendMessage', 
+        sessionId, 
+        message: userMessage, 
+        image: currentImage 
+      });
       if (response.data.success) {
         setMessages((prev) => [...prev, {
           role: 'assistant',
@@ -421,7 +428,12 @@ const AIHomeworkChat = () => {
                     reader.readAsDataURL(audioBlob);
                     reader.onloadend = async () => {
                       const base64Audio = reader.result.split(',')[1];
-                      const res = await aiApi.homeworkHelp({ action: 'sendMessage', sessionId, message: text, stream: true });
+                      const res = await aiApi.homeworkHelp({ 
+                        action: 'sendMessage', 
+                        sessionId, 
+                        message: '🎤 Voice message attached',
+                        audio: base64Audio
+                      });
                       if (res.data.success) {
                         setMessages(prev => [...prev, {
                           role: 'assistant', content: res.data.data.content, timestamp: new Date(), metadata: res.data.data

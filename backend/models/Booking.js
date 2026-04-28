@@ -8,8 +8,14 @@ const bookingSchema = new mongoose.Schema({
   endTime: { type: String, required: true }, // Format: 'HH:mm'
   status: { 
     type: String, 
-    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'in_progress'], 
+    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'in_progress', 'skip_requested'], 
     default: 'pending' 
+  },
+  skipRequest: {
+    reason: { type: String },
+    requestedAt: { type: Date },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
   subject: { type: String, required: true },
   meetingUrl: { type: String },

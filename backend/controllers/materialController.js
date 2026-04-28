@@ -26,6 +26,18 @@ exports.uploadMaterial = async (req, res) => {
   }
 };
 
+// @desc    Get materials uploaded by current user
+// @route   GET /api/materials/my
+// @access  Private
+exports.getMyMaterials = async (req, res) => {
+  try {
+    const materials = await Material.find({ uploaderId: req.user._id });
+    res.json(materials);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get all approved materials (Filtered by Grade for students)
 // @route   GET /api/materials
 // @access  Private (Authenticated)
@@ -94,6 +106,34 @@ exports.moderateMaterial = async (req, res) => {
   }
 };
 
+// @desc    Update material
+// @route   PUT /api/materials/:id
+// @access  Private (Owner/Admin)
+exports.updateMaterial = async (req, res) => {
+  try {
+    const material = await Material.findById(req.params.id);
+    if (!material) return res.status(404).json({ message: 'Material not found' });
+
+    if (material.uploaderId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(401).json({ message: 'User not authorized' });
+    }
+
+    const fieldsToUpdate = ['title', 'description', 'fileUrl', 'fileType', 'subject', 'grade', 'price', 'tags'];
+    fieldsToUpdate.forEach(field => {
+      if (req.body[field] !== undefined) material[field] = req.body[field];
+    });
+
+    // Reset moderation on update
+    material.moderationStatus = 'pending';
+    material.isApproved = false;
+
+    const updated = await material.save();
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Delete material
 // @route   DELETE /api/materials/:id
 // @access  Private (Owner/Admin)
@@ -105,11 +145,37 @@ exports.deleteMaterial = async (req, res) => {
       if (material.uploaderId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
         return res.status(401).json({ message: 'User not authorized' });
       }
-      await material.remove();
+      await material.deleteOne();
       res.json({ message: 'Material removed' });
     } else {
       res.status(404).json({ message: 'Material not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Purchase material
+// @route   POST /api/materials/:id/purchase
+// @access  Private (Student)
+exports.purchaseMaterial = async (req, res) => {
+  try {
+    const material = await Material.findById(req.params.id);
+    if (!material) return res.status(404).json({ message: 'Material not found' });
+
+    if (material.price === 0) {
+      return res.status(400).json({ message: 'This material is free' });
+    }
+
+    if (material.purchasedBy.includes(req.user._id)) {
+      return res.status(400).json({ message: 'Already purchased' });
+    }
+
+    // In a real app, integrate payment here. For now, we simulate.
+    material.purchasedBy.push(req.user._id);
+    await material.save();
+
+    res.json({ success: true, message: 'Material purchased successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

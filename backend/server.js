@@ -120,6 +120,7 @@ app.use('/api/qa', require('./routes/qa'));
 app.use('/api/recommendations', require('./routes/recommendations'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/search', require('./routes/search'));
+app.use('/api/announcements', require('./routes/announcements'));
 
 
 // Socket.io for Real-time Features

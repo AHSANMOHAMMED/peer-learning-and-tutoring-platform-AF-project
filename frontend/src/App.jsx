@@ -33,6 +33,8 @@ import QAForumHome from './views/QAForumHome';
 import AttemptQuestionPage from './views/AttemptQuestionPage';
 import ProfileView from './views/ProfileView';
 import ProfileSetup from './views/ProfileSetup';
+import TutorOnboarding from './views/TutorOnboarding';
+import TutorPending from './views/TutorPending';
 import LearningGamesPage from './views/LearningGamesPage';
 import RefreshZone from './views/RefreshZone';
 import AuthCallback from './views/AuthCallback';
@@ -104,12 +106,12 @@ function App() {
           <Route path="/tutor-workspace" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorWorkspace /></ProtectedRoute>} />
           <Route path="/tutor/qa" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorQAForumPage /></ProtectedRoute>} />
           
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><UserManagement /></ProtectedRoute>} />
-          <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminApprovals /></ProtectedRoute>} />
-          <Route path="/admin/games" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminGameManagement /></ProtectedRoute>} />
-          <Route path="/admin/parent-links" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><ParentLinkManager /></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'superadmin']}><AdminSettings /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><UserManagement /></ProtectedRoute>} />
+          <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminApprovals /></ProtectedRoute>} />
+          <Route path="/admin/games" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminGameManagement /></ProtectedRoute>} />
+          <Route path="/admin/parent-links" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><ParentLinkManager /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminSettings /></ProtectedRoute>} />
           <Route path="/moderation" element={<ProtectedRoute allowedRoles={['admin', 'moderator', 'superadmin']}><ModerationHub /></ProtectedRoute>} />
           <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><SuperAdminDashboard /></ProtectedRoute>} />
           
@@ -120,6 +122,8 @@ function App() {
           <Route path="/session/:sessionId" element={<ProtectedRoute><SessionRoom /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfileView /></ProtectedRoute>} />
           <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
+          <Route path="/tutor-onboarding" element={<ProtectedRoute allowedRoles={['tutor']}><TutorOnboarding /></ProtectedRoute>} />
+          <Route path="/tutor-pending" element={<ProtectedRoute allowedRoles={['tutor']}><TutorPending /></ProtectedRoute>} />
           <Route path="/games" element={<ProtectedRoute><LearningGamesPage /></ProtectedRoute>} />
           <Route path="/games/:gameId" element={<ProtectedRoute><LearningGamesPage /></ProtectedRoute>} />
           <Route path="/refresh-zone" element={<ProtectedRoute><RefreshZone /></ProtectedRoute>} />

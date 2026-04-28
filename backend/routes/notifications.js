@@ -7,7 +7,8 @@ const {
   markAllAsRead,
   deleteNotification,
   getUnreadCount,
-  createNotification
+  createNotification,
+  broadcastNotification
 } = require('../controllers/notificationController');
 
 const router = express.Router();
@@ -28,7 +29,8 @@ router.put('/:id/read', authenticate, markAsRead);
 router.put('/read-all', authenticate, markAllAsRead);
 router.delete('/:id', authenticate, deleteNotification);
 
-// Admin only routes
-router.post('/', authenticate, authorize('admin'), notificationValidation, createNotification);
+// Admin/Tutor only routes
+router.post('/', authenticate, authorize('admin', 'superadmin'), notificationValidation, createNotification);
+router.post('/broadcast', authenticate, authorize('admin', 'superadmin', 'tutor', 'schoolAdmin'), broadcastNotification);
 
 module.exports = router;

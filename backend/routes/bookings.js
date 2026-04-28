@@ -4,7 +4,8 @@ const {
   createBooking, 
   getBookings, 
   updateBookingStatus, 
-  updateWhiteboard 
+  updateWhiteboard,
+  requestSkip
 } = require('../controllers/bookingController');
 const { authenticate } = require('../middleware/auth');
 
@@ -70,5 +71,6 @@ router.put('/:id', authenticate, updateBookingStatus);
  *       - bearerAuth: []
  */
 router.put('/:id/whiteboard', authenticate, updateWhiteboard);
+router.post('/:id/skip', authenticate, requestSkip);
 
 module.exports = router;

@@ -4,6 +4,7 @@ const Vote = require('../models/Vote');
 const Comment = require('../models/Comment');
 const PointTransaction = require('../models/PointTransaction');
 const PointsService = require('../services/pointsService');
+const notificationService = require('../services/notificationService');
 const { validationResult } = require('express-validator');
 
 // Get answers for a question
@@ -344,6 +345,31 @@ const updateAnswerStatus = async (req, res) => {
       answer.isAccepted = true;
       answer.acceptedBy = req.user._id;
       answer.acceptedAt = new Date();
+      
+      // Award points to student
+      try {
+        await PointsService.awardAnswerCorrect(
+          answer.author, 
+          answer._id, 
+          answer.question.subject
+        );
+      } catch (pointsErr) {
+        console.error('Error awarding points for correct answer:', pointsErr);
+      }
+      // Notify student
+      try {
+        await notificationService.emitNotification(answer.author, {
+          type: 'review_received',
+          data: {
+            answerId: answer._id,
+            questionId: answer.question._id,
+            status: 'correct',
+            tutorComment: tutorComment || ''
+          }
+        });
+      } catch (notifyErr) {
+        console.error('Error sending notification for correct answer:', notifyErr);
+      }
     }
 
     await answer.save();

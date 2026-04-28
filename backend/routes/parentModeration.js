@@ -353,10 +353,33 @@ router.get('/parent/student/link-requests', authenticate, async (req, res) => {
       data: { requests }
     });
   } catch (error) {
-    console.error('Error getting student pending requests:', error);
+    console.error('Error getting student link requests:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve link requests',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/parent/student/my-parents
+ * @desc    Get student's linked parents
+ * @access  Private (Student)
+ */
+router.get('/parent/student/my-parents', authenticate, async (req, res) => {
+  try {
+    const parents = await ParentDashboardService.getLinkedParents(req.user._id);
+    res.json({
+      success: true,
+      message: 'Linked parents retrieved',
+      data: { parents }
+    });
+  } catch (error) {
+    console.error('Error getting student linked parents:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve parents',
       error: error.message
     });
   }

@@ -40,6 +40,9 @@ role: {
     ] 
   },
   grade: { type: String }, // e.g., 'Grade 11', 'A/L 2025'
+  language: { type: String, enum: ['English', 'Sinhala', 'Tamil'], default: 'English' },
+  subjects: { type: [String] },
+  university: { type: String },
   profile: {
     firstName: String,
     lastName: String,
@@ -88,6 +91,16 @@ role: {
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'School',
     index: true
+  },
+  permissions: {
+    canUseQA: { type: Boolean, default: true },
+    canUseGames: { type: Boolean, default: true },
+    canUseAI: { type: Boolean, default: true },
+    canUseMarketplace: { type: Boolean, default: true },
+    canPostResources: { type: Boolean, default: true },
+    canManageUsers: { type: Boolean, default: false },
+    canVerifyTutors: { type: Boolean, default: false },
+    canModerateForum: { type: Boolean, default: false }
   }
 }, { 
   timestamps: true,
@@ -146,6 +159,16 @@ userSchema.methods.toPublicJSON = function() {
     stream: this.stream,
     lastLogin: this.lastLogin,
     createdAt: this.createdAt,
+    permissions: this.permissions || {
+      canUseQA: true,
+      canUseGames: true,
+      canUseAI: true,
+      canUseMarketplace: true,
+      canPostResources: true,
+      canManageUsers: false,
+      canVerifyTutors: false,
+      canModerateForum: false
+    }
   };
 
   // Safe Map conversion for subjectPoints

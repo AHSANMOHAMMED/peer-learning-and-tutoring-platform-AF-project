@@ -289,6 +289,25 @@ const processScheduledNotifications = async () => {
   }
 };
 
+// Broadcast notification to specific role or grade
+const broadcastToRoleOrGrade = async (target, notificationData) => {
+  try {
+    const { role, grade } = target;
+    const query = {};
+    if (role) query.role = role;
+    if (grade) query.grade = grade;
+
+    const User = require('../models/User');
+    const users = await User.find(query).select('_id');
+    const recipientIds = users.map(u => u._id);
+
+    return await sendBulkNotifications(recipientIds, notificationData);
+  } catch (error) {
+    console.error('Broadcast notification error:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   emitNotification,
   sendBulkNotifications,
@@ -299,5 +318,6 @@ module.exports = {
   deleteNotification,
   getUnreadNotificationCount,
   scheduleNotification,
-  processScheduledNotifications
+  processScheduledNotifications,
+  broadcastToRoleOrGrade
 };

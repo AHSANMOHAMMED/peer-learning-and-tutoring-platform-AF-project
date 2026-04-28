@@ -6,7 +6,8 @@ const {
   getTutorProfile, 
   getTutorByUserId,
   moderateTutor,
-  getAllTutors
+  getAllTutors,
+  updateTutorProfile
 } = require('../controllers/tutorController');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -36,6 +37,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *         description: List of available tutors
  */
 router.post('/', authenticate, authorize(['tutor', 'mentor']), registerTutor);
+router.post('/profile', authenticate, authorize(['tutor', 'mentor']), registerTutor);
 router.get('/', getTutors);
 
 /**
@@ -47,7 +49,7 @@ router.get('/', getTutors);
  *     security:
  *       - bearerAuth: []
  */
-router.get('/all', authenticate, authorize('admin', 'superadmin'), getAllTutors);
+router.get('/all', authenticate, authorize('admin', 'websiteAdmin', 'superadmin'), getAllTutors);
 
 /**
  * @swagger
@@ -66,6 +68,7 @@ router.get('/all', authenticate, authorize('admin', 'superadmin'), getAllTutors)
  *         description: Tutor details retrieved
  */
 router.get('/:id', getTutorProfile);
+router.put('/:id', authenticate, authorize(['tutor', 'mentor', 'admin']), updateTutorProfile);
 router.get('/user/:userId', getTutorByUserId);
 
 /**
@@ -83,6 +86,6 @@ router.get('/user/:userId', getTutorByUserId);
  *         schema:
  *           type: string
  */
-router.put('/:id/moderate', authenticate, authorize('admin', 'superadmin'), moderateTutor);
+router.put('/:id/moderate', authenticate, authorize('admin', 'websiteAdmin', 'superadmin'), moderateTutor);
 
 module.exports = router;

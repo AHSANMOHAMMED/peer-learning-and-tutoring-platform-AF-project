@@ -32,7 +32,8 @@ const materialSchema = new mongoose.Schema({
   },
   tags: [String],
   downloads: { type: Number, default: 0 },
-  trustScore: { type: Number, default: 0 }
+  trustScore: { type: Number, default: 0 },
+  purchasedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Material', materialSchema);

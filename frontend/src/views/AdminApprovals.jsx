@@ -18,11 +18,13 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import { useAuth } from '../controllers/useAuth';
 import { useTutors } from '../controllers/useTutors';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
 
 const AdminApprovals = () => {
+  const { user: currentUser } = useAuth();
   const { tutors, fetchAllTutors, moderateTutor } = useTutors();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTutor, setSelectedTutor] = useState(null);
@@ -56,19 +58,47 @@ const AdminApprovals = () => {
     return Math.min(100, score);
   };
 
-  const handleAction = async (tutorId, action) => {
-    try {
-      await moderateTutor(tutorId, action);
-      toast.success(`Application has been ${action}.`);
-      setSelectedTutor(null);
-    } catch (err) {
-      toast.error(`Failed to process application.`);
-    }
-  };
+   const [rejectionModal, setRejectionModal] = useState({ isOpen: false, tutorId: null, reason: '' });
 
-  return (
-    <Layout userRole="admin">
-      <div className="min-h-screen bg-[#fafafc] pb-12 w-full font-sans">
+   const handleAction = async (tutorId, action) => {
+     if (action === 'rejected' && !rejectionModal.isOpen) {
+       setRejectionModal({ isOpen: true, tutorId, reason: '' });
+       return;
+     }
+
+     try {
+       await moderateTutor(tutorId, action, action === 'rejected' ? rejectionModal.reason : undefined);
+       toast.success(`Application has been ${action}.`);
+       setSelectedTutor(null);
+       setRejectionModal({ isOpen: false, tutorId: null, reason: '' });
+     } catch (err) {
+       toast.error(`Failed to process application.`);
+     }
+   };
+
+   return (
+     <Layout userRole={currentUser?.role || 'admin'}>
+       <div className="min-h-screen bg-[#fafafc] pb-12 w-full font-sans">
+         {/* Rejection Modal */}
+         <AnimatePresence>
+           {rejectionModal.isOpen && (
+             <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+                 <h3 className="text-2xl font-black text-slate-800 mb-2">Rejection Reason</h3>
+                 <p className="text-slate-500 text-sm mb-6">Please explain why this tutor's application is being declined. This will be sent to them via email.</p>
+                 <textarea 
+                   rows={4} value={rejectionModal.reason} onChange={e => setRejectionModal({...rejectionModal, reason: e.target.value})}
+                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-rose-500 font-medium text-slate-700 resize-none mb-6"
+                   placeholder="e.g. Incomplete profile details, lack of certifications..."
+                 />
+                 <div className="flex gap-3">
+                   <button onClick={() => setRejectionModal({ isOpen: false, tutorId: null, reason: '' })} className="flex-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-xl uppercase text-[10px] tracking-widest">Cancel</button>
+                   <button onClick={() => handleAction(rejectionModal.tutorId, 'rejected')} disabled={!rejectionModal.reason} className="flex-1 py-4 bg-rose-600 text-white font-bold rounded-xl uppercase text-[10px] tracking-widest disabled:opacity-50">Confirm Rejection</button>
+                 </div>
+               </motion.div>
+             </div>
+           )}
+         </AnimatePresence>
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-8">
           
           {/* Header */}

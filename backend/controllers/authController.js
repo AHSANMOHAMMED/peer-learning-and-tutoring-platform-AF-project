@@ -3,6 +3,7 @@ const UserGamification = require('../models/UserGamification');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
+const Tutor = require('../models/Tutor');
 
 const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
@@ -14,7 +15,7 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 // =============================================================
 exports.registerUser = async (req, res) => {
   try {
-    let { username, email, password, role, profile, district, stream, grade } = req.body;
+    let { username, email, password, role, profile, district, stream, grade, language, subjects, university } = req.body;
     console.log('Registering user:', { username, email, role });
     
     if (!username) {
@@ -40,38 +41,18 @@ exports.registerUser = async (req, res) => {
       }
     }
 
-const user = await User.create({ 
-  username, email, password, role, profile, 
-  district, stream, grade, school: schoolId,
-  authProvider: 'local' 
-});
+    // Parse subjects if it's a comma-separated string
+    let parsedSubjects = [];
+    if (subjects && typeof subjects === 'string') {
+      parsedSubjects = subjects.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    }
 
-// Initialize gamification profile for all users including demo
-await UserGamification.create({
-  user: user._id,
-  points: { total: 0, earnedThisMonth: 0, earnedThisWeek: 0, lifetime: 0 },
-  level: { current: 1, title: 'Beginner', progress: 0, pointsToNextLevel: 1000 },
-  streaks: { current: 0, longest: 0, lastActivity: null, streakType: 'daily' },
-  stats: {
-    totalSessions: 0,
-    peerSessions: 0,
-    groupSessions: 0,
-    lectureSessions: 0,
-    totalHours: 0,
-    coursesCompleted: 0,
-    coursesInProgress: 0,
-    studentsHelped: 0,
-    hoursTutored: 0,
-    averageRating: 0,
-    totalReviews: 0
-  },
-  preferences: {
-    showBadgesOnProfile: true,
-    streakNotifications: true,
-    levelUpNotifications: true,
-    shareAchievements: true
-  }
-});
+    const user = await User.create({ 
+      username, email, password, role, profile, 
+      district, stream, grade, school: schoolId,
+      language: language || 'English', subjects: parsedSubjects, university,
+      authProvider: 'local' 
+    });
 
     // Initialize gamification profile for all new users (including demo)
     await UserGamification.create({
@@ -177,17 +158,16 @@ exports.loginUser = async (req, res) => {
       return res.status(403).json({ message: 'Account deactivated. Contact support.' });
     }
 
-    // New: Strict Tutor Access Control
+    // New: Strict Tutor Access Control (Flagging status instead of blocking login)
+    let isPendingApproval = false;
+    let verificationStatus = 'approved';
+
     if (user.role === 'tutor') {
-      const Tutor = require('../models/Tutor');
       const tutorProfile = await Tutor.findOne({ userId: user._id });
       
       if (!tutorProfile || tutorProfile.verificationStatus !== 'approved') {
-        return res.status(403).json({ 
-          message: 'Tutor account pending approval. Access denied until background check is complete.',
-          isPendingApproval: true,
-          verificationStatus: tutorProfile?.verificationStatus || 'not_created'
-        });
+        isPendingApproval = true;
+        verificationStatus = tutorProfile?.verificationStatus || 'not_created';
       }
     }
 
@@ -204,6 +184,8 @@ exports.loginUser = async (req, res) => {
       profile: user.profile,
       gamification: user.gamification,
       token: generateToken(user._id),
+      isPendingApproval,
+      verificationStatus
     });
   } catch (error) {
     console.error('CRITICAL Login Error:', {
@@ -211,7 +193,17 @@ exports.loginUser = async (req, res) => {
       stack: error.stack,
       email: req.body?.email
     });
-    res.status(500).json({ message: error.message });
+    
+    // Return detailed error in development
+    if (process.env.NODE_ENV === 'development') {
+      return res.status(500).json({ 
+        message: 'Internal Server Error during login', 
+        error: error.message,
+        stack: error.stack 
+      });
+    }
+    
+    res.status(500).json({ message: 'Login failed. Please try again later.' });
   }
 };
 
@@ -226,7 +218,17 @@ exports.getUserProfile = async (req, res) => {
     
     const user = await User.findById(req.user._id);
     if (user) {
-      res.json(user.toPublicJSON ? user.toPublicJSON() : user);
+      const publicUser = user.toPublicJSON ? user.toPublicJSON() : user;
+      
+      // New: Include tutor verification status
+      if (user.role === 'tutor') {
+        const Tutor = require('../models/Tutor');
+        const tutorProfile = await Tutor.findOne({ userId: user._id });
+        publicUser.isPendingApproval = !tutorProfile || tutorProfile.verificationStatus !== 'approved';
+        publicUser.verificationStatus = tutorProfile?.verificationStatus || 'not_created';
+      }
+
+      res.json(publicUser);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
@@ -354,17 +356,17 @@ exports.verifyOTP = async (req, res) => {
       user.isVerified = true;
     }
 
-    // New: Strict Tutor Access Control
+    // New: Strict Tutor Access Control (Flagging status instead of blocking login)
+    let isPendingApproval = false;
+    let verificationStatus = 'approved';
+
     if (user.role === 'tutor') {
       const Tutor = require('../models/Tutor');
       const tutorProfile = await Tutor.findOne({ userId: user._id });
       
       if (!tutorProfile || tutorProfile.verificationStatus !== 'approved') {
-        return res.status(403).json({ 
-          message: 'Tutor account pending approval. Access denied until background check is complete.',
-          isPendingApproval: true,
-          verificationStatus: tutorProfile?.verificationStatus || 'not_created'
-        });
+        isPendingApproval = true;
+        verificationStatus = tutorProfile?.verificationStatus || 'not_created';
       }
     }
 
@@ -386,6 +388,8 @@ exports.verifyOTP = async (req, res) => {
       message: purpose === 'verify' ? 'Email verified successfully!' : 'OTP verified. Login successful.',
       token: generateToken(user._id),
       user: user.toPublicJSON ? user.toPublicJSON() : { _id: user._id, email: user.email, role: user.role },
+      isPendingApproval,
+      verificationStatus
     });
   } catch (error) {
     console.error('Verify OTP error:', error);

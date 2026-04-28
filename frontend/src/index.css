@@ -234,6 +234,18 @@
   .badge-outline {
     @apply border border-slate-200 bg-white text-slate-700;
   }
+
+  .glass-overlay {
+    @apply bg-slate-900/40 backdrop-blur-md border border-white/10;
+  }
+
+  .hero-gradient {
+    @apply bg-gradient-to-r from-slate-900 via-slate-900/40 to-transparent;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-aura-400 to-emerald-400;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {

@@ -95,5 +95,19 @@ export const useTutors = () => {
     }
   }, []);
 
-  return { tutors, loading, error, fetchTutors, fetchAllTutors, registerTutor, getTutorProfile, getTutorByUserId, moderateTutor };
+   const updateTutorProfile = useCallback(async (id, data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await tutorApi.updateProfile(id, data);
+      return response;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update tutor profile');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { tutors, loading, error, fetchTutors, fetchAllTutors, registerTutor, getTutorProfile, getTutorByUserId, updateTutorProfile, moderateTutor };
 };

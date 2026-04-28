@@ -72,6 +72,7 @@ class AIHomeworkAssistant {
       '6': `CURRICULUM CONSTRAINTS (GRADE 6 - Sri Lankan National Syllabus):
         - Mathematics Units: Prathama Sankhya (Natural Numbers), Dashama (Decimals), Bhinna (Fractions), Parimithiya (Perimeter), Vargaphala (Area), Kona (Angles), Dishawa (Directions).
         - Science Units: Jeevi ha Ajeevi dravya (Living/Non-living), Jalaya (Water), Shakha (Plants), Tapaya (Heat), Dhvaniya (Sound), Alokaya (Light), Balaya ha Chalanaya (Force/Motion).
+        - Deep Understanding Requirements: For Grade 6, always relate abstract concepts to everyday home/school objects (e.g., explaining perimeter using a garden fence, or decimals using currency cents).
         - Language: Use very simple Sinhalish/English terminology. Focus on 'Environment' based examples.`,
       
       '7': `CURRICULUM CONSTRAINTS (GRADE 7 - Sri Lankan National Syllabus):
@@ -115,6 +116,9 @@ class AIHomeworkAssistant {
     try {
       const { subject, topic, grade, specificQuestion } = params;
       
+      const user = await User.findById(userId);
+      const userLanguage = user?.language || 'English';
+
       // Create session record
       const session = await HomeworkSession.create({
         user: userId,
@@ -131,6 +135,7 @@ class AIHomeworkAssistant {
         subject: subject || 'general',
         grade,
         topic,
+        language: userLanguage,
         messageHistory: [],
         conceptsCovered: new Set(),
         hintsGiven: 0,
@@ -138,7 +143,7 @@ class AIHomeworkAssistant {
       });
       
       // Generate welcome message
-      const welcomeMessage = await this.generateWelcomeMessage(subject, topic, grade);
+      const welcomeMessage = await this.generateWelcomeMessage(subject, topic, grade, userLanguage);
       
       await this.addMessageToSession(session._id, 'assistant', welcomeMessage);
       
@@ -156,13 +161,13 @@ class AIHomeworkAssistant {
   }
 
   /**
-   * Process student message and get AI response
    * @param {String} sessionId - Session ID
    * @param {String} message - Student's message
    * @param {Object} imageData - Optional image data { mimeType: 'image/jpeg', data: 'base64...' }
+   * @param {String} audioData - Optional base64 audio data
    * @returns {Object} AI response
    */
-  async processMessage(sessionId, message, imageData = null) {
+  async processMessage(sessionId, message, imageData = null, audioData = null) {
     try {
       const session = await HomeworkSession.findById(sessionId);
       if (!session || session.status !== 'active') {
@@ -185,14 +190,15 @@ class AIHomeworkAssistant {
             }),
           conceptsCovered: new Set(session.conceptsCovered || []),
           hintsGiven: session.hintsGiven || 0,
-          understandingChecks: session.understandingChecks || 0
+          understandingChecks: session.understandingChecks || 0,
+          language: 'English' // Default for recovered sessions, could be enhanced to fetch user
         };
         this.sessionMemory.set(sessionId, memory);
       }
       
       // Add student message
-      const messageContent = imageData 
-        ? { text: message, image: imageData } 
+      const messageContent = (imageData || audioData) 
+        ? { text: message, image: imageData, audio: audioData } 
         : message;
         
       await this.addMessageToSession(session._id, 'user', messageContent);
@@ -240,13 +246,14 @@ class AIHomeworkAssistant {
   /**
    * Generate welcome message based on subject and topic
    */
-  async generateWelcomeMessage(subject, topic, grade) {
+  async generateWelcomeMessage(subject, topic, grade, language = 'English') {
+    const topicStr = topic || 'any topic';
     const prompts = {
-        mathematics: `Hi! I'm your AI Math tutor. I can help you with ${topic || 'any math topic'} (Combined Mathematics/General) at grade ${grade} level. 
+        mathematics: `Hi! I'm your AI Math tutor. I can help you with ${topicStr} (Combined Mathematics/General) at grade ${grade} level. 
         What specific problem or concept would you like help with? 
         Remember, I'll guide you through the solution rather than just giving you the answer.`,
       
-      physics: `Hello! I'm here to help you understand physics concepts, especially ${topic || 'physics principles'}. 
+      physics: `Hello! I'm here to help you understand physics concepts, especially ${topicStr}. 
         Whether it's mechanics, electricity, or waves - ask me anything! 
         I'll use real-world examples to make it clearer.`,
       
@@ -254,7 +261,13 @@ class AIHomeworkAssistant {
         What subject or topic would you like help with today?`
     };
     
-    return prompts[subject] || prompts.general;
+    let welcome = prompts[subject] || prompts.general;
+    if (language === 'Sinhala') {
+      welcome = `ආයුබෝවන්! මම ඔබේ AI අධ්‍යයන සහායකයා වෙමි. ${topicStr} සම්බන්ධයෙන් ඔබට ඇති ගැටලුව කුමක්ද? මම ඔබට උදව් කිරීමට සූදානම්!`;
+    } else if (language === 'Tamil') {
+      welcome = `வணக்கம்! நான் உங்கள் AI கல்வி உதவியாளர். ${topicStr} பற்றி உங்களுக்கு ஏதேனும் சந்தேகங்கள் உள்ளதா? நான் உங்களுக்கு உதவ தயாராக உள்ளேன்!`;
+    }
+    return welcome;
   }
 
   /**
@@ -292,11 +305,22 @@ class AIHomeworkAssistant {
     const gradeKey = memory.grade?.toString();
     const constraints = this.syllabusConstraints[gradeKey] || (parseInt(gradeKey) >= 12 ? this.syllabusConstraints['12'] : '');
     
+    const guardrails = `
+      IMPORTANT GUARDRAILS:
+      1. ONLY answer questions related to the student's registered grade (${memory.grade}) and subject (${memory.subject}).
+      2. If the student asks about concepts from a HIGHER GRADE (e.g. asking for Grade 8 math while in Grade 6), politely REFUSE. Explain that they should focus on mastering their current Grade ${memory.grade} syllabus first.
+      3. Strictly REFUSE any non-academic, harmful, or off-topic requests (e.g. video games, entertainment, non-scholastic gossip, or solving full exam papers).
+      4. EXPLAIN DEEPLY: For the allowed Grade ${memory.grade} topics, provide deep, intuitive explanations. Use multiple simple metaphors and at least TWO real-world examples from a Sri Lankan context (e.g. tea estates, local markets, school cricket, etc.).
+      5. LEVEL-APPROPRIATE: For Grade 6-8, use very simple language, short sentences, and engaging tone. Avoid complex jargon unless explaining it simply. For Grade 10-13, be more technical and exam-oriented.
+      6. MULTIMODAL AWARENESS: If the student uploads an image or voice note, acknowledge it and relate your explanation directly to what they shared.
+      7. If asked about a forbidden topic, say: "I am your Grade ${memory.grade} ${memory.subject} assistant. I am restricted to helping you excel in your current curriculum. Let's get back to [Current Topic]!"`;
+
     if (constraints) {
-      prompt += `\n\nSTRICT CURRICULUM BOUNDARIES:\n${constraints}\n
-      IMPORTANT: If the student asks for something explicitly mentioned above as "NO" or "TOO ADVANCED", explain that you cannot teach it as it is beyond their current grade level. instead, explain why they need to master their current concepts first to understand that later.`;
+      prompt += `\n\nSTRICT CURRICULUM & GRADE LOCK:\n${constraints}\n${guardrails}`;
     } else {
       // Fallback for missing grade info or other grades
+      prompt += `\n\nGRADE CONTEXT: Grade ${memory.grade || 'Unknown'}\n${guardrails}`;
+      
       if (memory.grade && parseInt(memory.grade) <= 8) {
         prompt += '\nUse simple language appropriate for younger students. Break down concepts into small steps.';
       } else if (memory.grade && parseInt(memory.grade) >= 11) {
@@ -310,9 +334,10 @@ class AIHomeworkAssistant {
     }
 
     // NEW: Multilingual Guard for Tamil and Sinhala
+    const prefLang = memory.language || 'English';
     prompt += `\n\nLANGUAGE INSTRUCTIONS:
-    - If the student communicates in Sinhala, respond primarily in Sinhala (using Unicode).
-    - If the student communicates in Tamil, respond primarily in Tamil (using Unicode).
+    - The student's preferred language is: ${prefLang}.
+    - ALWAYS reply primarily in ${prefLang}.
     - If explaining complex concepts, you may provide the English term in parentheses.
     - If requested, provide a transliteration into Latin script to help with pronunciation.
     - Always maintain the educational persona described above, regardless of the language used.
@@ -334,7 +359,8 @@ class AIHomeworkAssistant {
         return {
           role: msg.role,
           content: msg.content.text,
-          image: msg.content.image
+          image: msg.content.image,
+          audio: msg.content.audio
         };
       }
       return {
@@ -348,9 +374,9 @@ class AIHomeworkAssistant {
    * Call AI with automatic model fallback and retry
    */
   async callAI(systemPrompt, messages) {
-    // 1. Try Gemini models with fallback chain
     if (this.geminiKey) {
-      const geminiModels = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+      // Recommended: gemini-1.5-flash (fast/free), gemini-1.5-pro (complex)
+      const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
       
       for (const model of geminiModels) {
         try {
@@ -410,6 +436,7 @@ class AIHomeworkAssistant {
           }
           parts.push({ text: textContent });
 
+
           // Add image part if exists
           const imageData = msg.image || (typeof msg.content === 'object' && msg.content !== null ? msg.content.image : null);
           if (imageData) {
@@ -421,6 +448,17 @@ class AIHomeworkAssistant {
               inline_data: {
                 mime_type: imageData.mimeType || 'image/jpeg',
                 data: base64Data
+              }
+            });
+          }
+
+          // Add audio part if exists
+          const audioData = msg.audio || (typeof msg.content === 'object' && msg.content !== null ? msg.content.audio : null);
+          if (audioData) {
+            parts.push({
+              inline_data: {
+                mime_type: 'audio/webm', // Common for browser recordings
+                data: audioData
               }
             });
           }

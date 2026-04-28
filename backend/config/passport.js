@@ -15,13 +15,13 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         try {
           // Extract role from state if present
           let role = 'student';
-          try {
-            if (req.query.state) {
+          if (req.query.state) {
+            try {
               const state = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
               if (state.role) role = state.role;
+            } catch (e) {
+              console.error('Error parsing OAuth state:', e);
             }
-          } catch (e) {
-            console.error('Error parsing OAuth state:', e);
           }
 
           // Check if user already exists with this Google ID

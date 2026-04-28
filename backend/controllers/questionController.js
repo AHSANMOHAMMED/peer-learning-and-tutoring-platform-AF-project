@@ -481,6 +481,33 @@ const getQuestionStats = async (req, res) => {
   }
 };
 
+// @desc    Get questions/challenges created by the tutor
+// @access  Private (Tutor)
+const getTutorChallenges = async (req, res) => {
+  try {
+    const questions = await Question.find({ author: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate('author', 'username profile.firstName profile.lastName');
+    
+    // For each question, get the answer count if not already in the model
+    const enrichedQuestions = await Promise.all(questions.map(async (q) => {
+      const answers = await Answer.find({ question: q._id }).populate('author', 'username profile.firstName profile.lastName');
+      return {
+        ...q._doc,
+        answers,
+        answerCount: answers.length
+      };
+    }));
+
+    res.json({
+      success: true,
+      data: enrichedQuestions
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getQuestions,
   getQuestionById,
@@ -491,5 +518,6 @@ module.exports = {
   deleteQuestion,
   closeQuestion,
   approveQuestion,
-  rejectQuestion
+  rejectQuestion,
+  getTutorChallenges
 };

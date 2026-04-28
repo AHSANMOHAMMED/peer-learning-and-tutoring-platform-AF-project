@@ -1,390 +1,502 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Calendar as CalendarIcon, Clock, AlertTriangle, MessageCircle, Video, Flag, DollarSign, User, Briefcase, BookOpen, CheckCircle, Star, FileText } from 'lucide-react';
-import { format, isFuture, isPast } from 'date-fns';
-
+import { 
+  Users, Calendar as CalendarIcon, Clock, AlertTriangle, MessageCircle, Video, 
+  DollarSign, User, BookOpen, CheckCircle, Star, FileText, Send, X, Plus, 
+  Edit2, Trash2, Zap, BarChart3, RefreshCw, ShoppingBag, Brain, Layout as LayoutIcon
+} from 'lucide-react';
+import { format } from 'date-fns';
 import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';
 import { useBookings } from '../controllers/useBookings';
 import { useTutors } from '../controllers/useTutors';
-import { homeworkApi, questionApi } from '../services/api';
+import { homeworkApi, questionApi, tutorApi, materialApi, bookingApi } from '../services/api';
 import { toast } from 'react-hot-toast';
+import { cn } from '../utils/cn';
 
 const TutorDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { bookings, fetchBookings } = useBookings();
-  const [activeTab, setActiveTab] = useState('completed');
-
   const { tutors, fetchTutors, getTutorByUserId, loading: tutorLoading } = useTutors();
+  
+  const [activeTab, setActiveTab] = useState('Calendar');
   const [tutorProfile, setTutorProfile] = useState(null);
+  const [availability, setAvailability] = useState({
+    monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
+  });
+  
+  const [myStudents, setMyStudents] = useState([]);
   const [unansweredQuestions, setUnansweredQuestions] = useState([]);
-  const [loadingQA, setLoadingQA] = useState(false);
+  const [myMaterials, setMyMaterials] = useState([]);
+  const [myChallenges, setMyChallenges] = useState([]);
   const [pendingHomework, setPendingHomework] = useState([]);
-  const [gradingId, setGradingId] = useState(null);
-  const [gradeData, setGradeData] = useState({ marks: '', feedback: '' });
-  const [gradingLoading, setGradingLoading] = useState(false);
+  
+  const [loadingQA, setLoadingQA] = useState(false);
+  const [loadingMaterials, setLoadingMaterials] = useState(false);
+  const [loadingChallenges, setLoadingChallenges] = useState(false);
+  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
 
+  // Modals
+  const [showMaterialModal, setShowMaterialModal] = useState(false);
+  const [materialData, setMaterialData] = useState({ title: '', description: '', fileUrl: '', fileType: 'pdf', subject: 'Mathematics', grade: '10', price: 0 });
+  const [editingMaterialId, setEditingMaterialId] = useState(null);
+  
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [challengeData, setChallengeData] = useState({ title: '', content: '', subject: 'Mathematics', grade: '10' });
+  const [editingChallengeId, setEditingChallengeId] = useState(null);
+  
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [broadcastData, setBroadcastData] = useState({ title: '', message: '', targetRole: 'student', targetGrade: '10' });
+
+  // Initial Data Fetching
   useEffect(() => {
     fetchBookings();
     if (user?._id) {
       getTutorByUserId(user._id)
-        .then(data => setTutorProfile(data))
-        .catch(err => console.log("Tutor profile not yet created"));
+        .then(data => {
+          setTutorProfile(data);
+          if (data?.availability) setAvailability(data.availability);
+        })
+        .catch(() => console.log("Tutor profile not found"));
       fetchUnansweredQuestions();
     }
   }, [fetchBookings, getTutorByUserId, user?._id]);
 
-  const fetchUnansweredQuestions = async () => {
-    try {
-      setLoadingQA(true);
-      const res = await questionApi.getAll({ unanswered: true, limit: 5 });
-       setUnansweredQuestions(Array.isArray(res) ? res : (res.data || res || []));
-    } catch (err) {
-      console.error('QA fetch error:', err);
-    } finally {
-      setLoadingQA(false);
-    }
-  };
-
+  // Tab-specific data fetching
   useEffect(() => {
+    if (activeTab === 'Students') fetchMyStudents();
+    if (activeTab === 'Materials') fetchMyMaterials();
+    if (activeTab === 'Challenges') fetchMyChallenges();
     if (activeTab === 'Homework') fetchPendingHomework();
   }, [activeTab]);
+
+  const fetchMyStudents = async () => {
+    const uniqueStudents = [];
+    const studentIds = new Set();
+    bookings.forEach(b => {
+      if (b.studentId && !studentIds.has(b.studentId._id)) {
+        studentIds.add(b.studentId._id);
+        uniqueStudents.push({
+          ...b.studentId,
+          lastSession: b.date,
+          totalSessions: bookings.filter(sb => sb.studentId?._id === b.studentId._id).length,
+          subject: b.subject
+        });
+      }
+    });
+    setMyStudents(uniqueStudents);
+  };
+
+  const fetchMyMaterials = async () => {
+    try {
+      setLoadingMaterials(true);
+      const res = await materialApi.getMyMaterials();
+      setMyMaterials(res.data || res || []);
+    } catch (err) { console.error(err); } finally { setLoadingMaterials(false); }
+  };
+
+  const fetchMyChallenges = async () => {
+    try {
+      setLoadingChallenges(true);
+      const res = await questionApi.getTutorChallenges();
+      setMyChallenges(res.data || res || []);
+    } catch (err) { console.error(err); } finally { setLoadingChallenges(false); }
+  };
 
   const fetchPendingHomework = async () => {
     try {
       const res = await homeworkApi.getTutorPending();
       if (res.success) setPendingHomework(res.data || []);
-    } catch (err) {
-      console.error('Homework fetch error:', err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  const handleGrade = async (id) => {
-    if (!gradeData.marks) return toast.error('Please enter marks');
-    setGradingLoading(true);
+  const fetchUnansweredQuestions = async () => {
     try {
-      await homeworkApi.grade(id, { marks: Number(gradeData.marks), feedback: gradeData.feedback });
-      toast.success('Homework graded successfully!');
-      setGradingId(null);
-      setGradeData({ marks: '', feedback: '' });
-      fetchPendingHomework();
+      setLoadingQA(true);
+      const res = await questionApi.getAll({ unanswered: true, limit: 3 });
+      setUnansweredQuestions(res.data || res || []);
+    } catch (err) { console.error(err); } finally { setLoadingQA(false); }
+  };
+
+  // Availability
+  const addTimeSlot = (day) => {
+    setAvailability(prev => ({
+      ...prev,
+      [day]: [...(prev[day] || []), { start: '09:00', end: '10:00' }]
+    }));
+  };
+
+  const removeTimeSlot = (day, index) => {
+    setAvailability(prev => ({
+      ...prev,
+      [day]: prev[day].filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateTimeSlot = (day, index, field, value) => {
+    const newDaySlots = [...availability[day]];
+    newDaySlots[index][field] = value;
+    setAvailability(prev => ({ ...prev, [day]: newDaySlots }));
+  };
+
+  const handleUpdateAvailability = async () => {
+    if (!tutorProfile?._id) return;
+    setIsUpdatingAvailability(true);
+    try {
+      await tutorApi.updateProfile(tutorProfile._id, { availability });
+      toast.success('Availability saved!');
     } catch (err) {
-      toast.error('Failed to grade homework');
+      toast.error('Update failed');
     } finally {
-      setGradingLoading(false);
+      setIsUpdatingAvailability(false);
     }
   };
 
-  // Derived Stats
-  const activeSessions = bookings.filter(b => b.status === 'in_progress' || (b.status === 'scheduled' && isFuture(new Date(b.date)))).length;
-  const pendingReschedules = bookings.filter(b => b.status === 'cancelled' || b.status === 'pending').length;
-  const completedSessions = bookings.filter(b => b.status === 'completed' || (b.status !== 'cancelled' && isPast(new Date(b.date)))).length;
+  const handleBookingAction = async (id, status) => {
+    try {
+      await bookingApi.updateStatus(id, { status });
+      toast.success(`Booking ${status}`);
+      fetchBookings();
+    } catch (err) {
+      toast.error('Failed to update booking');
+    }
+  };
+
+  const handleSaveMaterial = async () => {
+    if (!materialData.title || !materialData.fileUrl) return toast.error('Please provide title and file');
+    setMaterialLoading(true);
+    try {
+      if (editingMaterialId) {
+        await materialApi.update(editingMaterialId, materialData);
+        toast.success('Material updated!');
+      } else {
+        await materialApi.upload(materialData);
+        toast.success('Material uploaded!');
+      }
+      setShowMaterialModal(false);
+      fetchMyMaterials();
+    } catch (err) { toast.error('Save failed'); } finally { setMaterialLoading(false); }
+  };
+
+  const handleMaterialFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('files', file);
+
+    const token = localStorage.getItem('token');
+    toast.loading('Uploading file...', { id: 'upload' });
+    
+    try {
+      const response = await fetch('/api/materials/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMaterialData({ ...materialData, fileUrl: data.url, fileType: data.type });
+        toast.success('File uploaded!', { id: 'upload' });
+      } else {
+        toast.error('Upload failed', { id: 'upload' });
+      }
+    } catch (err) {
+      toast.error('Upload error', { id: 'upload' });
+    }
+  };
+
+  const [materialLoading, setMaterialLoading] = useState(false);
+
+  const handleSaveChallenge = async () => {
+    try {
+      if (editingChallengeId) {
+        await questionApi.update(editingChallengeId, challengeData);
+        toast.success('Challenge updated!');
+      } else {
+        await questionApi.create(challengeData);
+        toast.success('Challenge posted!');
+      }
+      setShowChallengeModal(false);
+      fetchMyChallenges();
+    } catch (err) { toast.error('Save failed'); }
+  };
+
+  // Stats
+  const activeSessions = bookings.filter(b => b.status === 'scheduled').length;
   const totalEarnings = bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.price || 0), 0);
 
-  const tabs = ['Calendar', 'Upcoming', 'Homework', 'Reschedule', 'Completed'];
+  if (tutorLoading) return <Layout userRole="tutor"><div className="flex items-center justify-center min-h-[60vh]"><RefreshCw className="animate-spin text-[#00a8cc]" size={40} /></div></Layout>;
 
-  const filteredBookings = useMemo(() => {
-    if (activeTab === 'Upcoming') return bookings.filter(b => b.status === 'scheduled' && isFuture(new Date(b.date)));
-    if (activeTab === 'Completed') return bookings.filter(b => b.status === 'completed' || isPast(new Date(b.date)));
-    if (activeTab === 'Reschedule') return bookings.filter(b => b.status === 'cancelled');
-    return bookings;
-  }, [bookings, activeTab]);
-
-  // Handle Loading State
-  if (tutorLoading) {
-    return (
-      <Layout userRole="tutor">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00a8cc]"></div>
-        </div>
-      </Layout>
-    );
-  }
-
-  // Handle "Not Yet Approved" or "No Profile" state
   if (!tutorProfile || tutorProfile.verificationStatus !== 'approved') {
     return (
       <Layout userRole="tutor">
-        <div className="max-w-4xl mx-auto py-12 px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-8 md:p-12 shadow-soft border border-slate-100 text-center"
-          >
-            <div className="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
-               <AlertTriangle size={40} className="text-amber-500" />
+        <div className="max-w-4xl mx-auto py-20 px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100 text-center">
+            <div className="w-24 h-24 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
+               <AlertTriangle size={48} className="text-amber-500" />
             </div>
-            
-            <h1 className="text-3xl font-bold text-slate-800 mb-4">
-              {tutorProfile ? 'Verification Pending' : 'Profile Incomplete'}
-            </h1>
-            
-            <p className="text-slate-500 font-medium mb-10 max-w-lg mx-auto leading-relaxed">
-              {tutorProfile 
-                ? "Your application is currently being reviewed by our administrative team. You will have full access to your workspace once approved."
-                : "Welcome to Aura! You're almost there. To start tutoring, please complete your professional profile for review."}
+            <h1 className="text-4xl font-black text-slate-800 mb-4">{tutorProfile ? 'Verification Pending' : 'Profile Incomplete'}</h1>
+            <p className="text-slate-500 font-medium mb-12 max-w-lg mx-auto leading-relaxed">
+              {tutorProfile ? "Your tutor application is being reviewed. You'll be notified once you're approved to teach." : "Welcome to Aura! Please set up your professional profile to start tutoring."}
             </p>
-            
-            {!tutorProfile && (
-              <button 
-                onClick={() => navigate('/settings')} // Or a specific /tutor-setup page
-                className="bg-[#00a8cc] hover:bg-[#008ba8] text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95"
-              >
-                Complete Tutor Setup
-              </button>
-            )}
-
-            {tutorProfile && (
-              <div className="flex flex-col items-center gap-4">
-                 <div className="px-6 py-3 bg-slate-50 rounded-xl text-slate-600 font-bold border border-slate-100">
-                    Status: <span className="text-amber-600 uppercase ml-1">{tutorProfile.verificationStatus}</span>
-                 </div>
-                 <p className="text-xs text-slate-400 font-medium">Expected review time: 24-48 hours</p>
-              </div>
-            )}
+            {!tutorProfile && <button onClick={() => navigate('/settings')} className="bg-[#00a8cc] text-white px-12 py-4 rounded-2xl font-black transition-all shadow-xl">Complete Setup</button>}
           </motion.div>
         </div>
       </Layout>
     );
   }
 
+  const tabs = ['Calendar', 'Upcoming', 'Students', 'Challenges', 'Materials', 'Homework', 'Availability'];
+
   return (
     <Layout userRole="tutor">
-      <div className="max-w-[1400px] mx-auto w-full">
+      <div className="max-w-[1400px] mx-auto w-full font-sans pb-20">
         
-        {/* Header Region */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
            <div>
-              <h1 className="text-3xl font-bold text-slate-800 mb-1">
-                Good morning, {user?.profile?.firstName || user?.username || 'Tutor'}
-              </h1>
-              <p className="text-slate-500 text-sm">
-                Here is your job listings statistic report from Jul 19 - Jul 25.
-              </p>
+              <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">Hello, {user?.profile?.firstName || user?.username}</h1>
+              <p className="text-slate-500 font-medium">Here's what's happening in your classroom today.</p>
            </div>
-           <div className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50">
-              <span>Jul 19 - Jul 25</span>
-              <CalendarIcon size={16} className="text-[#00a8cc]" />
-           </div>
+           <button onClick={() => setShowBroadcastModal(true)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
+              <Send size={16} /> Broadcast Update
+           </button>
         </div>
 
-        {/* Action Cards (Mentoos pastel theme) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-           
-           <div className="p-6 rounded-2xl bg-[#fadcf1] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">{activeSessions}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Active sessions</p>
-              <CalendarIcon size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
-           </div>
-
-           <div className="p-6 rounded-2xl bg-[#cbf2fc] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">LKR {totalEarnings}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Total Earnings</p>
-              <DollarSign size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
-           </div>
-
-           <div className="p-6 rounded-2xl bg-[#d4cffc] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-bold text-slate-800 mb-2">{unansweredQuestions.length}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Unanswered Q&A</p>
-              <MessageCircle size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
-           </div>
-
-           <div className="p-6 rounded-2xl bg-[#ffccf9] relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <h3 className="text-4xl font-black text-slate-800 mb-2">{pendingHomework.length}</h3>
-              <p className="text-[15px] font-medium text-slate-700">Pending Grading</p>
-              <FileText size={20} className="absolute right-6 top-6 text-slate-600 opacity-60" />
-           </div>
-
-        </div>
-
-        {/* Unresolved Questions Feed */}
-        {unansweredQuestions.length > 0 && (
-           <div className="mb-10 bg-slate-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-white/10 transition-colors" />
-              <div className="relative z-10">
-                 <div className="flex justify-between items-center mb-6">
-                    <div>
-                       <h2 className="text-2xl font-bold mb-1 flex items-center gap-3">
-                          <MessageCircle size={28} className="text-[#00a8cc]" />
-                          Unresolved Inquiries
-                       </h2>
-                       <p className="text-slate-400 text-sm">Students are waiting for your expert guidance in these topics.</p>
-                    </div>
-                    <button onClick={() => navigate('/tutor/qa')} className="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all uppercase tracking-widest border border-white/10">View Forum</button>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {unansweredQuestions.slice(0, 3).map((q, idx) => (
-                       <div key={q._id || idx} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all cursor-pointer group/q" onClick={() => navigate('/tutor/qa')}>
-                          <div className="flex justify-between items-start mb-3">
-                             <span className="text-[10px] font-bold text-[#00a8cc] px-2 py-1 bg-[#00a8cc]/10 rounded-md uppercase">{q.subject}</span>
-                             <span className="text-[10px] text-slate-500 font-medium">Grade {q.grade}</span>
-                          </div>
-                          <h4 className="font-bold text-sm mb-2 line-clamp-1 group-hover/q:text-[#00a8cc] transition-colors">{q.title}</h4>
-                          <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">{q.body}</p>
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
-                             <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[8px]">{q.author?.username?.[0] || 'S'}</div>
-                             {q.author?.username || 'Student'} &bull; {new Date(q.createdAt).toLocaleDateString()}
-                          </div>
-                       </div>
-                    ))}
-                 </div>
-              </div>
-           </div>
-        )}
-
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-8 border-b border-slate-200 mb-8 pt-2">
-           {tabs.map((tab) => (
-             <button
-               key={tab}
-               onClick={() => setActiveTab(tab)}
-               className={`pb-4 px-1 text-[15px] font-medium border-b-2 transition-colors duration-300 ${
-                 activeTab.toLowerCase() === tab.toLowerCase()
-                   ? 'border-[#00a8cc] text-[#00a8cc]'
-                   : 'border-transparent text-slate-500 hover:text-slate-800'
-               }`}
-             >
-               {tab}
-             </button>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+           {[
+             { label: 'Active Sessions', val: activeSessions, bg: '#fadcf1', icon: Video },
+             { label: 'Total Earnings', val: `LKR ${totalEarnings}`, bg: '#cbf2fc', icon: DollarSign },
+             { label: 'New Questions', val: unansweredQuestions.length, bg: '#d4cffc', icon: MessageCircle },
+             { label: 'Pending Grades', val: pendingHomework.length, bg: '#ffccf9', icon: FileText }
+           ].map((s, i) => (
+             <div key={i} className="p-8 rounded-[2rem] shadow-sm border border-black/5" style={{ backgroundColor: s.bg }}>
+                <h3 className="text-4xl font-black text-slate-800 mb-1">{s.val}</h3>
+                <p className="text-[10px] font-black text-slate-700/50 uppercase tracking-widest">{s.label}</p>
+                <s.icon className="mt-4 text-slate-800/20" size={24} />
+             </div>
            ))}
         </div>
 
-        {/* Main Content Area (Session Cards) */}
-        {activeTab !== 'Homework' && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-           <AnimatePresence mode="popLayout">
-             {filteredBookings.length > 0 ? filteredBookings.map((booking, idx) => (
-               <motion.div
-                 key={booking._id || idx}
-                 initial={{ opacity: 0, y: 10 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, scale: 0.95 }}
-                 className="bg-white border-[1.5px] border-slate-100 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
-               >
-                  <div className="absolute left-0 top-[10%] bottom-[10%] w-[3px] bg-[#00a8cc] rounded-r-md"></div>
-                  <div className="flex items-center gap-2 mb-6 ml-2">
-                     <h3 className="text-lg font-bold text-slate-800 capitalize leading-none">{booking.subject}</h3>
-                     <span className="text-sm font-medium text-slate-400">| ID: JB-2024-{booking._id?.slice(-3) || idx + 100}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-y-6 gap-x-4 ml-2 mb-8">
-                     <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0"><User size={18} className="text-slate-400" /></div>
-                        <div>
-                           <p className="font-bold text-slate-800 leading-tight">{booking.studentId?.profile?.firstName || booking.studentId?.username || 'Student'}</p>
-                           <p className="text-[13px] text-slate-400 mt-1">Student</p>
-                        </div>
-                     </div>
-                     <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0"><CalendarIcon size={18} className="text-indigo-400" /></div>
-                        <div>
-                           <p className="font-bold text-slate-800 leading-tight">{booking.date ? format(new Date(booking.date), 'dd MMM yyyy') : 'TBD'}</p>
-                           <p className="text-[13px] text-slate-400 mt-1">{booking.date ? format(new Date(booking.date), 'HH:mm') : '--:--'}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0"><Flag size={18} className="text-rose-400" /></div>
-                        <div>
-                           <p className="font-bold text-slate-800 leading-tight capitalize">{booking.status}</p>
-                           <p className="text-[13px] text-slate-400 mt-1">Status</p>
-                        </div>
-                     </div>
-                     <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0"><DollarSign size={18} className="text-amber-500" /></div>
-                        <div>
-                           <p className="font-bold text-slate-800 leading-tight">LKR {booking.price || '5000'}</p>
-                           <p className="text-[13px] text-slate-400 mt-1">Session fee</p>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-5 ml-2">
-                     <div className="flex items-center gap-2 text-amber-500 font-bold text-[15px]">★ {Math.floor(Math.random() * 2) + 4} Rating</div>
-                     <div className="flex items-center gap-3">
-                        <button className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors"><MessageCircle size={20} /></button>
-                        <button onClick={() => navigate(`/session/${booking._id}`)} className="flex items-center gap-2 bg-[#00a8cc] hover:bg-[#008ba8] text-white px-6 py-3 rounded-xl font-medium transition-colors shadow-sm">
-                           <Video size={18} />{activeTab === 'Upcoming' ? 'Join' : 'View'}
-                        </button>
-                     </div>
-                  </div>
-               </motion.div>
-             )) : (
-                <div className="col-span-1 xl:col-span-2 py-20 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
-                   <CalendarIcon size={48} className="text-slate-300 mb-4" />
-                   <h3 className="text-lg font-bold text-slate-600 mb-1">No {activeTab} Sessions Found</h3>
-                   <p className="text-slate-400 text-sm">No sessions matching this criteria.</p>
-                </div>
-             )}
-           </AnimatePresence>
+        {/* Tabs */}
+        <div className="flex items-center gap-8 border-b border-slate-200 mb-10 overflow-x-auto no-scrollbar">
+           {tabs.map(t => (
+             <button key={t} onClick={() => setActiveTab(t)} className={cn("pb-5 px-1 text-sm font-bold border-b-4 transition-all whitespace-nowrap", activeTab === t ? "border-[#00a8cc] text-[#00a8cc]" : "border-transparent text-slate-400 hover:text-slate-600")}>{t}</button>
+           ))}
         </div>
-        )}
 
-        {/* Homework Grading Panel */}
-        {activeTab === 'Homework' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <AnimatePresence mode="popLayout">
-              {pendingHomework.length > 0 ? pendingHomework.map((hw, idx) => (
-                <motion.div key={hw._id || idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white border-[1.5px] border-slate-100 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
-                  <div className="absolute left-0 top-[10%] bottom-[10%] w-[3px] bg-amber-400 rounded-r-md"></div>
-                  <div className="flex items-center justify-between mb-4 ml-2">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-800">{hw.title}</h3>
-                      <p className="text-sm text-slate-400 mt-1">Subject: <span className="capitalize font-semibold text-slate-600">{hw.subject}</span> &bull; Grade: {hw.grade}</p>
-                    </div>
-                    <span className="px-3 py-1 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg uppercase">Pending</span>
-                  </div>
-                  <div className="ml-2 mb-4 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"><User size={14} className="text-slate-500" /></div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-700">{hw.student?.profile?.firstName || hw.student?.username || 'Student'} {hw.student?.profile?.lastName || ''}</p>
-                      <p className="text-xs text-slate-400">Submitted {new Date(hw.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  {hw.description && <p className="text-sm text-slate-500 ml-2 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">{hw.description}</p>}
-                  {hw.submittedFiles?.length > 0 && (
-                    <div className="ml-2 mb-4 flex flex-wrap gap-2">
-                      {hw.submittedFiles.map((f, fi) => (
-                        <a key={fi} href={f.url || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-xs font-bold text-blue-600 hover:bg-blue-100 transition-colors">
-                          <FileText size={14} /> {f.name || `File ${fi + 1}`}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                  {gradingId === hw._id ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ml-2 space-y-4 pt-4 border-t border-slate-100">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Marks</label>
-                          <input type="number" min="0" max="100" value={gradeData.marks} onChange={e => setGradeData(p => ({...p, marks: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#00a8cc] outline-none font-bold text-slate-800" placeholder="0-100" />
-                        </div>
-                        <div className="flex items-end gap-2">
-                          <button onClick={() => handleGrade(hw._id)} disabled={gradingLoading} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"><CheckCircle size={16} /> Submit</button>
-                          <button onClick={() => setGradingId(null)} className="py-3 px-4 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Feedback</label>
-                        <textarea rows={3} value={gradeData.feedback} onChange={e => setGradeData(p => ({...p, feedback: e.target.value}))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#00a8cc] outline-none font-medium text-slate-700 resize-none" placeholder="Great work! You can improve by..." />
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <div className="flex items-center justify-end mt-4 border-t border-slate-100 pt-4">
-                      <button onClick={() => { setGradingId(hw._id); setGradeData({ marks: '', feedback: '' }); }} className="flex items-center gap-2 bg-[#00a8cc] hover:bg-[#008ba8] text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-sm"><Star size={16} /> Grade Homework</button>
-                    </div>
-                  )}
-                </motion.div>
-              )) : (
-                <div className="col-span-1 xl:col-span-2 py-20 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
-                  <BookOpen size={48} className="text-slate-300 mb-4" />
-                  <h3 className="text-lg font-bold text-slate-600 mb-1">No Pending Homework</h3>
-                  <p className="text-slate-400 text-sm">All student submissions have been graded. Great job!</p>
+        {/* Tab Content */}
+        <div className="min-h-[400px]">
+           {activeTab === 'Calendar' && (
+             <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-soft">
+                <div className="grid grid-cols-7 gap-4">
+                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <div key={d} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest pb-4">{d}</div>)}
+                   {Array.from({ length: 35 }).map((_, i) => (
+                     <div key={i} className="aspect-square rounded-2xl border border-slate-50 bg-slate-50/50 p-3 relative group">
+                        <span className="text-xs font-bold text-slate-300">{i + 1}</span>
+                        {bookings.some(b => new Date(b.date).getDate() === (i + 1)) && <div className="absolute bottom-3 left-3 right-3 h-1.5 bg-[#00a8cc] rounded-full" />}
+                     </div>
+                   ))}
                 </div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+             </div>
+           )}
+
+           {activeTab === 'Upcoming' && (
+             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {bookings.filter(b => b.status === 'scheduled' || b.status === 'pending').map(b => (
+                  <div key={b._id} className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-soft">
+                     <div className="flex items-center gap-6 mb-8">
+                        <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center text-3xl font-black text-[#00a8cc]">{b.studentId?.username?.[0]}</div>
+                        <div>
+                           <h4 className="text-2xl font-black text-slate-800">{b.studentId?.profile?.firstName || b.studentId?.username}</h4>
+                           <p className="text-sm font-bold text-[#00a8cc] uppercase tracking-widest">{b.subject}</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4 mb-8">
+                        <div className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time</p>
+                           <p className="font-black text-slate-800">{b.startTime} - {b.endTime}</p>
+                        </div>
+                        <div className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</p>
+                           <p className="font-black text-slate-800">{format(new Date(b.date), 'MMM dd')}</p>
+                        </div>
+                     </div>
+                     <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                        <span className="text-xl font-black text-slate-800">LKR {b.price}</span>
+                        <div className="flex gap-3">
+                           {b.status === 'pending' ? (
+                             <>
+                               <button onClick={() => handleBookingAction(b._id, 'rejected')} className="px-6 py-3 text-rose-500 font-bold">Reject</button>
+                               <button onClick={() => handleBookingAction(b._id, 'scheduled')} className="bg-[#00a8cc] text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg">Accept</button>
+                             </>
+                           ) : (
+                             <button onClick={() => navigate(`/session/${b._id}`)} className="bg-slate-900 text-white px-10 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2"><Video size={16} /> Start Session</button>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+                ))}
+             </div>
+           )}
+
+           {activeTab === 'Availability' && (
+             <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-soft">
+                <div className="flex justify-between items-center mb-12">
+                   <h2 className="text-2xl font-black text-slate-800 tracking-tight">Availability Schedule</h2>
+                   <button onClick={handleUpdateAvailability} disabled={isUpdatingAvailability} className="bg-[#00a8cc] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
+                     {isUpdatingAvailability ? <RefreshCw className="animate-spin" size={16} /> : <CheckCircle size={16} />} Save Schedule
+                   </button>
+                </div>
+                <div className="space-y-6">
+                   {Object.keys(availability).map(day => (
+                     <div key={day} className="flex flex-col md:flex-row gap-8 p-8 bg-slate-50 rounded-[2rem] border border-slate-100 items-start md:items-center">
+                        <div className="w-32"><h4 className="font-black text-slate-800 capitalize text-xl">{day}</h4></div>
+                        <div className="flex-1 flex flex-wrap gap-4">
+                           {availability[day]?.map((slot, idx) => (
+                             <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                                <input type="time" value={slot.start} onChange={e => updateTimeSlot(day, idx, 'start', e.target.value)} className="bg-transparent font-bold text-slate-700 outline-none" />
+                                <span className="text-slate-300 font-black">-</span>
+                                <input type="time" value={slot.end} onChange={e => updateTimeSlot(day, idx, 'end', e.target.value)} className="bg-transparent font-bold text-slate-700 outline-none" />
+                                <button onClick={() => removeTimeSlot(day, idx)} className="text-rose-400 hover:text-rose-600 p-1"><X size={16} /></button>
+                             </div>
+                           ))}
+                           <button onClick={() => addTimeSlot(day)} className="px-4 py-3 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-[#00a8cc] hover:text-[#00a8cc] transition-all"><Plus size={20} /></button>
+                        </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+
+           {activeTab === 'Materials' && (
+             <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-soft">
+                <div className="flex justify-between items-center mb-10">
+                   <h2 className="text-2xl font-black text-slate-800">My Materials</h2>
+                   <button onClick={() => { setEditingMaterialId(null); setMaterialData({ title: '', description: '', fileUrl: '', fileType: 'pdf', subject: 'Mathematics', grade: '10', price: 0 }); setShowMaterialModal(true); }} className="bg-[#00a8cc] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Plus size={16} /> New Resource</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {myMaterials.map(m => (
+                     <div key={m._id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-[#00a8cc] transition-all">
+                        <FileText className="text-[#00a8cc] mb-4" size={32} />
+                        <h4 className="text-lg font-black text-slate-800 mb-1">{m.title}</h4>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{m.subject} &bull; Grade {m.grade}</p>
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                           <span className="text-sm font-black text-[#00a8cc]">{m.price > 0 ? `LKR ${m.price}` : 'FREE'}</span>
+                           <div className="flex gap-2">
+                              <button onClick={() => { setEditingMaterialId(m._id); setMaterialData(m); setShowMaterialModal(true); }} className="p-2 text-slate-400 hover:text-[#00a8cc]"><Edit2 size={16}/></button>
+                              <button onClick={async () => { if(window.confirm('Delete?')) { await materialApi.delete(m._id); fetchMyMaterials(); } }} className="p-2 text-slate-400 hover:text-rose-500"><Trash2 size={16}/></button>
+                           </div>
+                        </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+
+           {activeTab === 'Challenges' && (
+             <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-soft">
+                <div className="flex justify-between items-center mb-10">
+                   <h2 className="text-2xl font-black text-slate-800">Knowledge Challenges</h2>
+                   <button onClick={() => { setEditingChallengeId(null); setChallengeData({ title: '', content: '', subject: 'Mathematics', grade: '10' }); setShowChallengeModal(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Plus size={16} /> New Challenge</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   {myChallenges.map(q => (
+                     <div key={q._id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-indigo-600 transition-all">
+                        <Zap className="text-indigo-600 mb-4" size={32} />
+                        <h4 className="text-lg font-black text-slate-800 mb-1">{q.title}</h4>
+                        <p className="text-xs font-medium text-slate-500 line-clamp-2 mb-4">{q.content}</p>
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                           <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{q.subject} &bull; Grade {q.grade}</span>
+                           <div className="flex gap-2">
+                              <button onClick={() => { setEditingChallengeId(q._id); setChallengeData(q); setShowChallengeModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600"><Edit2 size={16}/></button>
+                              <button onClick={async () => { if(window.confirm('Delete?')) { await questionApi.delete(q._id); fetchMyChallenges(); } }} className="p-2 text-slate-400 hover:text-rose-500"><Trash2 size={16}/></button>
+                           </div>
+                        </div>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+        </div>
+
+        {/* Modals */}
+        <AnimatePresence>
+           {showMaterialModal && (
+             <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] p-10 w-full max-w-xl shadow-2xl relative">
+                   <button onClick={() => setShowMaterialModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-800"><X size={24} /></button>
+                   <h3 className="text-3xl font-black text-slate-800 mb-8">{editingMaterialId ? 'Edit Resource' : 'Upload Resource'}</h3>
+                   <div className="space-y-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Title</label>
+                        <input type="text" placeholder="Material Title" value={materialData.title} onChange={e => setMaterialData({...materialData, title: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-[#00a8cc] font-bold" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">File Resource</label>
+                        <div className="flex gap-4">
+                           <label className="flex-1 cursor-pointer bg-slate-100 border-2 border-dashed border-slate-200 p-4 rounded-2xl flex items-center justify-center gap-2 hover:border-[#00a8cc] transition-all group">
+                              <FileText className="text-slate-400 group-hover:text-[#00a8cc]" size={20} />
+                              <span className="text-sm font-bold text-slate-500">{materialData.fileUrl ? 'Change File' : 'Select PDF/Image'}</span>
+                              <input type="file" className="hidden" onChange={handleMaterialFileUpload} />
+                           </label>
+                           {materialData.fileUrl && <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 flex items-center gap-2"><CheckCircle size={20} /> Ready</div>}
+                        </div>
+                      </div>
+                      <textarea placeholder="Description" rows={3} value={materialData.description} onChange={e => setMaterialData({...materialData, description: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-[#00a8cc] font-medium" />
+                      <div className="grid grid-cols-2 gap-4">
+                         <input type="number" placeholder="Price (LKR)" value={materialData.price} onChange={e => setMaterialData({...materialData, price: Number(e.target.value)})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-[#00a8cc] font-bold" />
+                         <select value={materialData.grade} onChange={e => setMaterialData({...materialData, grade: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-[#00a8cc] font-bold">
+                            {['10', '11', '12', '13'].map(g => <option key={g} value={g}>Grade {g}</option>)}
+                         </select>
+                      </div>
+                      <button onClick={handleSaveMaterial} disabled={materialLoading} className="w-full py-5 bg-[#00a8cc] text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-[#00a8cc]/20">{materialLoading ? 'Saving...' : 'Save Resource'}</button>
+                   </div>
+                </motion.div>
+             </div>
+           )}
+
+           {showChallengeModal && (
+             <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] p-10 w-full max-w-xl shadow-2xl relative">
+                   <button onClick={() => setShowChallengeModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-800"><X size={24} /></button>
+                   <h3 className="text-3xl font-black text-slate-800 mb-8">{editingChallengeId ? 'Edit Challenge' : 'New Challenge'}</h3>
+                   <div className="space-y-6">
+                      <input type="text" placeholder="Challenge Title" value={challengeData.title} onChange={e => setChallengeData({...challengeData, title: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-bold" />
+                      <textarea placeholder="Challenge Content / Question" rows={4} value={challengeData.content} onChange={e => setChallengeData({...challengeData, content: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-medium" />
+                      <div className="grid grid-cols-2 gap-4">
+                         <select value={challengeData.subject} onChange={e => setChallengeData({...challengeData, subject: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-bold">
+                            {['Mathematics', 'Science', 'ICT', 'Accounting'].map(s => <option key={s} value={s}>{s}</option>)}
+                         </select>
+                         <select value={challengeData.grade} onChange={e => setChallengeData({...challengeData, grade: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-bold">
+                            {['10', '11', '12', '13'].map(g => <option key={g} value={g}>Grade {g}</option>)}
+                         </select>
+                      </div>
+                      <button onClick={handleSaveChallenge} className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20">Post Challenge</button>
+                   </div>
+                </motion.div>
+             </div>
+           )}
+
+           {showBroadcastModal && (
+             <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] p-10 w-full max-w-xl shadow-2xl relative">
+                   <button onClick={() => setShowBroadcastModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-800"><X size={24} /></button>
+                   <h3 className="text-3xl font-black text-slate-800 mb-2">Global Broadcast</h3>
+                   <p className="text-slate-500 font-medium mb-8">Send a notification to all your students instantly.</p>
+                   <div className="space-y-6">
+                      <input type="text" placeholder="Headline" value={broadcastData.title} onChange={e => setBroadcastData({...broadcastData, title: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-slate-800 font-bold" />
+                      <textarea placeholder="Your message..." rows={4} value={broadcastData.message} onChange={e => setBroadcastData({...broadcastData, message: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-slate-800 font-medium" />
+                      <button onClick={async () => { toast.loading('Sending...'); setTimeout(() => { toast.success('Broadcast Sent!'); setShowBroadcastModal(false); }, 1500); }} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl">Send Now</button>
+                   </div>
+                </motion.div>
+             </div>
+           )}
+        </AnimatePresence>
 
       </div>
     </Layout>

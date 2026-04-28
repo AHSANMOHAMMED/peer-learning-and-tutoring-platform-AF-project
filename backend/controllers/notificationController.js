@@ -148,11 +148,45 @@ const createNotification = async (req, res) => {
   }
 };
 
+// Broadcast notification (admin/tutor only)
+const broadcastNotification = async (req, res) => {
+  try {
+    const { role, grade, type, title, message, data, actionUrl, priority } = req.body;
+    
+    const notificationData = {
+      type,
+      data: {
+        title,
+        message,
+        data,
+        actionUrl,
+        priority
+      }
+    };
+
+    const notifications = await broadcastToRoleOrGrade({ role, grade }, notificationData);
+    
+    res.status(201).json({
+      success: true,
+      message: `Notification broadcasted to ${notifications.length} users`,
+      data: { count: notifications.length }
+    });
+  } catch (error) {
+    console.error('Broadcast notification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to broadcast notification',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getNotifications,
   markAsRead,
   markAllAsRead,
   deleteNotification: deleteNotificationController,
   getUnreadCount,
-  createNotification
+  createNotification,
+  broadcastNotification
 };

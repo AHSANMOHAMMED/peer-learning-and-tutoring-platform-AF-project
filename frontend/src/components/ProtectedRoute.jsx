@@ -29,6 +29,19 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/verify" state={{ from: location }} replace />;
   }
 
+  // New: Tutor Verification & Onboarding Redirects
+  if (user.role === 'tutor') {
+    if (user.verificationStatus === 'not_created' && location.pathname !== '/tutor-onboarding') {
+      return <Navigate to="/tutor-onboarding" replace />;
+    }
+    if (user.verificationStatus === 'pending' && location.pathname !== '/tutor-pending') {
+      return <Navigate to="/tutor-pending" replace />;
+    }
+    if (user.verificationStatus === 'rejected' && location.pathname !== '/tutor-pending') {
+      return <Navigate to="/tutor-pending" replace />;
+    }
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // If user role is not allowed, redirect to their default dashboard
     const defaultDashboards = {
@@ -36,6 +49,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
       tutor: '/tutor-dashboard',
       parent: '/dashboard',
       admin: '/admin',
+      websiteAdmin: '/admin',
       superadmin: '/super-admin',
       moderator: '/moderation',
       schoolAdmin: '/school-dashboard'

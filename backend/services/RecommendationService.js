@@ -116,33 +116,49 @@ class RecommendationService {
     const user = await User.findById(userId);
     if (!user) return [];
 
-    const userSubjects = user.profile?.subjects || [];
-    const userGrade = user.profile?.grade;
+    const userSubjects = user.subjects || user.profile?.subjects || [];
+    const userGrade = user.grade || user.profile?.grade;
     const userRole = user.role;
+    const userLanguage = user.language || 'English';
+    const userStream = user.stream;
+
+    const matchQuery = {
+      _id: { $ne: userId },
+      role: userRole === 'student' ? 'tutor' : 'student',
+      isActive: true
+    };
+
+    // Strictly match language for better tutoring
+    if (userLanguage) {
+      matchQuery.language = userLanguage;
+    }
+
+    // Strictly match stream if available
+    if (userStream) {
+      matchQuery.stream = userStream;
+    }
 
     // Find compatible peers
-    const peers = await User.find({
-      _id: { $ne: userId },
-      role: userRole === 'student' ? 'tutor' : 'student', // Match students with tutors and vice versa
-      'profile.subjects': { $in: userSubjects },
-      isActive: true
-    })
-    .select('name role profile subjects profile.grade profile.avatar profile.bio')
-    .limit(20);
+    const peers = await User.find(matchQuery)
+    .select('name role profile subjects stream language grade reputation avatar bio')
+    .limit(30);
 
     // Calculate compatibility scores
     const scoredPeers = peers.map(peer => {
       let score = 0;
-      const peerSubjects = peer.profile?.subjects || [];
+      const peerSubjects = peer.subjects || peer.profile?.subjects || [];
       
       // Subject overlap
       const commonSubjects = userSubjects.filter(s => peerSubjects.includes(s));
       score += commonSubjects.length * 15;
       
       // Grade proximity (for students)
-      if (userGrade && peer.profile?.grade) {
-        const gradeDiff = Math.abs(parseInt(userGrade) - parseInt(peer.profile.grade));
-        score += Math.max(0, 20 - gradeDiff * 5);
+      const peerGrade = peer.grade || peer.profile?.grade;
+      if (userGrade && peerGrade) {
+        const gradeDiff = Math.abs(parseInt(userGrade.replace(/\D/g,'')) - parseInt(peerGrade.replace(/\D/g,'')));
+        if (!isNaN(gradeDiff)) {
+          score += Math.max(0, 20 - gradeDiff * 5);
+        }
       }
       
       // Reputation bonus

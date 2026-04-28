@@ -55,6 +55,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+    // For login, we don't necessarily need the role state as the user already exists
     window.location.href = `${backendUrl}/api/auth/google`;
   };
 
@@ -67,24 +68,51 @@ const Login = () => {
          className="w-full max-w-5xl bg-white rounded-3xl shadow-soft overflow-hidden flex flex-col md:flex-row border border-slate-100"
       >
         {/* Left Side Branding */}
-        <div className="md:w-5/12 bg-[#00a8cc] p-12 text-white flex flex-col justify-between hidden md:flex relative overflow-hidden">
-           <div className="absolute top-[-20%] right-[-20%] w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="md:w-5/12 bg-slate-900 p-12 text-white flex flex-col justify-between hidden md:flex relative overflow-hidden group">
+           <motion.img 
+             initial={{ scale: 1.05 }}
+             animate={{ scale: 1 }}
+             transition={{ duration: 10, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
+             src="/images/hero_slider_1_1777312515895.png" 
+             className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay group-hover:opacity-50 transition-opacity duration-700" 
+             alt="Background"
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/50 to-transparent z-0" />
+           <div className="absolute top-[-20%] right-[-20%] w-[400px] h-[400px] bg-[#00a8cc]/30 rounded-full blur-[80px] pointer-events-none" />
            
            <div className="relative z-10">
-              <h2 className="text-3xl font-extrabold tracking-tight mb-4">Welcome back to <br/>Aura Platform.</h2>
-              <p className="text-white/80 font-medium leading-relaxed">
-                 Access your personalized dashboard, continue your learning streaks, and connect with elite mentors.
+              <Link to="/" className="inline-block mb-12">
+                 <div className="flex items-center gap-3 text-white group">
+                    <div className="w-10 h-10 bg-[#00a8cc] rounded-xl flex items-center justify-center font-black shadow-lg shadow-[#00a8cc]/20 group-hover:rotate-12 transition-transform">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-6 h-6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" /></svg>
+                    </div>
+                    <span className="text-2xl font-black tracking-tighter">Aura</span>
+                 </div>
+              </Link>
+              <h2 className="text-4xl font-black tracking-tighter mb-4 leading-tight">Welcome back to <br/><span className="text-[#00a8cc]">Aura Platform.</span></h2>
+              <p className="text-white/70 font-medium leading-relaxed max-w-sm">
+                 Access your personalized dashboard, continue your learning streaks, and connect with elite mentors across Sri Lanka.
               </p>
            </div>
            
-           <div className="relative z-10 bg-white/10 p-6 rounded-2xl border border-white/20 backdrop-blur-sm">
-              <div className="flex gap-4">
-                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#00a8cc] font-bold">12k+</div>
-                 <div>
-                    <h4 className="font-bold">Active Learners</h4>
-                    <p className="text-sm text-white/80">Joining sessions daily</p>
+           <div className="relative z-10">
+              <motion.div 
+                 animate={{ y: [0, -10, 0] }}
+                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                 className="bg-white/10 p-6 rounded-3xl border border-white/20 backdrop-blur-md shadow-2xl"
+              >
+                 <div className="flex gap-4 items-center">
+                    <div className="flex -space-x-3">
+                       <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-blue-500 flex items-center justify-center text-[10px] font-bold">JD</div>
+                       <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-emerald-500 flex items-center justify-center text-[10px] font-bold">AS</div>
+                       <div className="w-10 h-10 bg-[#00a8cc] rounded-full border-2 border-slate-800 flex items-center justify-center text-xs font-bold text-white">12k+</div>
+                    </div>
+                    <div>
+                       <h4 className="font-bold text-white text-sm">Active Learners</h4>
+                       <p className="text-xs text-white/70 font-medium">Joining sessions daily</p>
+                    </div>
                  </div>
-              </div>
+              </motion.div>
            </div>
         </div>
 

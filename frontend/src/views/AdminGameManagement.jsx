@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import { useAuth } from '../controllers/useAuth';
 import { adminGamesApi } from '../services/api';
 import { cn } from '../utils/cn';
 
@@ -30,6 +31,7 @@ const iconMap = {
 const formatDate = (date) => date ? new Date(date).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
 const AdminGameManagement = () => {
+  const { user: currentUser } = useAuth();
   const [games, setGames] = useState([]);
   const [stats, setStats] = useState({ totalGames: 0, activeGames: 0, inactiveGames: 0, deletedGames: 0 });
   const [loading, setLoading] = useState(true);
@@ -124,7 +126,7 @@ const AdminGameManagement = () => {
   ];
 
   return (
-    <Layout userRole="admin">
+    <Layout userRole={currentUser?.role || 'admin'}>
       <div className="mx-auto w-full max-w-[1400px] pb-12">
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>

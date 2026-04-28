@@ -112,6 +112,36 @@ const templates = {
         <p>You may update your profile and apply again in the future.</p>
       </div>
     `
+  }),
+
+  childActivityAlert: (parentName, childName, activityType, details) => ({
+    subject: `Alert: New Activity for ${childName} on Aura`,
+    html: `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1e293b;">
+        <div style="text-align: center; margin-bottom: 25px;">
+          <h1 style="color: #4f46e5; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">Aura Platform</h1>
+        </div>
+        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 15px;">Hello ${parentName},</h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
+          We are notifying you about a new update regarding <strong>${childName}</strong>'s learning activity:
+        </p>
+        <div style="background-color: #f8fafc; border-left: 4px solid #4f46e5; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+          <p style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 8px;">Activity Type</p>
+          <p style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;">${activityType}</p>
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
+          <p style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 8px;">Details</p>
+          <p style="margin: 0; font-size: 15px; color: #334155; line-height: 1.5;">${details}</p>
+        </div>
+        <div style="text-align: center;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/parent" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">
+            View Parent Dashboard
+          </a>
+        </div>
+        <p style="margin-top: 30px; font-size: 13px; color: #94a3b8; text-align: center;">
+          This is an automated notification based on your account settings.
+        </p>
+      </div>
+    `
   })
 };
 
@@ -177,6 +207,11 @@ class EmailService {
 
   async sendTutorRejectedEmail(email, userName, reason) {
     const { subject, html } = templates.tutorRejected(userName, reason);
+    return this.send(email, subject, html);
+  }
+
+  async sendChildActivityAlert(email, parentName, childName, activityType, details) {
+    const { subject, html } = templates.childActivityAlert(parentName, childName, activityType, details);
     return this.send(email, subject, html);
   }
 

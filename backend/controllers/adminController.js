@@ -95,6 +95,9 @@ const getAllUsersAdmin = async (req, res) => {
   }
 };
 
+// Protected roles that cannot be deleted, suspended, or demoted
+const PROTECTED_ROLES = ['admin', 'superadmin', 'websiteAdmin'];
+
 // Activate/Deactivate user
 const toggleUserStatus = async (req, res) => {
   try {
@@ -106,6 +109,14 @@ const toggleUserStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'User not found'
+      });
+    }
+
+    // Prevent suspending admin/superadmin accounts
+    if (PROTECTED_ROLES.includes(user.role) && !isActive) {
+      return res.status(403).json({
+        success: false,
+        message: `Cannot suspend a ${user.role} account. This action is restricted for platform security.`
       });
     }
     
@@ -144,6 +155,14 @@ const changeUserRole = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'User not found'
+      });
+    }
+
+    // Prevent changing roles of admin/superadmin accounts
+    if (PROTECTED_ROLES.includes(user.role) && req.user.role !== 'superadmin') {
+      return res.status(403).json({
+        success: false,
+        message: `Cannot change the role of a ${user.role} account. Only superadmins can modify admin roles.`
       });
     }
     
@@ -391,7 +410,11 @@ const bulkUserOperations = async (req, res) => {
         );
         break;
       case 'delete':
-        result = await User.deleteMany({ _id: { $in: userIds } });
+        // Exclude protected admin roles from bulk deletion
+        result = await User.deleteMany({ 
+          _id: { $in: userIds }, 
+          role: { $nin: PROTECTED_ROLES } 
+        });
         break;
       default:
         return res.status(400).json({
@@ -567,6 +590,14 @@ const deleteUser = async (req, res) => {
     // Prevent self-deletion
     if (id === req.user._id.toString()) {
       return res.status(400).json({ success: false, message: 'Cannot delete your own account' });
+    }
+
+    // Prevent deletion of admin/superadmin/websiteAdmin accounts
+    if (PROTECTED_ROLES.includes(user.role)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Cannot delete a ${user.role} account. Administrator accounts are protected and cannot be removed.` 
+      });
     }
 
     // Cascade: remove tutor profile if exists

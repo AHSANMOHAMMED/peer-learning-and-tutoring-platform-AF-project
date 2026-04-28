@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Plus } from 'lucide-react';
 import Sidebar from './Sidebar';
 import NotificationBell from './NotificationBell';
+import AuraLogo from './AuraLogo';
 
 const Layout = ({ children, userRole }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -22,7 +23,10 @@ const Layout = ({ children, userRole }) => {
         
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100 sticky top-0 z-[60] backdrop-blur-xl">
-          <span className="text-xl font-bold text-slate-800">Aura</span>
+          <div className="flex items-center gap-2">
+            <AuraLogo size={32} />
+            <span className="text-xl font-bold text-slate-800">Aura</span>
+          </div>
           <div className="flex items-center gap-3">
             <NotificationBell />
             <button

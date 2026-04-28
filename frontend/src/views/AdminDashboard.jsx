@@ -5,16 +5,19 @@ import {
   Users, Briefcase, Video, Clock, MessageSquare, 
   CircleDollarSign, Calendar as CalendarIcon, 
   ShieldCheck, AlertTriangle, Settings, ChevronRight,
-  TrendingUp, Activity, FileText, Gamepad2
+  TrendingUp, Activity, FileText, Gamepad2, Megaphone, Send
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import Layout from '../components/Layout';
+import { useAuth } from '../controllers/useAuth';
 import { useTutors } from '../controllers/useTutors';
 import { useReports } from '../controllers/useReports';
 import { useAnalytics } from '../controllers/useAnalytics';
 import { useParentLinks } from '../controllers/useParentLinks';
+import { announcementApi } from '../services/api';
 import { cn } from '../utils/cn';
+import toast from 'react-hot-toast';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -27,11 +30,21 @@ const itemVariants = {
 };
 
 const AdminDashboard = () => {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const { tutors, fetchTutors } = useTutors();
   const { reports, fetchReports } = useReports();
   const { analytics, fetchAnalytics } = useAnalytics();
   const { linkRequests, fetchParentLinkRequests } = useParentLinks();
+  
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = React.useState(false);
+  const [broadcastForm, setBroadcastForm] = React.useState({
+    title: '',
+    content: '',
+    priority: 'normal',
+    targetRoles: ['all']
+  });
+  const [isBroadcasting, setIsBroadcasting] = React.useState(false);
 
   useEffect(() => {
     fetchTutors().catch((err) => console.error('Tutor fetch error:', err));
@@ -39,6 +52,23 @@ const AdminDashboard = () => {
     fetchAnalytics().catch((err) => console.error('Analytics fetch error:', err));
     fetchParentLinkRequests().catch((err) => console.error('Parent link requests fetch error:', err));
   }, [fetchTutors, fetchReports, fetchAnalytics, fetchParentLinkRequests]);
+
+  const handleBroadcastSubmit = async (e) => {
+    e.preventDefault();
+    setIsBroadcasting(true);
+    try {
+      const res = await announcementApi.create(broadcastForm);
+      if (res.success) {
+        toast.success("Broadcast dispatched successfully!");
+        setIsBroadcastModalOpen(false);
+        setBroadcastForm({ title: '', content: '', priority: 'normal', targetRoles: ['all'] });
+      }
+    } catch (err) {
+      toast.error("Failed to dispatch broadcast");
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
 
   const pendingTutorsCount = tutors.filter(t => t.verificationStatus === 'pending').length;
   const pendingReportsCount = reports.filter(r => r.status === 'pending' || r.status === 'open').length;
@@ -93,7 +123,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <Layout userRole="admin">
+    <Layout userRole={currentUser?.role || 'admin'}>
       <div className="min-h-screen bg-[#fafafc] pb-12 w-full font-sans">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-8">
           
@@ -142,47 +172,66 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Operations Center */}
-              <motion.div variants={itemVariants} className="lg:col-span-2 bg-slate-900 rounded-[2rem] p-8 md:p-10 text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+              <motion.div variants={itemVariants} className="lg:col-span-2 bg-white rounded-[2rem] p-8 md:p-10 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-50 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                 
                 <div className="relative z-10">
-                  <h2 className="text-2xl font-extrabold mb-2 flex items-center gap-3 tracking-tight">
-                    <ShieldCheck size={28} className="text-indigo-400" /> Action Required Queue
+                  <h2 className="text-2xl font-bold mb-2 flex items-center gap-3 text-slate-800 tracking-tight">
+                    <ShieldCheck size={26} className="text-indigo-600" /> Pending Actions
                   </h2>
-                  <p className="text-slate-400 text-sm mb-10 font-medium">Review and process pending items to maintain platform integrity.</p>
+                  <p className="text-slate-500 text-sm mb-10 font-medium">Review and process pending items to maintain platform integrity.</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     
-                    <div onClick={() => navigate('/admin/approvals')} className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 rounded-2xl p-6 transition-all cursor-pointer group">
+                    <div onClick={() => navigate('/admin/approvals')} className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-2xl p-6 transition-all cursor-pointer group shadow-sm">
                       <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl group-hover:scale-110 transition-transform"><Briefcase size={22} /></div>
-                        {pendingTutorsCount > 0 && <span className="text-[10px] font-bold text-white px-2.5 py-1 bg-rose-500 rounded-full animate-pulse shadow-lg shadow-rose-500/30">{pendingTutorsCount} PENDING</span>}
+                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl group-hover:scale-110 transition-transform"><Briefcase size={22} /></div>
+                        {pendingTutorsCount > 0 && <span className="text-[10px] font-bold text-rose-600 px-2.5 py-1 bg-rose-100 rounded-full shadow-sm">{pendingTutorsCount} PENDING</span>}
                       </div>
-                      <h3 className="text-3xl font-black mb-1">{pendingTutorsCount}</h3>
-                      <p className="text-slate-400 text-sm font-medium">Tutor Applications</p>
+                      <h3 className="text-3xl font-bold mb-1 text-slate-800">{pendingTutorsCount}</h3>
+                      <p className="text-slate-500 text-sm font-medium">Tutor Applications</p>
                     </div>
 
-                    <div onClick={() => navigate('/moderation')} className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 hover:border-rose-500/50 rounded-2xl p-6 transition-all cursor-pointer group">
+                    <div onClick={() => navigate('/moderation')} className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-rose-300 rounded-2xl p-6 transition-all cursor-pointer group shadow-sm">
                       <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-rose-500/20 text-rose-400 rounded-xl group-hover:scale-110 transition-transform"><AlertTriangle size={22} /></div>
-                        {pendingReportsCount > 0 && <span className="text-[10px] font-bold text-white px-2.5 py-1 bg-rose-500 rounded-full shadow-lg shadow-rose-500/30">URGENT</span>}
+                        <div className="p-3 bg-rose-100 text-rose-600 rounded-xl group-hover:scale-110 transition-transform"><AlertTriangle size={22} /></div>
+                        {pendingReportsCount > 0 && <span className="text-[10px] font-bold text-rose-600 px-2.5 py-1 bg-rose-100 rounded-full shadow-sm">URGENT</span>}
                       </div>
-                      <h3 className="text-3xl font-black mb-1">{pendingReportsCount}</h3>
-                      <p className="text-slate-400 text-sm font-medium">Unresolved Reports</p>
+                      <h3 className="text-3xl font-bold mb-1 text-slate-800">{pendingReportsCount}</h3>
+                      <p className="text-slate-500 text-sm font-medium">Unresolved Reports</p>
                     </div>
 
-                    <div onClick={() => navigate('/admin/parent-links')} className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 hover:border-amber-500/50 rounded-2xl p-6 transition-all cursor-pointer group">
+                    <div onClick={() => navigate('/admin/parent-links')} className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-amber-300 rounded-2xl p-6 transition-all cursor-pointer group shadow-sm">
                       <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-amber-500/20 text-amber-400 rounded-xl group-hover:scale-110 transition-transform"><Users size={22} /></div>
-                        {linkRequests?.length > 0 && <span className="text-[10px] font-bold text-amber-400 px-2.5 py-1 bg-amber-500/20 border border-amber-500/30 rounded-full">NEW</span>}
+                        <div className="p-3 bg-amber-100 text-amber-600 rounded-xl group-hover:scale-110 transition-transform"><Users size={22} /></div>
+                        {linkRequests?.length > 0 && <span className="text-[10px] font-bold text-amber-700 px-2.5 py-1 bg-amber-100 border border-amber-200 rounded-full">NEW</span>}
                       </div>
-                      <h3 className="text-3xl font-black mb-1">{linkRequests?.length || 0}</h3>
-                      <p className="text-slate-400 text-sm font-medium">Parent Links</p>
+                      <h3 className="text-3xl font-bold mb-1 text-slate-800">{linkRequests?.length || 0}</h3>
+                      <p className="text-slate-500 text-sm font-medium">Parent Links</p>
                     </div>
 
                   </div>
-                </div>
-              </motion.div>
+                   
+                   {/* Broadcast Quick Link */}
+                   <div className="mt-10 p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                         <div className="p-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-200">
+                            <Megaphone size={22} />
+                         </div>
+                         <div>
+                            <h4 className="font-bold text-slate-800">Global Broadcast</h4>
+                            <p className="text-xs text-slate-500 font-medium">Post announcements to students, tutors, or parents.</p>
+                         </div>
+                      </div>
+                      <button 
+                        onClick={() => setIsBroadcastModalOpen(true)}
+                        className="px-6 py-2.5 bg-white border border-indigo-200 text-indigo-600 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
+                      >
+                         Launch Hub
+                      </button>
+                   </div>
+                 </div>
+               </motion.div>
 
               {/* Quick Navigation */}
               <motion.div variants={itemVariants} className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200 flex flex-col justify-between relative overflow-hidden">
@@ -298,6 +347,95 @@ const AdminDashboard = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Broadcast Modal */}
+      {isBroadcastModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+           <motion.div 
+             initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
+             onClick={() => setIsBroadcastModalOpen(false)}
+             className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" 
+           />
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.9, y: 20 }}
+             animate={{ opacity: 1, scale: 1, y: 0 }}
+             className="relative bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-4xl border border-slate-100"
+           >
+              <div className="p-8 bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex justify-between items-center">
+                 <div>
+                    <h2 className="text-2xl font-black tracking-tight">Broadcast Center</h2>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Persistent System Announcement</p>
+                 </div>
+                 <button onClick={() => setIsBroadcastModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ShieldCheck size={20}/></button>
+              </div>
+              
+              <form onSubmit={handleBroadcastSubmit} className="p-8 space-y-6">
+                 <div className="space-y-2">
+                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Message Title</label>
+                    <input 
+                      required
+                      value={broadcastForm.title}
+                      onChange={(e) => setBroadcastForm({...broadcastForm, title: e.target.value})}
+                      placeholder="Important: Scholastic Update"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-800"
+                    />
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Content Body</label>
+                    <textarea 
+                      required
+                      rows={4}
+                      value={broadcastForm.content}
+                      onChange={(e) => setBroadcastForm({...broadcastForm, content: e.target.value})}
+                      placeholder="Type your message here..."
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-600 resize-none"
+                    />
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Priority</label>
+                       <select 
+                         value={broadcastForm.priority}
+                         onChange={(e) => setBroadcastForm({...broadcastForm, priority: e.target.value})}
+                         className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700"
+                       >
+                          <option value="normal">Normal</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                       </select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Target Audience</label>
+                       <select 
+                         value={broadcastForm.targetRoles[0]}
+                         onChange={(e) => setBroadcastForm({...broadcastForm, targetRoles: [e.target.value]})}
+                         className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700"
+                       >
+                          <option value="all">All Users</option>
+                          <option value="student">Students Only</option>
+                          <option value="tutor">Tutors Only</option>
+                          <option value="parent">Parents Only</option>
+                       </select>
+                    </div>
+                 </div>
+
+                 <button 
+                   type="submit"
+                   disabled={isBroadcasting}
+                   className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
+                 >
+                    {isBroadcasting ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <><Send size={18} /> Dispatch Broadcast</>
+                    )}
+                 </button>
+              </form>
+           </motion.div>
+        </div>
+      )}
     </Layout>
   );
 };

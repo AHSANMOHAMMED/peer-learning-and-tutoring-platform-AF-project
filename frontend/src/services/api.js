@@ -138,6 +138,7 @@ export const featureFlagApi = {
 export const parentApi = {
   linkStudent: (data) => api.post('/parent/link-student', data).then((res) => res.data),
   getLinkedStudents: () => api.get('/parent/students').then((res) => res.data),
+  getLinkedParents: () => api.get('/parent/student/my-parents').then((res) => res.data),
   getLinkRequests: () => api.get('/parent/link-requests').then((res) => res.data),
   getStudentLinkRequests: () => api.get('/parent/student/link-requests').then((res) => res.data),
   respondToLink: (linkId, data) => api.post(`/parent/student/respond-link/${linkId}`, data).then((res) => res.data),
@@ -174,6 +175,7 @@ export const tutorApi = {
   getAllAdmin: (params) => api.get('/tutors/all', { params }).then((res) => res.data),
   getProfile: (id) => api.get(`/tutors/${id}`).then((res) => res.data),
   getByUserId: (userId) => api.get(`/tutors/user/${userId}`).then((res) => res.data),
+  updateProfile: (id, data) => api.put(`/tutors/${id}`, data).then((res) => res.data),
   moderate: (id, data) => api.put(`/tutors/${id}/moderate`, data).then((res) => res.data)
 };
 
@@ -192,6 +194,7 @@ export const bookingApi = {
   getById: (id) => api.get(`/bookings/${id}`).then((res) => res.data),
   updateStatus: (id, data) => api.put(`/bookings/${id}`, data).then((res) => res.data),
   updateWhiteboard: (id, data) => api.put(`/bookings/${id}/whiteboard`, data).then((res) => res.data),
+  requestSkip: (id, data) => api.post(`/bookings/${id}/skip`, data).then((res) => res.data),
   delete: (id) => api.delete(`/bookings/${id}`).then((res) => res.data)
 };
 
@@ -203,7 +206,8 @@ export const materialApi = {
   update: (id, data) => api.put(`/materials/${id}`, data).then((res) => res.data),
   delete: (id) => api.delete(`/materials/${id}`).then((res) => res.data),
   approve: (id) => api.put(`/materials/${id}/approve`).then((res) => res.data),
-  reject: (id, reason) => api.put(`/materials/${id}/reject`, { reason }).then((res) => res.data)
+  reject: (id, reason) => api.put(`/materials/${id}/reject`, { reason }).then((res) => res.data),
+  purchase: (id) => api.post(`/materials/${id}/purchase`).then((res) => res.data)
 };
 
 export const gamificationApi = {
@@ -292,7 +296,8 @@ export const questionApi = {
   create: (data) => api.post('/questions', data).then((res) => res.data),
   update: (id, data) => api.put(`/questions/${id}`, data).then((res) => res.data),
   delete: (id) => api.delete(`/questions/${id}`).then((res) => res.data),
-  search: (params) => api.get('/questions/search', { params }).then((res) => res.data)
+  search: (params) => api.get('/questions/search', { params }).then((res) => res.data),
+  getTutorChallenges: () => api.get('/questions/tutor/my-challenges').then((res) => res.data)
 };
 
 export const answerApi = {
@@ -300,6 +305,7 @@ export const answerApi = {
   getById: (id) => api.get(`/answers/${id}`).then((res) => res.data),
   create: (data) => api.post('/answers', data).then((res) => res.data),
   update: (id, data) => api.put(`/answers/${id}`, data).then((res) => res.data),
+  updateStatus: (id, data) => api.put(`/answers/${id}/status`, data).then((res) => res.data),
   delete: (id) => api.delete(`/answers/${id}`).then((res) => res.data),
   markBest: (id) => api.put(`/answers/${id}/best`).then((res) => res.data)
 };
@@ -377,6 +383,13 @@ export const recommendationApi = {
   getTutorRecommendations: (params) => api.get('/recommendations/tutors', { params }).then((res) => res.data),
   getCourseRecommendations: (params) => api.get('/recommendations/courses', { params }).then((res) => res.data),
   getMaterialRecommendations: (params) => api.get('/recommendations/materials', { params }).then((res) => res.data)
+};
+
+export const announcementApi = {
+  create: (data) => api.post('/announcements', data).then((res) => res.data),
+  getMy: () => api.get('/announcements/my').then((res) => res.data),
+  update: (id, data) => api.put(`/announcements/${id}`, data).then((res) => res.data),
+  delete: (id) => api.delete(`/announcements/${id}`).then((res) => res.data)
 };
 
 export default api;

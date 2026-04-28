@@ -15,7 +15,8 @@ import {
   Users,
   X,
   CreditCard,
-  Gamepad2
+  Gamepad2,
+  Zap
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useAuth } from '../controllers/useAuth';
@@ -30,17 +31,17 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
   const getMenuItems = () => {
     const defaultNav = [
       { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-      { title: 'Messages', icon: MessageSquare, path: '/qa' },
+      { title: 'Q&A Forum', icon: MessageSquare, path: '/qa' },
       { title: 'My Profile', icon: User, path: '/profile' },
     ];
     
     const settingsNav = [
       { title: 'Settings', icon: Settings, path: '/settings' },
-      { title: 'Help Center', icon: HelpCircle, path: '/support' },
     ];
 
     switch (role) {
       case 'admin':
+      case 'websiteAdmin':
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
@@ -48,7 +49,6 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
             { title: 'Tutor Management', icon: Briefcase, path: '/admin/approvals' },
             { title: 'Session Management', icon: Video, path: '/bookings' },
             { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
-            { title: 'Payment Management', icon: CreditCard, path: '/admin/payments' },
             { title: 'Admin Settings', icon: Settings, path: '/admin/settings' },
           ],
           settings: settingsNav
@@ -75,7 +75,6 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
             { title: 'Course Materials', icon: Briefcase, path: '/materials' },
             { title: 'My Sessions', icon: Video, path: '/bookings' },
             { title: 'Workspace', icon: FileText, path: '/tutor-workspace' },
-            { title: 'Earnings', icon: CircleDollarSign, path: '/finances' },
           ],
           settings: settingsNav
         };
@@ -112,10 +111,12 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             ...defaultNav,
-            { title: 'My Assignments', icon: Briefcase, path: '/ai-homework' },
+            { title: 'Knowledge Challenges', icon: Zap, path: '/qa' },
+            { title: 'Study Circle', icon: Users, path: '/groups' },
+            { title: 'AI Assistant', icon: Briefcase, path: '/ai-homework' },
             { title: 'My Sessions', icon: Video, path: '/bookings' },
             { title: 'Browse Tutors', icon: FileText, path: '/tutors' },
-            { title: 'Break Time Games', icon: Gamepad2, path: '/refresh-zone' },
+            { title: 'Refresh Zone', icon: Gamepad2, path: '/refresh-zone' },
           ],
           settings: settingsNav
         };

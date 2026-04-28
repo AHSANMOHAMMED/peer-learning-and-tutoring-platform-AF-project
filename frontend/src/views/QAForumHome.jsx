@@ -20,18 +20,32 @@ const QAForumHome = () => {
   const [isCompose, setIsCompose] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
-  const [newSubject, setNewSubject] = useState('Mathematics');
+   const [newSubject, setNewSubject] = useState('Mathematics');
+   const [viewMode, setViewMode] = useState('Feed');
+   const [answerBody, setAnswerBody] = useState('');
+   const [isAnswering, setIsAnswering] = useState(false);
 
   const subjects = ['Mathematics', 'Science', 'History', 'English', 'ICT'];
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('/api/questions');
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+        
+        // In 'Feed' mode, fetch all questions for the student's grade
+        // In 'MyQuestions' mode, fetch only user's questions
+        const url = viewMode === 'Feed' 
+          ? `${API_URL}/api/questions?grade=${user?.profile?.grade?.match(/\d+/)?.[0] || '10'}`
+          : `${API_URL}/api/questions/user/my`;
+
+        const response = await fetch(url, {
+           headers: { 'Authorization': `Bearer ${token}` }
+        });
+
         if (response.ok) {
           const data = await response.json();
-          // For the student, we only want to show their own questions.
-          // Since the dummy data might not be assigned to this specific user, we show all for Demo purposes.
           const formatted = (data.questions || []).map(q => ({
              id: q._id,
              student: q.author?.username || q.author || 'Me',
@@ -43,18 +57,20 @@ const QAForumHome = () => {
              askedOn: new Date(q.createdAt).toLocaleDateString(),
              tutorAnswer: q.answers?.[0]?.content || '',
              marks: q.marks || null,
+             authorId: q.author?._id || q.author,
+             answers: q.answers || []
           }));
           setQuestions(formatted);
-          if (formatted.length > 0) setSelectedId(formatted[0].id);
+          if (formatted.length > 0 && !selectedId) setSelectedId(formatted[0].id);
         }
       } catch (error) {
-        toast.error("Could not load your messages.");
+        toast.error("Could not load forum questions.");
       } finally {
         setLoading(false);
       }
     };
     fetchQuestions();
-  }, [user]);
+  }, [user, viewMode]);
 
   const selectedQuestion = useMemo(
     () => questions.find((q) => q.id === selectedId),
@@ -117,6 +133,33 @@ const QAForumHome = () => {
     }
   };
 
+  const handlePostAnswer = async () => {
+    if (!answerBody.trim()) return toast.error("Answer cannot be empty");
+    
+    setIsAnswering(true);
+    const token = localStorage.getItem('token');
+    try {
+       const response = await fetch(`/api/answers/${selectedId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ body: answerBody })
+       });
+
+       if (response.ok) {
+          toast.success("Answer submitted successfully!");
+          setAnswerBody('');
+          // Re-fetch or update local state
+          const updatedQ = { ...selectedQuestion };
+          updatedQ.status = 'Resolved';
+          setQuestions(questions.map(q => q.id === selectedId ? updatedQ : q));
+       }
+    } catch(err) {
+       toast.error("Failed to post answer");
+    } finally {
+       setIsAnswering(false);
+    }
+  };
+
   return (
     <Layout userRole={user?.role || 'student'}>
       <div className="max-w-[1400px] mx-auto w-full font-sans flex flex-col h-[calc(100vh-100px)]">
@@ -145,11 +188,15 @@ const QAForumHome = () => {
                     <input type="text" placeholder="Search my questions..." className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#00a8cc] transition-colors" />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                  </div>
-                 <div className="flex gap-2">
-                    <button onClick={() => setFilter('All')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'All' ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-500")}>All</button>
-                    <button onClick={() => setFilter('Pending')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-slate-50 text-slate-500")}>Pending</button>
-                    <button onClick={() => setFilter('Resolved')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'Resolved' ? "bg-emerald-100 text-emerald-700" : "bg-slate-50 text-slate-500")}>Resolved</button>
-                 </div>
+                  <div className="flex bg-slate-100 p-1 rounded-2xl gap-1 mb-4">
+                     <button onClick={() => setViewMode('Feed')} className={cn("flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", viewMode === 'Feed' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:bg-slate-50")}>Feed</button>
+                     <button onClick={() => setViewMode('MyQuestions')} className={cn("flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", viewMode === 'MyQuestions' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:bg-slate-50")}>My Posts</button>
+                  </div>
+                  <div className="flex gap-2">
+                     <button onClick={() => setFilter('All')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'All' ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-500")}>All</button>
+                     <button onClick={() => setFilter('Pending')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-slate-50 text-slate-500")}>Pending</button>
+                     <button onClick={() => setFilter('Resolved')} className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-colors", filter === 'Resolved' ? "bg-emerald-100 text-emerald-700" : "bg-slate-50 text-slate-500")}>Resolved</button>
+                  </div>
               </div>
 
               <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -173,16 +220,19 @@ const QAForumHome = () => {
                                 <span className="text-[10px] font-semibold text-slate-400 shrink-0">{q.askedOn}</span>
                              </div>
                              <p className="text-slate-500 text-xs line-clamp-1 mb-3">{q.body}</p>
-                             <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-slate-100 text-slate-500">{q.subject}</span>
-                                <span className={cn(
-                                   "text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1",
-                                   q.status === 'Resolved' ? "text-emerald-500" : "text-amber-500"
-                                )}>
-                                   <div className={cn("w-1.5 h-1.5 rounded-full", q.status === 'Resolved' ? "bg-emerald-500" : "bg-amber-500")}/>
-                                   {q.status}
-                                </span>
-                             </div>
+                              <div className="flex items-center justify-between">
+                                 <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 uppercase">{q.student?.[0] || 'S'}</div>
+                                    <span className="text-[10px] font-bold text-slate-500">{q.student}</span>
+                                 </div>
+                                 <span className={cn(
+                                    "text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1",
+                                    q.status === 'Resolved' ? "text-emerald-500" : "text-amber-500"
+                                 )}>
+                                    <div className={cn("w-1.5 h-1.5 rounded-full", q.status === 'Resolved' ? "bg-emerald-500" : "bg-amber-500")}/>
+                                    {q.status}
+                                 </span>
+                              </div>
                           </div>
                        ))}
                     </div>
@@ -253,57 +303,58 @@ const QAForumHome = () => {
                     <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50">
                        
                        {/* My Bubble */}
-                       <div className="flex gap-4 flex-row-reverse">
-                          <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0 flex items-center justify-center text-slate-600 font-bold border border-slate-300">
-                             Me
-                          </div>
-                          <div className="flex-1 max-w-3xl flex flex-col items-end">
-                             <div className="flex items-end gap-2 mb-1">
-                                <span className="text-[10px] text-slate-400">{selectedQuestion.askedOn}</span>
-                                <span className="text-sm font-bold text-slate-700">Me</span>
-                             </div>
-                             <div className="bg-white border border-slate-200 p-4 rounded-b-xl rounded-tl-xl text-slate-700 text-sm leading-relaxed shadow-sm">
-                                {selectedQuestion.body}
-                             </div>
-                          </div>
-                       </div>
-
-                       {/* Tutor Bubble */}
-                       {selectedQuestion.status === 'Resolved' && (
-                          <div className="flex gap-4">
-                             <div className="w-10 h-10 rounded-full bg-[#e8f6fa] shrink-0 flex items-center justify-center text-[#00a8cc] font-bold border border-[#bcecf9]">
-                                T
-                             </div>
-                             <div className="flex-1 max-w-3xl">
-                                <div className="flex items-end gap-2 mb-1">
-                                   <span className="text-sm font-bold text-slate-700">Verified Tutor</span>
-                                   <span className="text-[10px] text-slate-400 flex items-center gap-1"><AlertCircle size={10}/> Verified Answer</span>
-                                </div>
-                                <div className="bg-[#e8f6fa] border border-[#bcecf9] p-4 rounded-b-xl rounded-tr-xl text-slate-800 text-sm leading-relaxed shadow-sm">
-                                   {selectedQuestion.tutorAnswer}
-                                </div>
-                                {selectedQuestion.marks && (
-                                   <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold border border-orange-100">
-                                      Teacher Mark: {selectedQuestion.marks} / 10
-                                   </div>
-                                )}
-                             </div>
-                          </div>
-                       )}
-
-                    </div>
-
-                    {/* Compose Area for Follow up */}
-                    {selectedQuestion.status === 'Resolved' && (
-                       <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                          <div className="relative">
-                             <input type="text" placeholder="Type a follow up reply..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00a8cc] pr-12" />
-                             <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#00a8cc] text-white rounded-lg hover:bg-[#008ba8] transition-colors">
-                                <Send size={16} />
-                             </button>
-                          </div>
-                       </div>
-                    )}
+                        <div className="flex gap-4 flex-row-reverse">
+                           <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0 flex items-center justify-center text-slate-600 font-bold border border-slate-300">
+                              {selectedQuestion.student?.[0] || 'S'}
+                           </div>
+                           <div className="flex-1 max-w-3xl flex flex-col items-end">
+                              <div className="flex items-end gap-2 mb-1">
+                                 <span className="text-[10px] text-slate-400">{selectedQuestion.askedOn}</span>
+                                 <span className="text-sm font-bold text-slate-700">{selectedQuestion.student}</span>
+                              </div>
+                              <div className="bg-white border border-slate-200 p-4 rounded-b-xl rounded-tl-xl text-slate-700 text-sm leading-relaxed shadow-sm">
+                                 {selectedQuestion.body}
+                              </div>
+                           </div>
+                        </div>
+                        {selectedQuestion.answers?.map((ans, ai) => (
+                           <div key={ai} className="flex gap-4">
+                              <div className="w-10 h-10 rounded-full bg-blue-50 shrink-0 flex items-center justify-center text-blue-600 font-bold border border-blue-100">
+                                 {ans.author?.username?.[0] || 'A'}
+                              </div>
+                              <div className="flex-1 max-w-3xl">
+                                 <div className="flex items-end gap-2 mb-1">
+                                    <span className="text-sm font-bold text-slate-700">{ans.author?.username || 'Peer'}</span>
+                                    <span className="text-[10px] text-slate-400">{new Date(ans.createdAt).toLocaleDateString()}</span>
+                                 </div>
+                                 <div className="bg-white border border-slate-100 p-4 rounded-b-xl rounded-tr-xl text-slate-700 text-sm leading-relaxed shadow-sm">
+                                    {ans.body}
+                                 </div>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                     {selectedQuestion.authorId !== user?._id && (
+                        <div className="p-6 bg-white border-t border-slate-100 shrink-0">
+                           <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Provide your solution</p>
+                           <div className="flex gap-4">
+                              <textarea 
+                                 value={answerBody}
+                                 onChange={(e) => setAnswerBody(e.target.value)}
+                                 placeholder="Explain your answer or solve the problem..." 
+                                 className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00a8cc] resize-none" 
+                                 rows={2}
+                              />
+                              <button 
+                                 onClick={handlePostAnswer}
+                                 disabled={isAnswering}
+                                 className="px-6 bg-[#00a8cc] text-white rounded-xl hover:bg-[#008ba8] transition-colors font-bold flex items-center justify-center gap-2"
+                              >
+                                 {isAnswering ? '...' : <Send size={20} />}
+                              </button>
+                           </div>
+                        </div>
+                     )}
                  </>
               ) : (
                  <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-10">

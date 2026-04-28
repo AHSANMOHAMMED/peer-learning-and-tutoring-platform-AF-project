@@ -5,6 +5,39 @@ const { authenticate } = require('../middleware/auth');
 const { body, param, validationResult } = require('express-validator');
 
 /**
+ * @route   POST /api/ai-homework/help
+ * @desc    Unified AI homework help endpoint (supports start and sendMessage actions)
+ * @access  Private
+ */
+router.post('/help', authenticate, async (req, res) => {
+  try {
+    const { action, sessionId, message, image, voiceNote, audio, subject, grade, topic } = req.body;
+    
+    // Normalize audio field (frontend might send 'audio' or 'voiceNote')
+    const finalVoice = voiceNote || audio;
+
+    if (action === 'sendMessage') {
+      if (!sessionId) {
+        return res.status(400).json({ success: false, message: 'Session ID is required for sendMessage action.' });
+      }
+      const response = await AIHomeworkAssistant.processMessage(sessionId, message, image, finalVoice);
+      return res.json({ success: true, data: response });
+    } else {
+      // Default action is 'start' or no action
+      const session = await AIHomeworkAssistant.startSession(req.user._id, { 
+        subject: subject || 'general', 
+        topic, 
+        grade: grade || req.user.grade 
+      });
+      return res.json({ success: true, data: session });
+    }
+  } catch (error) {
+    console.error('Error in AI help endpoint:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
  * @route   POST /api/ai-homework/start
  * @desc    Start a new AI homework help session
  * @access  Private
@@ -82,7 +115,7 @@ router.post('/:sessionId/message', [
       return res.status(400).json({ success: false, message: 'Message, image, or voice note is required.' });
     }
 
-    const response = await AIHomeworkAssistant.processMessage(sessionId, message, image);
+    const response = await AIHomeworkAssistant.processMessage(sessionId, message, image, voiceNote);
 
     res.json({
       success: true,

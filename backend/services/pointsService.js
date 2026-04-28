@@ -33,10 +33,17 @@ class PointsService {
         const newLevel = Math.floor(Math.sqrt(user.gamification.points / 10)) + 1;
         if (newLevel > user.gamification.level) {
           user.gamification.level = newLevel;
-          // Could emit level up event here
         }
         
         await user.save();
+      }
+
+      // Record activity in GamificationService for streak and detailed stats
+      try {
+        const GamificationService = require('./GamificationService');
+        await GamificationService.recordActivity(userId, type, points);
+      } catch (gamifyErr) {
+        console.error('Error recording activity in GamificationService:', gamifyErr);
       }
 
       // Check for new badges after points award
@@ -396,6 +403,18 @@ class PointsService {
       console.error('Error awarding first answer of day:', error);
       throw error;
     }
+  }
+  // Process correct answer verification
+  static async awardAnswerCorrect(userId, answerId, subject) {
+    return await this.awardPoints(
+      userId,
+      25, // Verified correct answer bonus
+      'answer_correct',
+      answerId,
+      'answer',
+      'Answer verified correct by tutor',
+      { subject }
+    );
   }
 }
 

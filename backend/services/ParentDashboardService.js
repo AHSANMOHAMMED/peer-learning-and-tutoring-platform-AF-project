@@ -61,13 +61,13 @@ class ParentDashboardService {
 
       // Notify student
       await Notification.create({
-        recipient: student._id,
+        userId: student._id,
         type: 'social',
         title: 'Parent Link Request',
         message: `A parent wants to link to your account for monitoring. Please review and approve.`,
         priority: 'normal',
         actionUrl: '/dashboard/settings/parents',
-        channels: ['inApp', 'email']
+        channels: { inApp: true, email: true }
       });
 
       return {
@@ -117,13 +117,13 @@ class ParentDashboardService {
         // Notify parent
         const parent = await User.findById(link.parent);
         await Notification.create({
-          recipient: link.parent,
+          userId: link.parent,
           type: 'social',
           title: 'Student Link Approved',
           message: 'Your link request has been approved. You can now monitor student progress.',
           priority: 'normal',
           actionUrl: '/dashboard/parent',
-          channels: ['inApp', 'email']
+          channels: { inApp: true, email: true }
         });
 
         return { approved: true, link };
@@ -162,6 +162,29 @@ class ParentDashboardService {
 
     } catch (error) {
       console.error('Error getting linked students:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get student's linked parents
+   */
+  async getLinkedParents(studentId) {
+    try {
+      const links = await ParentStudentLink.find({
+        student: studentId,
+        status: 'active'
+      }).populate('parent', 'username email profile.firstName profile.lastName profile.avatar');
+
+      return links.map(link => ({
+        linkId: link._id,
+        parent: link.parent,
+        relationship: link.relationship,
+        permissions: link.permissions,
+        linkedAt: link.activatedAt
+      }));
+    } catch (error) {
+      console.error('Error getting linked parents:', error);
       throw error;
     }
   }
@@ -278,6 +301,26 @@ class ParentDashboardService {
         completionDate: { $gte: startDate }
       }).sort({ completionDate: -1 });
 
+      // Calculate weekly attendance (last 7 days)
+      const weeklyAttendance = [];
+      const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayName = daysOfWeek[d.getDay()];
+        
+        // Find if student was present (had at least one completed session)
+        const daySessions = sessions.filter(s => s.completedAt.toISOString().split('T')[0] === dateStr);
+        const hwSessions = homeworkSessions.filter(s => s.completionDate.toISOString().split('T')[0] === dateStr);
+        
+        weeklyAttendance.push({
+          day: dayName,
+          status: (daySessions.length > 0 || hwSessions.length > 0) ? 'present' : 'absent',
+          date: dateStr
+        });
+      }
+
       // Calculate progress metrics
       const progress = {
         totalSessions: sessions.length,
@@ -288,6 +331,7 @@ class ParentDashboardService {
           ? sessions.reduce((sum, s) => sum + (s.rating || 0), 0) / sessions.length
           : 0,
         dailyActivity: this.calculateDailyActivity(sessions, days),
+        weeklyAttendance,
         improvement: this.calculateImprovement(sessions),
         // Mocked history for charts until more granular tracking is in place
         history: Array.from({ length: 4 }, (_, i) => ({
@@ -468,9 +512,31 @@ class ParentDashboardService {
           completedAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
         });
 
+        // Check for skip requests
+        const Booking = require('../models/Booking');
+        const skipRequests = await Booking.find({
+          student: studentId,
+          status: 'skip_requested',
+          'skipRequest.status': 'pending',
+          createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+        });
+
+        const student = await User.findById(studentId).select('name');
+
+        skipRequests.forEach(req => {
+          alerts.push({
+            type: 'skip_request',
+            priority: 'high',
+            studentId,
+            studentName: student.name,
+            message: `${student.name} requested an absence for a session.`,
+            reason: req.skipRequest?.reason,
+            suggestedAction: 'View request in session list'
+          });
+        });
+
         // No activity alert
         if (recentSessions.length === 0) {
-          const student = await User.findById(studentId).select('name');
           alerts.push({
             type: 'no_activity',
             priority: 'medium',
@@ -488,7 +554,7 @@ class ParentDashboardService {
             type: 'streak_milestone',
             priority: 'low',
             studentId,
-            studentName: gamification.user?.name || 'Student',
+            studentName: student.name,
             message: `${gamification.streaks.current}-day learning streak!`,
             suggestedAction: 'Celebrate this achievement'
           });
@@ -552,14 +618,14 @@ class ParentDashboardService {
       // Notify other party
       const notifyUserId = isParent ? link.student : link.parent;
       await Notification.create({
-        recipient: notifyUserId,
+        userId: notifyUserId,
         type: 'social',
         title: 'Parent Link Removed',
         message: isParent 
           ? 'Your parent has removed the monitoring link.'
           : 'The student has removed your monitoring access.',
         priority: 'normal',
-        channels: ['inApp', 'email']
+        channels: { inApp: true, email: true }
       });
 
       return { removed: true };
@@ -630,13 +696,12 @@ class ParentDashboardService {
 
       // 2. Create notification
       await Notification.create({
-        recipient: studentId,
-        sender: parentId,
+        userId: studentId,
         type: 'alert',
         title,
         message,
         priority: 'high',
-        channels: ['inApp', 'email', 'push']
+        channels: { inApp: true, email: true, push: true }
       });
 
       return { success: true, message: `Nudge sent to ${student.name}` };
@@ -689,14 +754,14 @@ class ParentDashboardService {
       // Notify parent
       const Notification = require('../models/Notification'); // Ensure Notification is available
       await Notification.create({
-        recipient: link.parent,
+        userId: link.parent,
         type: 'system',
         title: approve ? 'Link Approved' : 'Link Rejected',
         message: approve 
           ? 'Your student link request has been approved by the administration.' 
           : `Your student link request was rejected. Reason: ${reviewNote || 'Contact support for details.'}`,
         priority: 'high',
-        channels: ['inApp', 'email']
+        channels: { inApp: true, email: true }
       });
 
       return link;

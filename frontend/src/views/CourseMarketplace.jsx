@@ -3,14 +3,16 @@ import {
   Search, Filter, Star, Clock, Users,
   ChevronDown, Grid, List, Heart, BookOpen,
   GraduationCap, ArrowUpRight, ArrowRight,
-  ShoppingBag
+  ShoppingBag, Eye, X, AlertCircle, RefreshCw
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { marketplaceApi } from '../services/api';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
+import { toast } from 'react-hot-toast';
 
-const CourseCard = ({ course, featured: isFeatured = false, viewMode }) => {
+const CourseCard = ({ course, featured: isFeatured = false, viewMode, addToCart }) => {
   const navigate = useNavigate();
   
   if (viewMode === 'list') {
@@ -63,7 +65,6 @@ const CourseCard = ({ course, featured: isFeatured = false, viewMode }) => {
 
   return (
     <div
-      onClick={() => navigate(`/lectures/${course._id}`)}
       className={cn(
         "group bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex flex-col h-full",
         isFeatured && "ring-2 ring-blue-500 border-transparent shadow-blue-100"
@@ -114,8 +115,19 @@ const CourseCard = ({ course, featured: isFeatured = false, viewMode }) => {
           <span className="text-lg font-bold text-slate-900">
              {course.isFree ? 'Free' : `Rs. ${course.price?.toLocaleString()}`}
           </span>
-          <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-            <ArrowUpRight size={16} />
+          <div className="flex gap-2">
+            <button 
+              onClick={(e) => { e.stopPropagation(); navigate(`/lectures/${course._id}`); }}
+              className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors"
+            >
+              <Eye size={16} />
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); addToCart(course); }}
+              className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-colors shadow-lg shadow-blue-200"
+            >
+              <ShoppingBag size={16} />
+            </button>
           </div>
         </div>
       </div>
@@ -142,6 +154,43 @@ const CourseMarketplace = () => {
     total: 1,
     count: 0
   });
+
+  // Cart State
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const addToCart = (course) => {
+    if (cart.find(item => item._id === course._id)) {
+      return toast.error('Course already in cart');
+    }
+    setCart([...cart, course]);
+    toast.success('Added to cart');
+  };
+
+  const removeFromCart = (id) => {
+    setCart(cart.filter(item => item._id !== id));
+  };
+
+  const calculateTotal = () => cart.reduce((sum, item) => sum + (item.price || 0), 0);
+
+  const handleCheckout = async () => {
+    setIsProcessing(true);
+    try {
+      for (const item of cart) {
+        await marketplaceApi.purchase(item._id);
+      }
+      toast.success('Enrollment successful! Redirecting to dashboard...');
+      setCart([]);
+      setIsCheckoutOpen(false);
+      setTimeout(() => navigate('/dashboard'), 2000);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Checkout failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     fetchInitialData();
@@ -231,7 +280,7 @@ const CourseMarketplace = () => {
                </div>
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {featured.map((course) => (
-                    <CourseCard key={course._id} course={course} featured viewMode="grid" />
+                    <CourseCard key={course._id} course={course} featured viewMode="grid" addToCart={addToCart} />
                   ))}
                </div>
             </div>
@@ -362,7 +411,7 @@ const CourseMarketplace = () => {
                      viewMode === 'grid' ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                    )}>
                       {courses.map((course) => (
-                         <CourseCard key={course._id} course={course} viewMode={viewMode} />
+                         <CourseCard key={course._id} course={course} viewMode={viewMode} addToCart={addToCart} />
                       ))}
                    </div>
                 ) : (
@@ -402,9 +451,168 @@ const CourseMarketplace = () => {
           </div>
           
         </div>
+
+        {/* Floating Cart Button */}
+        <AnimatePresence>
+          {cart.length > 0 && (
+            <motion.button
+              initial={{ scale: 0, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0, y: 20 }}
+              onClick={() => setIsCartOpen(true)}
+              className="fixed bottom-8 right-8 z-[100] w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl shadow-blue-500/40 flex items-center justify-center hover:bg-blue-500 hover:scale-110 transition-all active:scale-95"
+            >
+              <ShoppingBag size={24} />
+              <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-[10px] font-black rounded-full border-2 border-white flex items-center justify-center tabular-nums">
+                {cart.length}
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Cart Drawer */}
+        <AnimatePresence>
+          {isCartOpen && (
+            <div className="fixed inset-0 z-[1000] flex justify-end">
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setIsCartOpen(false)}
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col"
+              >
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center">
+                      <ShoppingBag size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800">Your Cart</h3>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{cart.length} Courses Selected</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500"><X size={24} /></button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
+                  {cart.map(item => (
+                    <CartItem key={item._id} item={item} onRemove={removeFromCart} />
+                  ))}
+                </div>
+
+                <div className="p-6 border-t border-slate-100 bg-slate-50/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Amount</span>
+                    <span className="text-2xl font-black text-slate-900">Rs. {calculateTotal().toLocaleString()}</span>
+                  </div>
+                  <button 
+                    onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}
+                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                  >
+                    Proceed to Checkout
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Checkout Modal */}
+        <AnimatePresence>
+          {isCheckoutOpen && (
+            <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 backdrop-blur-md bg-slate-900/60 overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl border border-slate-100 overflow-hidden my-auto"
+              >
+                <div className="p-8 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Checkout</h2>
+                    <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-1">Order Review & Secure Payment</p>
+                  </div>
+                  <button onClick={() => setIsCheckoutOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400"><X size={24}/></button>
+                </div>
+
+                <div className="p-8 space-y-6">
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Courses</h4>
+                    <div className="max-h-48 overflow-y-auto pr-2 space-y-2 no-scrollbar">
+                      {cart.map(item => (
+                        <div key={item._id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <span className="text-sm font-bold text-slate-700 truncate mr-4">{item.title}</span>
+                          <span className="text-sm font-black text-slate-900 shrink-0">Rs. {item.price?.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-slate-900 rounded-[2rem] text-white space-y-4">
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span className="text-xs font-bold uppercase tracking-widest">Subtotal</span>
+                      <span className="font-bold tabular-nums">Rs. {calculateTotal().toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span className="text-xs font-bold uppercase tracking-widest">Service Fee</span>
+                      <span className="font-bold tabular-nums">Rs. 0</span>
+                    </div>
+                    <div className="h-px bg-white/10" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-black uppercase tracking-widest">Total to Pay</span>
+                      <span className="text-2xl font-black tabular-nums">Rs. {calculateTotal().toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                      <AlertCircle className="text-amber-500 shrink-0" size={20} />
+                      <p className="text-xs font-bold text-amber-800 leading-relaxed">
+                        This is a secure enrollment process. Once payment is confirmed, courses will be added to your My Learning tab immediately.
+                      </p>
+                    </div>
+
+                    <button 
+                      onClick={handleCheckout}
+                      disabled={isProcessing}
+                      className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-[0.25em] transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <RefreshCw className="animate-spin mr-3" size={18} />
+                          Processing Order...
+                        </>
+                      ) : 'Confirm and Pay Now'}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
   );
 };
+
+// Sub-components for better organization
+const CartItem = ({ item, onRemove }) => (
+  <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200">
+      <img src={item.thumbnail || "/images/maths-3d.png"} className="w-full h-full object-cover" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <h4 className="font-bold text-slate-800 text-sm truncate">{item.title}</h4>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.instructor?.name || 'Faculty Member'}</p>
+    </div>
+    <div className="text-right shrink-0">
+      <p className="font-bold text-slate-900 text-sm">Rs. {item.price?.toLocaleString()}</p>
+      <button onClick={() => onRemove(item._id)} className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase tracking-wider mt-1">Remove</button>
+    </div>
+  </div>
+);
 
 export default CourseMarketplace;

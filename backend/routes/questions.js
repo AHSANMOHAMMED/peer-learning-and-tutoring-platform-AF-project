@@ -1,33 +1,40 @@
 const express = require('express');
 const router = express.Router();
-const questionController = require('../controllers/questionController');
-const { authenticate } = require('../middleware/auth');
-const Question = require('../models/Question');
+const { 
+  getQuestions, 
+  getQuestionById, 
+  createQuestion, 
+  updateQuestion, 
+  deleteQuestion, 
+  closeQuestion, 
+  approveQuestion, 
+  rejectQuestion, 
+  getQuestionStats,
+  getTutorChallenges
+} = require('../controllers/questionController');
+const { protect, authorize } = require('../middleware/auth');
 
 // Public routes
-router.get('/', questionController.getQuestions);
-
-router.get('/stats', async (req, res) => {
-  try {
-    const count = await Question.countDocuments();
-    res.json({ totalQuestions: count });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to get stats' });
-  }
-});
-
+router.get('/', getQuestions);
+router.get('/stats', getQuestionStats);
 router.get('/subjects', (req, res) => {
   res.json({ subjects: ['Mathematics', 'Science', 'History', 'Geography', 'English'] });
 });
 
-router.get('/:id', questionController.getQuestionById);
+// Tutor specific
+router.get('/tutor/my-challenges', protect, authorize('tutor', 'admin', 'superadmin'), getTutorChallenges);
+
+// Question detail
+router.get('/:id', getQuestionById);
 
 // Protected routes
-router.post('/', authenticate, questionController.createQuestion);
-router.put('/:id', authenticate, questionController.updateQuestion);
-router.delete('/:id', authenticate, questionController.deleteQuestion);
-router.post('/:id/close', authenticate, questionController.closeQuestion);
-router.put('/:id/approve', authenticate, questionController.approveQuestion);
-router.put('/:id/reject', authenticate, questionController.rejectQuestion);
+router.post('/', protect, createQuestion);
+router.put('/:id', protect, updateQuestion);
+router.delete('/:id', protect, deleteQuestion);
+router.post('/:id/close', protect, closeQuestion);
+
+// Admin routes
+router.put('/:id/approve', protect, authorize('admin', 'superadmin'), approveQuestion);
+router.put('/:id/reject', protect, authorize('admin', 'superadmin'), rejectQuestion);
 
 module.exports = router;

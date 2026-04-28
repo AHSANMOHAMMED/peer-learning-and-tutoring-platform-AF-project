@@ -4,50 +4,95 @@ import { motion } from 'framer-motion';
 const AuraLogo = ({ size = 40, className = "" }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-      {/* 3D Brand Asset Core */}
-      <motion.div
-        className="absolute inset-0 z-10"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-      >
-        <img 
-          src="/images/aura_logo_3d.png" 
-          alt="Aura Logo" 
-          className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-        />
-      </motion.div>
-
-      {/* SVG Background Pulse Logic */}
       <motion.svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="absolute inset-0 w-full h-full opacity-30 z-0"
-        initial="initial"
-        animate="animate"
+        className="w-full h-full filter drop-shadow-[0_0_15px_rgba(0,168,204,0.5)]"
+        initial={{ rotate: -10 }}
+        animate={{ rotate: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
       >
-        {/* Pulsing Outer Glow */}
+        <defs>
+          <linearGradient id="aura-unique-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00E5FF" />
+            <stop offset="50%" stopColor="#0072FF" />
+            <stop offset="100%" stopColor="#7000FF" />
+          </linearGradient>
+          <radialGradient id="aura-glow-unique" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#00A8CC" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Outer Geometric Frame - Hexagonal Bloom */}
         <motion.path
-          d="M50 5L89.1747 27.5V72.5L50 95L10.8253 72.5V27.5L50 5Z"
-          stroke="url(#aura-gradient-outer)"
-          strokeWidth="1"
-          strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: [0.1, 0.4, 0.1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          d="M50 5 L89 27.5 L89 72.5 L50 95 L11 72.5 L11 27.5 Z"
+          stroke="url(#aura-unique-gradient)"
+          strokeWidth="1.5"
+          fill="rgba(0,168,204,0.03)"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 2.5, ease: "easeInOut" }}
         />
         
-        <defs>
-          <linearGradient id="aura-gradient-outer" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#3b82f6" />
-            <stop offset="1" stopColor="#10b981" />
-          </linearGradient>
-        </defs>
+        {/* Interlocking Secondary Frame */}
+        <motion.path
+          d="M50 15 L80 32.5 L80 67.5 L50 85 L20 67.5 L20 32.5 Z"
+          stroke="url(#aura-unique-gradient)"
+          strokeWidth="0.5"
+          strokeDasharray="4 4"
+          initial={{ rotate: 0 }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        />
+
+        {/* Central Stylized 'A' - Kinetic Design */}
+        <motion.path
+          d="M35 75 L50 25 L65 75"
+          stroke="url(#aura-unique-gradient)"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+        />
+        <motion.path
+          d="M42 58 H58"
+          stroke="white"
+          strokeWidth="3"
+          strokeLinecap="round"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 1.2 }}
+        />
+
+        {/* Pulsing Energy Rings */}
+        {[38, 44, 50].map((r, i) => (
+          <motion.circle 
+            key={i}
+            cx="50" cy="50" r={r} 
+            stroke="url(#aura-unique-gradient)" 
+            strokeWidth="0.2" 
+            fill="none"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.3, 0.1] }}
+            transition={{ duration: 4, delay: i * 0.5, repeat: Infinity }}
+          />
+        ))}
+        
+        {/* Core Radiance */}
+        <motion.circle 
+          cx="50" cy="50" r="12" 
+          fill="url(#aura-glow-unique)" 
+          className="blur-[2px]"
+          animate={{ opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
       </motion.svg>
       
-      {/* Underlying Glow Pulse */}
-      <div className="absolute inset-0 bg-blue-500/10 blur-2xl rounded-full scale-125 animate-pulse pointer-events-none" />
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#00a8cc]/10 to-transparent rounded-full blur-2xl -z-10 animate-pulse" />
     </div>
   );
 };

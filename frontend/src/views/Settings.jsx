@@ -4,12 +4,29 @@ import { User, Shield, Bell, MapPin, GraduationCap, CheckCircle2, Save, Lock, Ma
 import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';
 import { useParentLinks } from '../controllers/useParentLinks';
+import { useTutors } from '../controllers/useTutors';
 import { cn } from '../utils/cn';
+import { toast } from 'react-hot-toast';
+import { Briefcase, Plus, Trash2 } from 'lucide-react';
 
 const Settings = () => {
   const { user, updateProfile, changePassword, loading } = useAuth();
   const { linkRequests, fetchStudentLinkRequests, studentRespondToLink, loading: linksLoading } = useParentLinks();
+  const { getTutorByUserId, updateTutorProfile, loading: tutorLoading } = useTutors();
   const [activeTab, setActiveTab] = useState('profile');
+  
+  const [tutorData, setTutorData] = useState(null);
+  const [isTutorLoading, setIsTutorLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (activeTab === 'professional' && user?.role === 'tutor') {
+      setIsTutorLoading(true);
+      getTutorByUserId(user._id).then(data => {
+        setTutorData(data);
+        setIsTutorLoading(false);
+      });
+    }
+  }, [activeTab, user, getTutorByUserId]);
 
   React.useEffect(() => {
     if (activeTab === 'family' && user?.role === 'student') {
@@ -44,6 +61,8 @@ const Settings = () => {
         }
         await changePassword(securityData.currentPassword, securityData.newPassword);
         setSecurityData({ currentPassword: '', newPassword: '' });
+      } else if (activeTab === 'professional') {
+        await updateTutorProfile(tutorData._id, tutorData);
       } else {
         const payload = {
           profile: { firstName: formData.firstName, lastName: formData.lastName, bio: formData.bio },
@@ -66,7 +85,8 @@ const Settings = () => {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    ...(user?.role === 'student' ? [{ id: 'family', label: 'Family', icon: Users }] : [])
+    ...(user?.role === 'student' ? [{ id: 'family', label: 'Family', icon: Users }] : []),
+    ...(user?.role === 'tutor' ? [{ id: 'professional', label: 'Tutor Profile', icon: Briefcase }] : [])
   ];
 
   return (
@@ -306,7 +326,123 @@ const Settings = () => {
                        </div>
                     </motion.div>
                   )}
-              </AnimatePresence>
+
+                  {activeTab === 'professional' && user?.role === 'tutor' && tutorData && (
+                    <motion.div key="professional" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="flex-1 space-y-8">
+                       <div className="flex justify-between items-center">
+                          <h2 className="text-xl font-bold text-slate-800">Professional Profile</h2>
+                          <span className={cn(
+                             "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                             tutorData.verificationStatus === 'approved' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"
+                          )}>
+                             {tutorData.verificationStatus}
+                          </span>
+                       </div>
+
+                       <div className="space-y-6">
+                          <div>
+                             <label className="text-sm font-bold text-slate-700 mb-2 block">Professional Bio</label>
+                             <textarea 
+                               value={tutorData.bio}
+                               onChange={(e) => setTutorData({...tutorData, bio: e.target.value})}
+                               rows={4}
+                               className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-[15px] font-medium text-slate-800 outline-none focus:bg-white focus:border-[#00a8cc] transition-colors resize-none"
+                             />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-6">
+                             <div>
+                                <label className="text-sm font-bold text-slate-700 mb-2 block">Hourly Rate (LKR)</label>
+                                <input 
+                                  type="number"
+                                  value={tutorData.hourlyRate}
+                                  onChange={(e) => setTutorData({...tutorData, hourlyRate: Number(e.target.value)})}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800"
+                                />
+                             </div>
+                             <div>
+                                <label className="text-sm font-bold text-slate-700 mb-2 block">Years of Experience</label>
+                                <input 
+                                  type="number"
+                                  value={tutorData.experience}
+                                  onChange={(e) => setTutorData({...tutorData, experience: Number(e.target.value)})}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-800"
+                                />
+                             </div>
+                          </div>
+
+                          <div>
+                             <div className="flex justify-between items-center mb-4">
+                                <label className="text-sm font-bold text-slate-700">Areas of Expertise</label>
+                                <button 
+                                  onClick={() => setTutorData({...tutorData, expertise: [...tutorData.expertise, { stream: 'Combined Mathematics', grades: ['12', '13'] }]})}
+                                  className="text-xs font-black text-[#00a8cc] flex items-center gap-1 hover:underline"
+                                >
+                                   <Plus size={14} /> Add Expertise
+                                </button>
+                             </div>
+                             <div className="space-y-4">
+                                {tutorData.expertise?.map((exp, idx) => (
+                                   <div key={idx} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-4">
+                                      <div className="flex justify-between items-start">
+                                         <div className="flex-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Stream</label>
+                                            <select 
+                                               value={exp.stream}
+                                               onChange={(e) => {
+                                                  const newExp = [...tutorData.expertise];
+                                                  newExp[idx].stream = e.target.value;
+                                                  setTutorData({...tutorData, expertise: newExp});
+                                               }}
+                                               className="w-full bg-white border border-slate-200 rounded-xl p-2 text-sm font-bold"
+                                            >
+                                               {['Combined Mathematics', 'Biological Sciences', 'Commercial Stream', 'Physical Sciences', 'Arts Stream', 'Technology Stream', 'O/L General', 'London A/L'].map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                         </div>
+                                         <button 
+                                           onClick={() => {
+                                              const newExp = tutorData.expertise.filter((_, i) => i !== idx);
+                                              setTutorData({...tutorData, expertise: newExp});
+                                           }}
+                                           className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                         >
+                                            <Trash2 size={18} />
+                                         </button>
+                                      </div>
+                                      <div>
+                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Target Grades</label>
+                                         <div className="flex flex-wrap gap-2">
+                                            {['6', '7', '8', '9', '10', '11', '12', '13'].map(g => (
+                                               <button
+                                                  key={g}
+                                                  onClick={() => {
+                                                     const newExp = [...tutorData.expertise];
+                                                     const grades = newExp[idx].grades;
+                                                     if (grades.includes(g)) {
+                                                        newExp[idx].grades = grades.filter(gr => gr !== g);
+                                                     } else {
+                                                        newExp[idx].grades = [...grades, g];
+                                                     }
+                                                     setTutorData({...tutorData, expertise: newExp});
+                                                  }}
+                                                  className={cn(
+                                                     "px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                                                     exp.grades.includes(g) ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:border-[#00a8cc]"
+                                                  )}
+                                               >
+                                                  Grade {g}
+                                               </button>
+                                            ))}
+                                         </div>
+                                      </div>
+                                   </div>
+                                ))}
+                             </div>
+                          </div>
+                       </div>
+                    </motion.div>
+                  )}
+               </AnimatePresence>
 
               {/* Footer Actions */}
               <div className="mt-auto pt-8 border-t border-slate-100 flex items-center justify-end gap-6 h-[88px]">

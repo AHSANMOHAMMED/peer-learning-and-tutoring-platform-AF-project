@@ -30,7 +30,27 @@ const questionSchema = new mongoose.Schema({
       'Technology Stream', 
       'O/L General',
       'London A/L',
-      'Other'
+      'Other',
+      'Tamil',
+      'Sinhala',
+      'English Language',
+      'Mathematics',
+      'Science',
+      'History',
+      'Geography',
+      'Religion',
+      'Islam',
+      'Buddhism',
+      'Hinduism',
+      'Christianity',
+      'Life Competencies and Citizenship Education',
+      'Civic Education',
+      'ICT',
+      'Health & Physical Education',
+      'Art',
+      'Dancing',
+      'Music',
+      'Drama & Theatre'
     ]
   },
   grade: {

@@ -39,7 +39,9 @@ exports.registerTutor = async (req, res) => {
       experience,
       hourlyRate,
       availability,
-      alStream
+      alStream,
+      expertise: req.body.expertise,
+      verificationStatus: 'pending'
     });
 
     res.status(201).json(tutor);
@@ -175,6 +177,38 @@ exports.moderateTutor = async (req, res) => {
       }
     }
     
+    res.json(updatedTutor);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// @desc    Update tutor professional profile
+// @route   PUT /api/tutors/:id
+// @access  Private (Tutor)
+exports.updateTutorProfile = async (req, res) => {
+  const { bio, hourlyRate, experience, subjects, education, availability, expertise } = req.body;
+
+  try {
+    const tutor = await Tutor.findById(req.params.id);
+
+    if (!tutor) {
+      return res.status(404).json({ message: 'Tutor not found' });
+    }
+
+    // Authorization check: User can only update their own tutor profile
+    if (tutor.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(401).json({ message: 'User not authorized' });
+    }
+
+    tutor.bio = bio !== undefined ? bio : tutor.bio;
+    tutor.hourlyRate = hourlyRate !== undefined ? hourlyRate : tutor.hourlyRate;
+    tutor.experience = experience !== undefined ? experience : tutor.experience;
+    tutor.subjects = subjects !== undefined ? subjects : tutor.subjects;
+    tutor.education = education !== undefined ? education : tutor.education;
+    tutor.availability = availability !== undefined ? availability : tutor.availability;
+    tutor.expertise = expertise !== undefined ? expertise : tutor.expertise;
+
+    const updatedTutor = await tutor.save();
     res.json(updatedTutor);
   } catch (error) {
     res.status(500).json({ message: error.message });

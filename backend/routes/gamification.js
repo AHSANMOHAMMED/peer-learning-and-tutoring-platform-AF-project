@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const GamificationService = require('../services/GamificationService');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const { param, body, validationResult } = require('express-validator');
 
 /**

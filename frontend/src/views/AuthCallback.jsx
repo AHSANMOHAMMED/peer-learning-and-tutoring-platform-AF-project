@@ -16,9 +16,16 @@ const AuthCallback = () => {
       // Refresh user profile in context and then redirect
       refreshUser()
         .then((userData) => {
-          // If student profile is incomplete (missing grade), redirect to setup
           if (userData && userData.role === 'student' && !userData.grade) {
             navigate('/profile-setup');
+          } else if (userData && userData.role === 'tutor') {
+            if (userData.verificationStatus === 'not_created') {
+              navigate('/tutor-onboarding');
+            } else if (userData.verificationStatus === 'approved') {
+              navigate('/dashboard');
+            } else {
+              navigate('/tutor-pending');
+            }
           } else {
             navigate('/dashboard');
           }

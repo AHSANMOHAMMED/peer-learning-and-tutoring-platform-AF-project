@@ -4,7 +4,7 @@ const { getGlobalAnalytics, getPulseStats } = require('../controllers/systemCont
 const { protect, authorize } = require('../middleware/auth');
 
 // Super Admin analytics route
-router.get('/analytics', protect, authorize('admin', 'superadmin'), getGlobalAnalytics);
+router.get('/analytics', protect, authorize('admin', 'superadmin', 'websiteAdmin'), getGlobalAnalytics);
 
 // Real-time pulse stats for all authenticated users
 router.get('/pulse', protect, getPulseStats);

@@ -22,7 +22,7 @@ router.get('/subjects', (req, res) => {
 });
 
 // Tutor specific
-router.get('/tutor/my-challenges', protect, authorize('tutor', 'admin', 'superadmin'), getTutorChallenges);
+router.get('/tutor/my-challenges', protect, authorize('tutor', 'admin', 'superadmin', 'websiteAdmin'), getTutorChallenges);
 
 // Question detail
 router.get('/:id', getQuestionById);
@@ -34,7 +34,7 @@ router.delete('/:id', protect, deleteQuestion);
 router.post('/:id/close', protect, closeQuestion);
 
 // Admin routes
-router.put('/:id/approve', protect, authorize('admin', 'superadmin'), approveQuestion);
-router.put('/:id/reject', protect, authorize('admin', 'superadmin'), rejectQuestion);
+router.put('/:id/approve', protect, authorize('admin', 'superadmin', 'websiteAdmin'), approveQuestion);
+router.put('/:id/reject', protect, authorize('admin', 'superadmin', 'websiteAdmin'), rejectQuestion);
 
 module.exports = router;

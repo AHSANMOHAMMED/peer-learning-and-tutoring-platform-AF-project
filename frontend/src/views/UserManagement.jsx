@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Search, Edit2, Trash2, ArrowRight, ShieldCheck, Mail, Calendar, 
   RefreshCw, MoreVertical, ShieldAlert, BadgeCheck, X, Plus, UserCircle,
-  GraduationCap, MapPin, Eye, AlertCircle, Laptop
+  GraduationCap, MapPin, Eye, AlertCircle, Laptop, Briefcase
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuth } from '../controllers/useAuth';

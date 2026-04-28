@@ -215,7 +215,8 @@ class ParentDashboardService {
       const courses = await LectureCourse.find({
         'enrolledStudents.user': studentId
       })
-        .select('title subject sessions enrolledStudents progress')
+        .populate('instructor', 'name')
+        .select('title subject sessions enrolledStudents progress instructor')
         .lean();
 
       // Calculate course progress
@@ -232,6 +233,46 @@ class ParentDashboardService {
           status: enrollment?.status || 'enrolled',
           lastSessionAttended: enrollment?.lastSessionAttended
         };
+      });
+
+      // Get mentors (tutors from courses and peer sessions)
+      const mentors = [];
+      const mentorIds = new Set();
+
+      // From courses
+      courses.forEach(course => {
+        if (course.instructor && !mentorIds.has(course.instructor._id.toString())) {
+          mentorIds.add(course.instructor._id.toString());
+          mentors.push({
+            id: course.instructor._id,
+            name: course.instructor.name,
+            role: 'Course Instructor',
+            subject: course.subject
+          });
+        }
+      });
+
+      // From bookings (private tutors)
+      const Booking = require('../models/Booking');
+      const bookings = await Booking.find({ studentId, status: 'confirmed' })
+        .populate({
+          path: 'tutorId',
+          populate: { path: 'userId', select: 'name' }
+        })
+        .limit(10)
+        .lean();
+
+      bookings.forEach(booking => {
+        const tutorUser = booking.tutorId?.userId;
+        if (tutorUser && !mentorIds.has(tutorUser._id.toString())) {
+          mentorIds.add(tutorUser._id.toString());
+          mentors.push({
+            id: tutorUser._id,
+            name: tutorUser.name,
+            role: 'Private Tutor',
+            subject: booking.subject
+          });
+        }
       });
 
       // Get recent activity
@@ -258,6 +299,7 @@ class ParentDashboardService {
         } : null,
         courses: courseData,
         recentActivity: recentSessions,
+        mentors,
         permissions: link.permissions
       };
 

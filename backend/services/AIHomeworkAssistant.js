@@ -376,7 +376,7 @@ class AIHomeworkAssistant {
   async callAI(systemPrompt, messages) {
     if (this.geminiKey) {
       // Recommended: gemini-1.5-flash (fast/free), gemini-1.5-pro (complex)
-      const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+      const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro', 'gemini-1.0-pro'];
       
       for (const model of geminiModels) {
         try {
@@ -411,7 +411,7 @@ class AIHomeworkAssistant {
   /**
    * Call Google Gemini API with retry support
    */
-  async callGemini(systemPrompt, messages, modelName = 'gemini-2.5-flash') {
+  async callGemini(systemPrompt, messages, modelName = 'gemini-1.5-flash') {
     const maxRetries = 2;
     let lastError;
 

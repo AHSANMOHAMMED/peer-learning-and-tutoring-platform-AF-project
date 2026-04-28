@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, UserPlus, Bell, TrendingUp, Calendar, CheckCircle, 
   MessageCircle, Zap, Shield, Plus, X, Search, Mail, 
@@ -19,6 +20,7 @@ import { cn } from '../utils/cn';
 
 const ParentDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState(null);
@@ -28,6 +30,7 @@ const ParentDashboard = () => {
   const [studentEmail, setStudentEmail] = useState('');
   const [linkLoading, setLinkLoading] = useState(false);
   const [alerts, setAlerts] = useState([]);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   useEffect(() => {
     fetchChildren();
@@ -306,6 +309,7 @@ const ParentDashboard = () => {
                                 <BookOpen size={20} className="text-indigo-400 group-hover:-rotate-12 transition-transform" />
                              </button>
                              <button 
+                               onClick={() => setShowMessageModal(true)}
                                className="w-full flex items-center justify-between p-5 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 transition-all group text-left"
                              >
                                 <div>
@@ -361,7 +365,7 @@ const ParentDashboard = () => {
                  <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setLinkModalOpen(false)} />
                  <motion.div 
                     initial={{ opacity: 0, scale:0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="bg-white rounded-[2.5rem] p-10 w-full max-w-md relative z-10 shadow-2xl"
+                    className="bg-white rounded-[2.5rem] p-10 w-full max-md relative z-10 shadow-2xl"
                  >
                     <button onClick={() => setLinkModalOpen(false)} className="absolute top-8 right-8 p-2 hover:bg-slate-100 rounded-xl transition-colors"><X size={20} className="text-slate-400"/></button>
                     <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6">
@@ -387,6 +391,60 @@ const ParentDashboard = () => {
                        </button>
                        <p className="text-[10px] font-bold text-slate-400 text-center uppercase tracking-widest">Student will need to approve this request</p>
                     </div>
+                 </motion.div>
+              </div>
+           )}
+        </AnimatePresence>
+
+        {/* Message Tutors Modal */}
+        <AnimatePresence>
+           {showMessageModal && (
+              <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4">
+                 <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowMessageModal(false)} />
+                 <motion.div 
+                    initial={{ opacity: 0, scale:0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg relative z-10 shadow-2xl"
+                 >
+                    <button onClick={() => setShowMessageModal(false)} className="absolute top-8 right-8 p-2 hover:bg-slate-100 rounded-xl transition-colors"><X size={20} className="text-slate-400"/></button>
+                    <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mb-6">
+                       <MessageCircle className="text-teal-600" size={32} />
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Message Mentors</h2>
+                    <p className="text-slate-500 font-medium text-sm mb-8">Directly communicate with your child's teachers and academic coordinators.</p>
+                    
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
+                       {summary?.mentors?.length > 0 ? (
+                         summary.mentors.map((mentor) => (
+                           <div 
+                              key={mentor.id}
+                              onClick={() => { navigate('/messages', { state: { participantId: mentor.id } }); setShowMessageModal(false); }}
+                              className="p-5 bg-slate-50 hover:bg-white border border-transparent hover:border-teal-200 rounded-2xl transition-all cursor-pointer flex items-center justify-between group"
+                           >
+                              <div className="flex items-center gap-4">
+                                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center font-bold text-teal-600 border border-slate-100">
+                                    {mentor.name?.[0]}
+                                 </div>
+                                 <div>
+                                    <h4 className="font-bold text-slate-800 group-hover:text-teal-600 transition-colors">{mentor.name}</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mentor.role} &bull; {mentor.subject}</p>
+                                 </div>
+                              </div>
+                              <ChevronRight size={18} className="text-slate-300 group-hover:text-teal-500 transition-colors" />
+                           </div>
+                         ))
+                       ) : (
+                         <div className="py-10 text-center bg-slate-50 rounded-3xl">
+                            <Users size={32} className="text-slate-200 mx-auto mb-3" />
+                            <p className="text-xs font-bold text-slate-400">No active mentors found for this student.</p>
+                         </div>
+                       )}
+                    </div>
+                    <button 
+                       onClick={() => setShowMessageModal(false)}
+                       className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl"
+                    >
+                       Close Hub
+                    </button>
                  </motion.div>
               </div>
            )}

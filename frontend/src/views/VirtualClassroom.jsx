@@ -43,6 +43,7 @@ const VirtualClassroom = ({
   const rendererRef = useRef(null);
   const controlsRef = useRef(null);
 
+
   // Initialize 3D Scene (Only if tab is 3D)
   useEffect(() => {
     if (activeTab === '3d') {

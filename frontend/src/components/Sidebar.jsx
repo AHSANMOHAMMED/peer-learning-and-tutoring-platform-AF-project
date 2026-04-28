@@ -16,7 +16,8 @@ import {
   X,
   CreditCard,
   Gamepad2,
-  Zap
+  Zap,
+  Mail
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useAuth } from '../controllers/useAuth';
@@ -32,6 +33,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
     const defaultNav = [
       { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
       { title: 'Q&A Forum', icon: MessageSquare, path: '/qa' },
+      { title: 'Direct Messages', icon: Mail, path: '/messages' },
       { title: 'My Profile', icon: User, path: '/profile' },
     ];
     
@@ -45,8 +47,9 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-            { title: 'Student Management', icon: Users, path: '/admin/students' },
-            { title: 'Tutor Management', icon: Briefcase, path: '/admin/tutors' },
+            { title: 'Direct Messages', icon: MessageSquare, path: '/messages' },
+            { title: 'Student Management', icon: Users, path: '/admin/users' },
+            { title: 'Tutor Management', icon: Briefcase, path: '/admin/approvals' },
             { title: 'Session Management', icon: Video, path: '/bookings' },
             { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
             { title: 'Admin Settings', icon: Settings, path: '/admin/settings' },
@@ -57,11 +60,13 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/super-admin' },
+            { title: 'Direct Messages', icon: MessageSquare, path: '/messages' },
             { title: 'User Management', icon: Users, path: '/admin/users' },
             { title: 'Tutor Management', icon: Briefcase, path: '/admin/tutors' },
             { title: 'All Sessions', icon: Video, path: '/bookings' },
             { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
             { title: 'Moderation', icon: FileText, path: '/moderation' },
+            { title: 'Q&A Inbox', icon: MessageSquare, path: '/tutor/qa' },
             { title: 'Admin Settings', icon: Settings, path: '/admin/settings' },
           ],
           settings: settingsNav
@@ -72,7 +77,8 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/tutor-dashboard' },
-            { title: 'Messages', icon: MessageSquare, path: '/tutor/qa' },
+            { title: 'Direct Messages', icon: MessageSquare, path: '/messages' },
+            { title: 'Q&A Inbox', icon: MessageSquare, path: '/tutor/qa' },
             { title: 'My Profile', icon: User, path: '/profile' },
             { title: 'Course Materials', icon: Briefcase, path: '/materials' },
             { title: 'My Sessions', icon: Video, path: '/bookings' },
@@ -85,7 +91,8 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
             { title: 'My Child\'s Progress', icon: Users, path: '/parent' },
-            { title: 'Message Tutors', icon: MessageSquare, path: '/qa' },
+            { title: 'Direct Messages', icon: MessageSquare, path: '/messages' },
+            { title: 'Q&A Forum', icon: HelpCircle, path: '/qa' },
             { title: 'My Profile', icon: User, path: '/profile' },
           ],
           settings: settingsNav
@@ -94,6 +101,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+            { title: 'Direct Messages', icon: MessageSquare, path: '/messages' },
             { title: 'Moderation Hub', icon: FileText, path: '/moderation' },
             { title: 'My Profile', icon: User, path: '/profile' },
           ],
@@ -103,6 +111,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/school-dashboard' },
+            { title: 'Direct Messages', icon: MessageSquare, path: '/messages' },
             { title: 'My Profile', icon: User, path: '/profile' },
           ],
           settings: settingsNav
@@ -112,11 +121,10 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             ...defaultNav,
-            { title: 'Knowledge Challenges', icon: Zap, path: '/qa' },
             { title: 'Study Circle', icon: Users, path: '/social' },
-            { title: 'AI Assistant', icon: Briefcase, path: '/ai-homework' },
+            { title: 'AI Assistant', icon: Zap, path: '/ai-homework' },
             { title: 'My Sessions', icon: Video, path: '/bookings' },
-            { title: 'Browse Tutors', icon: FileText, path: '/tutors' },
+            { title: 'Browse Tutors', icon: Briefcase, path: '/tutors' },
             { title: 'Refresh Zone', icon: Gamepad2, path: '/refresh-zone' },
           ],
           settings: settingsNav

@@ -77,9 +77,8 @@ const AIHomeworkChat = () => {
   const fetchSessionHistory = async () => {
     try {
       const response = await aiApi.homeworkHistory();
-      const payload = response?.data || response;
-      if (payload?.success) {
-        setSessionHistory(payload.data?.sessions || []);
+      if (response.success) {
+        setSessionHistory(response.data.sessions);
       }
     } catch (error) {
       console.error('Error fetching history:', error);
@@ -89,14 +88,12 @@ const AIHomeworkChat = () => {
   const startSession = async () => {
     try {
       setIsLoading(true);
-       const response = await aiApi.homeworkHelp({ subject, grade, topic: '' });
-      const payload = unwrapPayload(response);
-      const newSessionId = getSessionIdentifier(payload);
+      const response = await aiApi.homeworkStart({ subject, grade, topic: '' });
 
-      if (payload?.success && newSessionId) {
-        setSessionId(newSessionId);
+      if (response.success) {
+        setSessionId(response.data.sessionId);
         setMessages([
-          { role: 'assistant', content: payload.data?.welcomeMessage || getAssistantContent(payload), timestamp: new Date() }
+          { role: 'assistant', content: response.data.welcomeMessage, timestamp: new Date() }
         ]);
         setShowSetup(false);
       } else {
@@ -129,19 +126,16 @@ const AIHomeworkChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await aiApi.homeworkHelp({ 
-        action: 'sendMessage', 
-        sessionId, 
+      const response = await aiApi.homeworkMessage(sessionId, { 
         message: userMessage, 
-        image: currentImage 
+        imageContext: currentImage 
       });
-      const payload = unwrapPayload(response);
-      if (payload?.success) {
+      if (response.success) {
         setMessages((prev) => [...prev, {
           role: 'assistant',
-          content: getAssistantContent(payload),
+          content: response.data.content,
           timestamp: new Date(),
-          metadata: payload.data || payload
+          metadata: response.data
         }]);
       } else {
         toast.error(payload?.message || 'AI could not answer right now');
@@ -198,7 +192,7 @@ const AIHomeworkChat = () => {
 
   if (showSetup) {
     return (
-      <Layout userRole="student">
+      <Layout userRole={user?.role}>
         <div className="max-w-[1200px] mx-auto w-full font-sans">
           
           {/* Header */}
@@ -322,7 +316,7 @@ const AIHomeworkChat = () => {
   }
 
   return (
-    <Layout userRole="student">
+    <Layout userRole={user?.role}>
       <div className="h-[calc(100vh-80px)] max-w-[1000px] mx-auto w-full font-sans flex flex-col bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         
         {/* Chat Header */}

@@ -47,6 +47,7 @@ import VerifyOTP from './views/VerifyOTP';
 import NationalMerit from './views/NationalMerit';
 import ForumPage from './views/ForumPage';
 import ForumThreadPage from './views/ForumThreadPage';
+import Messages from './views/Messages';
 import { useAuth } from './controllers/useAuth';
 import { getDefaultRouteForUser } from './utils/roleRouting';
 
@@ -98,6 +99,7 @@ function App() {
           <Route path="/vr-classroom" element={<ProtectedRoute><VirtualClassroomWrapper /></ProtectedRoute>} />
           <Route path="/planner" element={<ProtectedRoute><StudyPlanner /></ProtectedRoute>} />
           <Route path="/social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
+          <Route path="/groups" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
           <Route path="/voice-tutor" element={<ProtectedRoute><VoiceTutor /></ProtectedRoute>} />
           <Route path="/school-dashboard" element={<ProtectedRoute allowedRoles={['schoolAdmin', 'superadmin']}><SchoolManagement /></ProtectedRoute>} />
           <Route path="/admin/schools" element={<ProtectedRoute allowedRoles={['superadmin']}><SchoolManagement /></ProtectedRoute>} />
@@ -132,6 +134,7 @@ function App() {
           <Route path="/refresh-zone/:gameId" element={<ProtectedRoute><RefreshZone /></ProtectedRoute>} />
           <Route path="/break-time-games" element={<ProtectedRoute><RefreshZone /></ProtectedRoute>} />
           <Route path="/merit" element={<ProtectedRoute><NationalMerit /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -173,13 +173,13 @@ const TutorQAForumPage = () => {
   };
 
   return (
-    <Layout userRole="tutor">
+    <Layout userRole={user?.role}>
       <div className="max-w-[1400px] mx-auto w-full font-sans flex flex-col h-[calc(100vh-100px)]">
         
         {/* Header */}
         <div className="mb-6 shrink-0">
-           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Student Inbox</h1>
-           <p className="text-slate-500 font-medium text-sm mt-1">Review and resolve open academic inquiries.</p>
+           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Q&A Management Hub</h1>
+           <p className="text-slate-500 font-medium text-sm mt-1">Review student inquiries and provide academic guidance.</p>
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 bg-white rounded-3xl shadow-soft border border-slate-100 overflow-hidden">

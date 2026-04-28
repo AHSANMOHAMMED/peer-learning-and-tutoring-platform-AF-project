@@ -1,0 +1,2480 @@
+[
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/statistics",
+    "roles": "websiteAdmin, superadmin",
+    "line": 31
+  },
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/games",
+    "roles": "websiteAdmin, superadmin",
+    "line": 34
+  },
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/games/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 35
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/games/:id/timer",
+    "roles": "websiteAdmin, superadmin",
+    "line": 36
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/games/:id/status",
+    "roles": "websiteAdmin, superadmin",
+    "line": 37
+  },
+  {
+    "file": "admin.js",
+    "method": "DELETE",
+    "path": "/games/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 38
+  },
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/users",
+    "roles": "websiteAdmin, superadmin",
+    "line": 41
+  },
+  {
+    "file": "admin.js",
+    "method": "POST",
+    "path": "/users",
+    "roles": "websiteAdmin, superadmin",
+    "line": 42
+  },
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/users/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 43
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/users/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 44
+  },
+  {
+    "file": "admin.js",
+    "method": "DELETE",
+    "path": "/users/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 45
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/users/:id/status",
+    "roles": "websiteAdmin, superadmin",
+    "line": 46
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/users/:id/role",
+    "roles": "websiteAdmin, superadmin",
+    "line": 47
+  },
+  {
+    "file": "admin.js",
+    "method": "POST",
+    "path": "/users/bulk",
+    "roles": "websiteAdmin, superadmin",
+    "line": 48
+  },
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/tutors/pending",
+    "roles": "websiteAdmin, superadmin",
+    "line": 51
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/tutors/:id/approve",
+    "roles": "websiteAdmin, superadmin",
+    "line": 52
+  },
+  {
+    "file": "admin.js",
+    "method": "PUT",
+    "path": "/tutors/:id/reject",
+    "roles": "websiteAdmin, superadmin",
+    "line": 53
+  },
+  {
+    "file": "admin.js",
+    "method": "GET",
+    "path": "/materials/pending",
+    "roles": "websiteAdmin, superadmin",
+    "line": 56
+  },
+  {
+    "file": "admin.js",
+    "method": "POST",
+    "path": "/broadcast",
+    "roles": "websiteAdmin, superadmin",
+    "line": 59
+  },
+  {
+    "file": "admin.js",
+    "method": "POST",
+    "path": "/rotate-keys",
+    "roles": "websiteAdmin, superadmin",
+    "line": 60
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/transcribe",
+    "roles": "public",
+    "line": 14
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/summarize",
+    "roles": "public",
+    "line": 54
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/quiz",
+    "roles": "public",
+    "line": 94
+  },
+  {
+    "file": "ai.js",
+    "method": "GET",
+    "path": "/recommendations",
+    "roles": "authenticated",
+    "line": 134
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/chat",
+    "roles": "public",
+    "line": 172
+  },
+  {
+    "file": "ai.js",
+    "method": "GET",
+    "path": "/platform",
+    "roles": "public",
+    "line": 219
+  },
+  {
+    "file": "ai.js",
+    "method": "GET",
+    "path": "/user",
+    "roles": "authenticated",
+    "line": 261
+  },
+  {
+    "file": "ai.js",
+    "method": "GET",
+    "path": "/realtime",
+    "roles": "authenticated",
+    "line": 286
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/engagement",
+    "roles": "public",
+    "line": 318
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/start",
+    "roles": "public",
+    "line": 359
+  },
+  {
+    "file": "ai.js",
+    "method": "POST",
+    "path": "/:id/stop",
+    "roles": "authenticated",
+    "line": 405
+  },
+  {
+    "file": "ai.js",
+    "method": "GET",
+    "path": "/:id/status",
+    "roles": "authenticated",
+    "line": 432
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/help",
+    "roles": "authenticated",
+    "line": 12
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/start",
+    "roles": "public",
+    "line": 45
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/:sessionId/message",
+    "roles": "public",
+    "line": 92
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/:sessionId/end",
+    "roles": "public",
+    "line": 141
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "GET",
+    "path": "/sessions/active",
+    "roles": "authenticated",
+    "line": 180
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "GET",
+    "path": "/sessions/history",
+    "roles": "authenticated",
+    "line": 205
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "GET",
+    "path": "/:sessionId/summary",
+    "roles": "public",
+    "line": 231
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/:sessionId/practice",
+    "roles": "public",
+    "line": 270
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/:sessionId/rate",
+    "roles": "public",
+    "line": 309
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "authenticated",
+    "line": 357
+  },
+  {
+    "file": "aiHomework.js",
+    "method": "POST",
+    "path": "/upload-image",
+    "roles": "public",
+    "line": 424
+  },
+  {
+    "file": "announcements.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "public",
+    "line": 10
+  },
+  {
+    "file": "announcements.js",
+    "method": "GET",
+    "path": "/my",
+    "roles": "authenticated",
+    "line": 20
+  },
+  {
+    "file": "announcements.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 25
+  },
+  {
+    "file": "announcements.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 30
+  },
+  {
+    "file": "answers.js",
+    "method": "GET",
+    "path": "/moderation/all",
+    "roles": "admin, moderator",
+    "line": 9
+  },
+  {
+    "file": "answers.js",
+    "method": "GET",
+    "path": "/question/:questionId",
+    "roles": "public",
+    "line": 12
+  },
+  {
+    "file": "answers.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "public",
+    "line": 22
+  },
+  {
+    "file": "answers.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "public",
+    "line": 31
+  },
+  {
+    "file": "answers.js",
+    "method": "POST",
+    "path": "/question/:questionId",
+    "roles": "authenticated",
+    "line": 44
+  },
+  {
+    "file": "answers.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 68
+  },
+  {
+    "file": "answers.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 80
+  },
+  {
+    "file": "auth.js",
+    "method": "POST",
+    "path": "/register",
+    "roles": "public",
+    "line": 33
+  },
+  {
+    "file": "auth.js",
+    "method": "POST",
+    "path": "/login",
+    "roles": "public",
+    "line": 55
+  },
+  {
+    "file": "auth.js",
+    "method": "POST",
+    "path": "/send-otp",
+    "roles": "public",
+    "line": 98
+  },
+  {
+    "file": "auth.js",
+    "method": "POST",
+    "path": "/verify-otp",
+    "roles": "public",
+    "line": 120
+  },
+  {
+    "file": "auth.js",
+    "method": "POST",
+    "path": "/forgot-password",
+    "roles": "public",
+    "line": 123
+  },
+  {
+    "file": "auth.js",
+    "method": "POST",
+    "path": "/reset-password",
+    "roles": "public",
+    "line": 124
+  },
+  {
+    "file": "auth.js",
+    "method": "PUT",
+    "path": "/change-password",
+    "roles": "authenticated",
+    "line": 125
+  },
+  {
+    "file": "auth.js",
+    "method": "GET",
+    "path": "/google",
+    "roles": "public",
+    "line": 137
+  },
+  {
+    "file": "auth.js",
+    "method": "GET",
+    "path": "/google/callback",
+    "roles": "public",
+    "line": 146
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 7
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/user/:userId",
+    "roles": "public",
+    "line": 22
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/user/:userId/progress",
+    "roles": "public",
+    "line": 38
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/check/:userId/:badgeId",
+    "roles": "public",
+    "line": 52
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/recent",
+    "roles": "public",
+    "line": 66
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/leaderboard",
+    "roles": "public",
+    "line": 80
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "public",
+    "line": 95
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/category/:category",
+    "roles": "public",
+    "line": 107
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/rarity/:rarity",
+    "roles": "public",
+    "line": 123
+  },
+  {
+    "file": "badges.js",
+    "method": "GET",
+    "path": "/subject/:subject",
+    "roles": "public",
+    "line": 139
+  },
+  {
+    "file": "badges.js",
+    "method": "POST",
+    "path": "/award",
+    "roles": "public",
+    "line": 155
+  },
+  {
+    "file": "badges.js",
+    "method": "PUT",
+    "path": "/toggle/:userBadgeId",
+    "roles": "public",
+    "line": 178
+  },
+  {
+    "file": "badges.js",
+    "method": "POST",
+    "path": "/initialize",
+    "roles": "public",
+    "line": 192
+  },
+  {
+    "file": "bookings.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 50
+  },
+  {
+    "file": "bookings.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 51
+  },
+  {
+    "file": "bookings.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 62
+  },
+  {
+    "file": "bookings.js",
+    "method": "PUT",
+    "path": "/:id/whiteboard",
+    "roles": "authenticated",
+    "line": 73
+  },
+  {
+    "file": "bookings.js",
+    "method": "POST",
+    "path": "/:id/skip",
+    "roles": "authenticated",
+    "line": 74
+  },
+  {
+    "file": "breakTimeGames.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 7
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:sessionId/create",
+    "roles": "public",
+    "line": 21
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:sessionId/start",
+    "roles": "public",
+    "line": 51
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:sessionId/end",
+    "roles": "public",
+    "line": 85
+  },
+  {
+    "file": "breakout.js",
+    "method": "GET",
+    "path": "/:sessionId",
+    "roles": "public",
+    "line": 114
+  },
+  {
+    "file": "breakout.js",
+    "method": "GET",
+    "path": "/my-room/:userId",
+    "roles": "public",
+    "line": 136
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:sessionId/move",
+    "roles": "public",
+    "line": 167
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:sessionId/broadcast",
+    "roles": "public",
+    "line": 196
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:roomId/message",
+    "roles": "public",
+    "line": 224
+  },
+  {
+    "file": "breakout.js",
+    "method": "POST",
+    "path": "/:roomId/whiteboard",
+    "roles": "public",
+    "line": 259
+  },
+  {
+    "file": "breakout.js",
+    "method": "GET",
+    "path": "/:sessionId/stats",
+    "roles": "public",
+    "line": 289
+  },
+  {
+    "file": "breakout.js",
+    "method": "DELETE",
+    "path": "/:sessionId/:roomId",
+    "roles": "public",
+    "line": 312
+  },
+  {
+    "file": "certificates.js",
+    "method": "POST",
+    "path": "/create",
+    "roles": "public",
+    "line": 12
+  },
+  {
+    "file": "certificates.js",
+    "method": "GET",
+    "path": "/my-certificates",
+    "roles": "authenticated",
+    "line": 79
+  },
+  {
+    "file": "certificates.js",
+    "method": "GET",
+    "path": "/verify/:code",
+    "roles": "public",
+    "line": 106
+  },
+  {
+    "file": "certificates.js",
+    "method": "GET",
+    "path": "/:id/eligibility",
+    "roles": "authenticated",
+    "line": 133
+  },
+  {
+    "file": "certificates.js",
+    "method": "POST",
+    "path": "/:id/share-linkedin",
+    "roles": "authenticated",
+    "line": 163
+  },
+  {
+    "file": "certificates.js",
+    "method": "POST",
+    "path": "/:id/share-twitter",
+    "roles": "authenticated",
+    "line": 190
+  },
+  {
+    "file": "certificates.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "authenticated",
+    "line": 217
+  },
+  {
+    "file": "certificates.js",
+    "method": "POST",
+    "path": "/:id/revoke",
+    "roles": "public",
+    "line": 249
+  },
+  {
+    "file": "comments.js",
+    "method": "GET",
+    "path": "/:targetType/:targetId",
+    "roles": "public",
+    "line": 17
+  },
+  {
+    "file": "comments.js",
+    "method": "GET",
+    "path": "/single/:id",
+    "roles": "public",
+    "line": 18
+  },
+  {
+    "file": "comments.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "public",
+    "line": 19
+  },
+  {
+    "file": "comments.js",
+    "method": "POST",
+    "path": "/:targetType/:targetId",
+    "roles": "public",
+    "line": 22
+  },
+  {
+    "file": "comments.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "public",
+    "line": 23
+  },
+  {
+    "file": "comments.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "public",
+    "line": 24
+  },
+  {
+    "file": "comments.js",
+    "method": "GET",
+    "path": "/user/my-comments",
+    "roles": "public",
+    "line": 25
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 12
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "GET",
+    "path": "/my-flags",
+    "roles": "authenticated",
+    "line": 44
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "GET",
+    "path": "/:key",
+    "roles": "authenticated",
+    "line": 69
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "public",
+    "line": 109
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 157
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "POST",
+    "path": "/:id/toggle",
+    "roles": "authenticated",
+    "line": 190
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 223
+  },
+  {
+    "file": "featureFlags.js",
+    "method": "GET",
+    "path": "/:id/analytics",
+    "roles": "authenticated",
+    "line": 255
+  },
+  {
+    "file": "files.js",
+    "method": "POST",
+    "path": "/upload/:sessionId",
+    "roles": "public",
+    "line": 22
+  },
+  {
+    "file": "files.js",
+    "method": "GET",
+    "path": "/session/:sessionId",
+    "roles": "public",
+    "line": 63
+  },
+  {
+    "file": "files.js",
+    "method": "GET",
+    "path": "/download/:fileId",
+    "roles": "public",
+    "line": 85
+  },
+  {
+    "file": "files.js",
+    "method": "GET",
+    "path": "/preview/:fileId",
+    "roles": "public",
+    "line": 111
+  },
+  {
+    "file": "files.js",
+    "method": "DELETE",
+    "path": "/:fileId",
+    "roles": "public",
+    "line": 136
+  },
+  {
+    "file": "files.js",
+    "method": "POST",
+    "path": "/:fileId/share",
+    "roles": "public",
+    "line": 161
+  },
+  {
+    "file": "files.js",
+    "method": "GET",
+    "path": "/stats/:sessionId",
+    "roles": "public",
+    "line": 194
+  },
+  {
+    "file": "files.js",
+    "method": "POST",
+    "path": "/copy-to-breakout",
+    "roles": "public",
+    "line": 216
+  },
+  {
+    "file": "files.js",
+    "method": "POST",
+    "path": "/cleanup",
+    "roles": "public",
+    "line": 250
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/profile",
+    "roles": "authenticated",
+    "line": 12
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/badges",
+    "roles": "authenticated",
+    "line": 37
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/badges/my",
+    "roles": "authenticated",
+    "line": 62
+  },
+  {
+    "file": "gamification.js",
+    "method": "POST",
+    "path": "/badges/viewed",
+    "roles": "authenticated",
+    "line": 98
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/leaderboard",
+    "roles": "public",
+    "line": 122
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/leaderboard/districts",
+    "roles": "public",
+    "line": 158
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/leaderboard/nearby",
+    "roles": "authenticated",
+    "line": 182
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "authenticated",
+    "line": 210
+  },
+  {
+    "file": "gamification.js",
+    "method": "POST",
+    "path": "/award-points",
+    "roles": "public",
+    "line": 286
+  },
+  {
+    "file": "gamification.js",
+    "method": "GET",
+    "path": "/catalog",
+    "roles": "authenticated",
+    "line": 338
+  },
+  {
+    "file": "gamification.js",
+    "method": "POST",
+    "path": "/attempt",
+    "roles": "authenticated",
+    "line": 396
+  },
+  {
+    "file": "gamification.js",
+    "method": "POST",
+    "path": "/init-profiles",
+    "roles": "superadmin",
+    "line": 421
+  },
+  {
+    "file": "groups.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "public",
+    "line": 13
+  },
+  {
+    "file": "groups.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 61
+  },
+  {
+    "file": "groups.js",
+    "method": "GET",
+    "path": "/my-rooms",
+    "roles": "public",
+    "line": 101
+  },
+  {
+    "file": "groups.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 137
+  },
+  {
+    "file": "groups.js",
+    "method": "POST",
+    "path": "/:id/join",
+    "roles": "public",
+    "line": 179
+  },
+  {
+    "file": "groups.js",
+    "method": "DELETE",
+    "path": "/:id/leave",
+    "roles": "authenticated",
+    "line": 236
+  },
+  {
+    "file": "groups.js",
+    "method": "PUT",
+    "path": "/:id/approve",
+    "roles": "public",
+    "line": 279
+  },
+  {
+    "file": "groups.js",
+    "method": "POST",
+    "path": "/:id/chat",
+    "roles": "public",
+    "line": 336
+  },
+  {
+    "file": "groups.js",
+    "method": "PUT",
+    "path": "/:id/settings",
+    "roles": "public",
+    "line": 392
+  },
+  {
+    "file": "homework.js",
+    "method": "POST",
+    "path": "/upload",
+    "roles": "student",
+    "line": 17
+  },
+  {
+    "file": "homework.js",
+    "method": "POST",
+    "path": "/submit",
+    "roles": "student",
+    "line": 41
+  },
+  {
+    "file": "homework.js",
+    "method": "GET",
+    "path": "/student/history",
+    "roles": "student",
+    "line": 42
+  },
+  {
+    "file": "homework.js",
+    "method": "GET",
+    "path": "/tutor/pending",
+    "roles": "tutor",
+    "line": 44
+  },
+  {
+    "file": "homework.js",
+    "method": "PUT",
+    "path": "/grade/:id",
+    "roles": "tutor",
+    "line": 45
+  },
+  {
+    "file": "lectures.js",
+    "method": "POST",
+    "path": "/courses",
+    "roles": "public",
+    "line": 13
+  },
+  {
+    "file": "lectures.js",
+    "method": "GET",
+    "path": "/courses",
+    "roles": "public",
+    "line": 69
+  },
+  {
+    "file": "lectures.js",
+    "method": "GET",
+    "path": "/courses/:id",
+    "roles": "authenticated",
+    "line": 113
+  },
+  {
+    "file": "lectures.js",
+    "method": "POST",
+    "path": "/courses/:id/enroll",
+    "roles": "authenticated",
+    "line": 148
+  },
+  {
+    "file": "lectures.js",
+    "method": "DELETE",
+    "path": "/courses/:id/enroll",
+    "roles": "authenticated",
+    "line": 195
+  },
+  {
+    "file": "lectures.js",
+    "method": "GET",
+    "path": "/courses/:id/sessions/:sessionId",
+    "roles": "authenticated",
+    "line": 237
+  },
+  {
+    "file": "lectures.js",
+    "method": "PUT",
+    "path": "/courses/:id/sessions/:sessionId/start",
+    "roles": "authenticated",
+    "line": 279
+  },
+  {
+    "file": "lectures.js",
+    "method": "PUT",
+    "path": "/courses/:id/sessions/:sessionId/end",
+    "roles": "authenticated",
+    "line": 332
+  },
+  {
+    "file": "lectures.js",
+    "method": "POST",
+    "path": "/courses/:id/sessions/:sessionId/polls",
+    "roles": "public",
+    "line": 384
+  },
+  {
+    "file": "lectures.js",
+    "method": "POST",
+    "path": "/courses/:id/sessions/:sessionId/polls/:pollId/respond",
+    "roles": "public",
+    "line": 440
+  },
+  {
+    "file": "lectures.js",
+    "method": "POST",
+    "path": "/courses/:id/sessions/:sessionId/questions",
+    "roles": "public",
+    "line": 495
+  },
+  {
+    "file": "lectures.js",
+    "method": "PUT",
+    "path": "/courses/:id/sessions/:sessionId/questions/:questionId/answer",
+    "roles": "public",
+    "line": 550
+  },
+  {
+    "file": "lectures.js",
+    "method": "GET",
+    "path": "/my-courses",
+    "roles": "public",
+    "line": 605
+  },
+  {
+    "file": "lectures.js",
+    "method": "POST",
+    "path": "/courses/:id/reviews",
+    "roles": "public",
+    "line": 641
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/featured",
+    "roles": "public",
+    "line": 12
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/new-arrivals",
+    "roles": "public",
+    "line": 38
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/trending",
+    "roles": "public",
+    "line": 64
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/search",
+    "roles": "public",
+    "line": 90
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/categories",
+    "roles": "public",
+    "line": 152
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/price-ranges",
+    "roles": "public",
+    "line": 177
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/recommended",
+    "roles": "authenticated",
+    "line": 202
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/tutor/courses",
+    "roles": "authenticated",
+    "line": 231
+  },
+  {
+    "file": "marketplace.js",
+    "method": "POST",
+    "path": "/tutor/courses/:id/publish",
+    "roles": "public",
+    "line": 265
+  },
+  {
+    "file": "marketplace.js",
+    "method": "POST",
+    "path": "/tutor/courses/:id/unpublish",
+    "roles": "public",
+    "line": 311
+  },
+  {
+    "file": "marketplace.js",
+    "method": "POST",
+    "path": "/courses/:id/purchase",
+    "roles": "public",
+    "line": 357
+  },
+  {
+    "file": "marketplace.js",
+    "method": "GET",
+    "path": "/analytics",
+    "roles": "authenticated",
+    "line": 401
+  },
+  {
+    "file": "materials.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 21
+  },
+  {
+    "file": "materials.js",
+    "method": "GET",
+    "path": "/my",
+    "roles": "public",
+    "line": 22
+  },
+  {
+    "file": "materials.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "public",
+    "line": 23
+  },
+  {
+    "file": "materials.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "public",
+    "line": 26
+  },
+  {
+    "file": "materials.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "public",
+    "line": 27
+  },
+  {
+    "file": "materials.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "public",
+    "line": 28
+  },
+  {
+    "file": "materials.js",
+    "method": "POST",
+    "path": "/:id/purchase",
+    "roles": "public",
+    "line": 29
+  },
+  {
+    "file": "materials.js",
+    "method": "PUT",
+    "path": "/:id/moderate",
+    "roles": "admin, moderator, superadmin",
+    "line": 32
+  },
+  {
+    "file": "materials.js",
+    "method": "POST",
+    "path": "/upload",
+    "roles": "public",
+    "line": 35
+  },
+  {
+    "file": "mentors.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "mentor, schoolMentor",
+    "line": 56
+  },
+  {
+    "file": "mentors.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 57
+  },
+  {
+    "file": "mentors.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "public",
+    "line": 75
+  },
+  {
+    "file": "mentors.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "mentor, schoolMentor",
+    "line": 76
+  },
+  {
+    "file": "mentors.js",
+    "method": "PUT",
+    "path": "/:id/moderate",
+    "roles": "websiteAdmin, superadmin",
+    "line": 96
+  },
+  {
+    "file": "messages.js",
+    "method": "GET",
+    "path": "/conversations",
+    "roles": "authenticated",
+    "line": 29
+  },
+  {
+    "file": "messages.js",
+    "method": "POST",
+    "path": "/conversations",
+    "roles": "authenticated",
+    "line": 30
+  },
+  {
+    "file": "messages.js",
+    "method": "GET",
+    "path": "/conversations/:id/messages",
+    "roles": "authenticated",
+    "line": 31
+  },
+  {
+    "file": "messages.js",
+    "method": "POST",
+    "path": "/conversations/:id/messages",
+    "roles": "authenticated",
+    "line": 32
+  },
+  {
+    "file": "messages.js",
+    "method": "POST",
+    "path": "/conversations/:id/archive",
+    "roles": "authenticated",
+    "line": 33
+  },
+  {
+    "file": "messages.js",
+    "method": "DELETE",
+    "path": "/conversations/:id",
+    "roles": "authenticated",
+    "line": 34
+  },
+  {
+    "file": "messages.js",
+    "method": "PUT",
+    "path": "/messages/:id/read",
+    "roles": "authenticated",
+    "line": 37
+  },
+  {
+    "file": "messages.js",
+    "method": "DELETE",
+    "path": "/messages/:id",
+    "roles": "authenticated",
+    "line": 38
+  },
+  {
+    "file": "messages.js",
+    "method": "GET",
+    "path": "/unread-count",
+    "roles": "authenticated",
+    "line": 41
+  },
+  {
+    "file": "notifications.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 26
+  },
+  {
+    "file": "notifications.js",
+    "method": "GET",
+    "path": "/unread-count",
+    "roles": "authenticated",
+    "line": 27
+  },
+  {
+    "file": "notifications.js",
+    "method": "PUT",
+    "path": "/:id/read",
+    "roles": "authenticated",
+    "line": 28
+  },
+  {
+    "file": "notifications.js",
+    "method": "PUT",
+    "path": "/read-all",
+    "roles": "authenticated",
+    "line": 29
+  },
+  {
+    "file": "notifications.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 30
+  },
+  {
+    "file": "notifications.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "websiteAdmin, superadmin",
+    "line": 33
+  },
+  {
+    "file": "notifications.js",
+    "method": "POST",
+    "path": "/broadcast",
+    "roles": "websiteAdmin, superadmin, tutor, mentor, schoolAdmin",
+    "line": 34
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/moderation/analyze",
+    "roles": "public",
+    "line": 17
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/moderation/chat",
+    "roles": "public",
+    "line": 59
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/moderation/academic-integrity",
+    "roles": "public",
+    "line": 103
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/moderation/stats",
+    "roles": "authenticated",
+    "line": 145
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/moderation/queue",
+    "roles": "authenticated",
+    "line": 179
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/parent/link-student",
+    "roles": "public",
+    "line": 217
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/admin/link-requests",
+    "roles": "authenticated",
+    "line": 261
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/parent/admin/review-link/:linkId",
+    "roles": "public",
+    "line": 292
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/student/link-requests",
+    "roles": "authenticated",
+    "line": 347
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/student/my-parents",
+    "roles": "authenticated",
+    "line": 370
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/parent/student/respond-link/:linkId",
+    "roles": "public",
+    "line": 393
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/link-requests",
+    "roles": "authenticated",
+    "line": 439
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/students",
+    "roles": "authenticated",
+    "line": 464
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/student/:studentId/summary",
+    "roles": "public",
+    "line": 489
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/student/:studentId/progress",
+    "roles": "public",
+    "line": 531
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/student/:studentId/schedule",
+    "roles": "public",
+    "line": 567
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/student/:studentId/grades",
+    "roles": "public",
+    "line": 602
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "GET",
+    "path": "/parent/alerts",
+    "roles": "authenticated",
+    "line": 635
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "PUT",
+    "path": "/parent/link/:linkId/permissions",
+    "roles": "public",
+    "line": 660
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "DELETE",
+    "path": "/parent/link/:linkId",
+    "roles": "public",
+    "line": 696
+  },
+  {
+    "file": "parentModeration.js",
+    "method": "POST",
+    "path": "/parent/student/:studentId/nudge",
+    "roles": "public",
+    "line": 731
+  },
+  {
+    "file": "payments.js",
+    "method": "POST",
+    "path": "/create-intent",
+    "roles": "public",
+    "line": 12
+  },
+  {
+    "file": "payments.js",
+    "method": "POST",
+    "path": "/confirm",
+    "roles": "public",
+    "line": 54
+  },
+  {
+    "file": "payments.js",
+    "method": "GET",
+    "path": "/history",
+    "roles": "authenticated",
+    "line": 93
+  },
+  {
+    "file": "payments.js",
+    "method": "POST",
+    "path": "/refund",
+    "roles": "public",
+    "line": 118
+  },
+  {
+    "file": "payments.js",
+    "method": "POST",
+    "path": "/webhook",
+    "roles": "public",
+    "line": 170
+  },
+  {
+    "file": "payments.js",
+    "method": "POST",
+    "path": "/connect-account",
+    "roles": "public",
+    "line": 200
+  },
+  {
+    "file": "payments.js",
+    "method": "GET",
+    "path": "/earnings",
+    "roles": "authenticated",
+    "line": 249
+  },
+  {
+    "file": "peer.js",
+    "method": "POST",
+    "path": "/match",
+    "roles": "authenticated",
+    "line": 14
+  },
+  {
+    "file": "peer.js",
+    "method": "POST",
+    "path": "/request-help",
+    "roles": "public",
+    "line": 51
+  },
+  {
+    "file": "peer.js",
+    "method": "GET",
+    "path": "/matches",
+    "roles": "public",
+    "line": 120
+  },
+  {
+    "file": "peer.js",
+    "method": "POST",
+    "path": "/sessions",
+    "roles": "public",
+    "line": 173
+  },
+  {
+    "file": "peer.js",
+    "method": "PUT",
+    "path": "/sessions/:id/accept",
+    "roles": "public",
+    "line": 264
+  },
+  {
+    "file": "peer.js",
+    "method": "PUT",
+    "path": "/sessions/:id/complete",
+    "roles": "public",
+    "line": 343
+  },
+  {
+    "file": "peer.js",
+    "method": "GET",
+    "path": "/sessions",
+    "roles": "public",
+    "line": 433
+  },
+  {
+    "file": "peer.js",
+    "method": "GET",
+    "path": "/sessions/:id",
+    "roles": "authenticated",
+    "line": 490
+  },
+  {
+    "file": "personalization.js",
+    "method": "GET",
+    "path": "/profile",
+    "roles": "authenticated",
+    "line": 11
+  },
+  {
+    "file": "personalization.js",
+    "method": "PUT",
+    "path": "/preferences",
+    "roles": "authenticated",
+    "line": 31
+  },
+  {
+    "file": "polls.js",
+    "method": "POST",
+    "path": "/:sessionId/polls",
+    "roles": "public",
+    "line": 21
+  },
+  {
+    "file": "polls.js",
+    "method": "POST",
+    "path": "/polls/:pollId/start",
+    "roles": "public",
+    "line": 54
+  },
+  {
+    "file": "polls.js",
+    "method": "POST",
+    "path": "/polls/:pollId/end",
+    "roles": "public",
+    "line": 79
+  },
+  {
+    "file": "polls.js",
+    "method": "POST",
+    "path": "/polls/:pollId/vote",
+    "roles": "public",
+    "line": 108
+  },
+  {
+    "file": "polls.js",
+    "method": "GET",
+    "path": "/:sessionId/polls",
+    "roles": "public",
+    "line": 150
+  },
+  {
+    "file": "polls.js",
+    "method": "GET",
+    "path": "/polls/:pollId/results",
+    "roles": "public",
+    "line": 175
+  },
+  {
+    "file": "polls.js",
+    "method": "DELETE",
+    "path": "/polls/:pollId",
+    "roles": "public",
+    "line": 196
+  },
+  {
+    "file": "qa.js",
+    "method": "POST",
+    "path": "/:sessionId/questions",
+    "roles": "public",
+    "line": 21
+  },
+  {
+    "file": "qa.js",
+    "method": "GET",
+    "path": "/:sessionId/questions",
+    "roles": "public",
+    "line": 55
+  },
+  {
+    "file": "qa.js",
+    "method": "POST",
+    "path": "/:sessionId/questions/:questionId/upvote",
+    "roles": "public",
+    "line": 81
+  },
+  {
+    "file": "qa.js",
+    "method": "POST",
+    "path": "/:sessionId/questions/:questionId/answer",
+    "roles": "public",
+    "line": 112
+  },
+  {
+    "file": "qa.js",
+    "method": "POST",
+    "path": "/:sessionId/questions/:questionId/highlight",
+    "roles": "public",
+    "line": 145
+  },
+  {
+    "file": "qa.js",
+    "method": "POST",
+    "path": "/:sessionId/questions/:questionId/pin",
+    "roles": "public",
+    "line": 174
+  },
+  {
+    "file": "qa.js",
+    "method": "DELETE",
+    "path": "/:sessionId/questions/:questionId",
+    "roles": "public",
+    "line": 203
+  },
+  {
+    "file": "qa.js",
+    "method": "POST",
+    "path": "/:sessionId/questions/:questionId/reaction",
+    "roles": "public",
+    "line": 236
+  },
+  {
+    "file": "qa.js",
+    "method": "GET",
+    "path": "/:sessionId/top",
+    "roles": "public",
+    "line": 269
+  },
+  {
+    "file": "qa.js",
+    "method": "GET",
+    "path": "/:sessionId/stats",
+    "roles": "public",
+    "line": 293
+  },
+  {
+    "file": "qa.js",
+    "method": "GET",
+    "path": "/:sessionId/export",
+    "roles": "public",
+    "line": 315
+  },
+  {
+    "file": "qa.js",
+    "method": "DELETE",
+    "path": "/:sessionId/clear",
+    "roles": "public",
+    "line": 339
+  },
+  {
+    "file": "qa.js",
+    "method": "GET",
+    "path": "/popular",
+    "roles": "public",
+    "line": 366
+  },
+  {
+    "file": "questions.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 18
+  },
+  {
+    "file": "questions.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "public",
+    "line": 19
+  },
+  {
+    "file": "questions.js",
+    "method": "GET",
+    "path": "/subjects",
+    "roles": "public",
+    "line": 20
+  },
+  {
+    "file": "questions.js",
+    "method": "GET",
+    "path": "/tutor/my-challenges",
+    "roles": "tutor, mentor, superadmin, websiteAdmin",
+    "line": 25
+  },
+  {
+    "file": "questions.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "public",
+    "line": 28
+  },
+  {
+    "file": "questions.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 31
+  },
+  {
+    "file": "questions.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 32
+  },
+  {
+    "file": "questions.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 33
+  },
+  {
+    "file": "questions.js",
+    "method": "POST",
+    "path": "/:id/close",
+    "roles": "authenticated",
+    "line": 34
+  },
+  {
+    "file": "questions.js",
+    "method": "PUT",
+    "path": "/:id/approve",
+    "roles": "websiteAdmin, superadmin",
+    "line": 37
+  },
+  {
+    "file": "questions.js",
+    "method": "PUT",
+    "path": "/:id/reject",
+    "roles": "websiteAdmin, superadmin",
+    "line": 38
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 21
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/courses",
+    "roles": "public",
+    "line": 42
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/peers",
+    "roles": "public",
+    "line": 63
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/groups",
+    "roles": "public",
+    "line": 84
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/materials",
+    "roles": "public",
+    "line": 105
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/trending",
+    "roles": "public",
+    "line": 126
+  },
+  {
+    "file": "recommendations.js",
+    "method": "GET",
+    "path": "/learning-path",
+    "roles": "public",
+    "line": 142
+  },
+  {
+    "file": "recommendations.js",
+    "method": "POST",
+    "path": "/interaction",
+    "roles": "public",
+    "line": 165
+  },
+  {
+    "file": "reportRoutes.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 6
+  },
+  {
+    "file": "reportRoutes.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "admin, superadmin",
+    "line": 7
+  },
+  {
+    "file": "reportRoutes.js",
+    "method": "PATCH",
+    "path": "/:id/status",
+    "roles": "admin, superadmin",
+    "line": 8
+  },
+  {
+    "file": "reviews.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 38
+  },
+  {
+    "file": "reviews.js",
+    "method": "GET",
+    "path": "/tutor/:tutorId",
+    "roles": "public",
+    "line": 39
+  },
+  {
+    "file": "reviews.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 42
+  },
+  {
+    "file": "reviews.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 43
+  },
+  {
+    "file": "reviews.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 44
+  },
+  {
+    "file": "reviews.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 45
+  },
+  {
+    "file": "reviews.js",
+    "method": "POST",
+    "path": "/:id/response",
+    "roles": "authenticated",
+    "line": 48
+  },
+  {
+    "file": "reviews.js",
+    "method": "POST",
+    "path": "/:id/helpful",
+    "roles": "authenticated",
+    "line": 49
+  },
+  {
+    "file": "reviews.js",
+    "method": "POST",
+    "path": "/:id/report",
+    "roles": "authenticated",
+    "line": 50
+  },
+  {
+    "file": "schools.js",
+    "method": "GET",
+    "path": "/verify/:code",
+    "roles": "public",
+    "line": 18
+  },
+  {
+    "file": "schools.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "superadmin, websiteAdmin",
+    "line": 25
+  },
+  {
+    "file": "schools.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "superadmin, websiteAdmin, schoolAdmin",
+    "line": 32
+  },
+  {
+    "file": "schools.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "superadmin",
+    "line": 39
+  },
+  {
+    "file": "schools.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "superadmin, schoolAdmin",
+    "line": 46
+  },
+  {
+    "file": "schools.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "superadmin",
+    "line": 53
+  },
+  {
+    "file": "schools.js",
+    "method": "GET",
+    "path": "/:id/users",
+    "roles": "schoolAdmin",
+    "line": 60
+  },
+  {
+    "file": "schools.js",
+    "method": "POST",
+    "path": "/:id/users",
+    "roles": "schoolAdmin",
+    "line": 80
+  },
+  {
+    "file": "search.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 19
+  },
+  {
+    "file": "search.js",
+    "method": "GET",
+    "path": "/advanced",
+    "roles": "public",
+    "line": 35
+  },
+  {
+    "file": "search.js",
+    "method": "GET",
+    "path": "/suggestions",
+    "roles": "public",
+    "line": 43
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/start",
+    "roles": "authenticated",
+    "line": 10
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/join",
+    "roles": "authenticated",
+    "line": 23
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/leave",
+    "roles": "authenticated",
+    "line": 28
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/end",
+    "roles": "authenticated",
+    "line": 34
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/recording/start",
+    "roles": "authenticated",
+    "line": 45
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/recording/stop",
+    "roles": "authenticated",
+    "line": 50
+  },
+  {
+    "file": "sessions.js",
+    "method": "POST",
+    "path": "/:id/issues",
+    "roles": "authenticated",
+    "line": 55
+  },
+  {
+    "file": "sessions.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "authenticated",
+    "line": 62
+  },
+  {
+    "file": "sessions.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 67
+  },
+  {
+    "file": "social.js",
+    "method": "GET",
+    "path": "/feed",
+    "roles": "authenticated",
+    "line": 11
+  },
+  {
+    "file": "social.js",
+    "method": "POST",
+    "path": "/post",
+    "roles": "authenticated",
+    "line": 26
+  },
+  {
+    "file": "social.js",
+    "method": "POST",
+    "path": "/follow/:userId",
+    "roles": "authenticated",
+    "line": 40
+  },
+  {
+    "file": "social.js",
+    "method": "POST",
+    "path": "/unfollow/:userId",
+    "roles": "authenticated",
+    "line": 54
+  },
+  {
+    "file": "social.js",
+    "method": "POST",
+    "path": "/like/:postId",
+    "roles": "authenticated",
+    "line": 68
+  },
+  {
+    "file": "social.js",
+    "method": "GET",
+    "path": "/recommendations",
+    "roles": "authenticated",
+    "line": 82
+  },
+  {
+    "file": "system.js",
+    "method": "GET",
+    "path": "/analytics",
+    "roles": "admin, superadmin, websiteAdmin",
+    "line": 7
+  },
+  {
+    "file": "system.js",
+    "method": "GET",
+    "path": "/pulse",
+    "roles": "authenticated",
+    "line": 10
+  },
+  {
+    "file": "timetable.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 14
+  },
+  {
+    "file": "timetable.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "public",
+    "line": 15
+  },
+  {
+    "file": "timetable.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "public",
+    "line": 16
+  },
+  {
+    "file": "timetable.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "public",
+    "line": 17
+  },
+  {
+    "file": "timetable.js",
+    "method": "GET",
+    "path": "/ai-suggest/:tutorId",
+    "roles": "public",
+    "line": 20
+  },
+  {
+    "file": "tutors.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "tutor, mentor, schoolMentor",
+    "line": 39
+  },
+  {
+    "file": "tutors.js",
+    "method": "POST",
+    "path": "/profile",
+    "roles": "tutor, mentor, schoolMentor",
+    "line": 40
+  },
+  {
+    "file": "tutors.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "public",
+    "line": 41
+  },
+  {
+    "file": "tutors.js",
+    "method": "GET",
+    "path": "/all",
+    "roles": "admin, websiteAdmin, superadmin",
+    "line": 52
+  },
+  {
+    "file": "tutors.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "public",
+    "line": 70
+  },
+  {
+    "file": "tutors.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "tutor, mentor, schoolMentor, admin, websiteAdmin, superadmin",
+    "line": 71
+  },
+  {
+    "file": "tutors.js",
+    "method": "GET",
+    "path": "/user/:userId",
+    "roles": "public",
+    "line": 72
+  },
+  {
+    "file": "tutors.js",
+    "method": "PUT",
+    "path": "/:id/moderate",
+    "roles": "admin, websiteAdmin, superadmin",
+    "line": 89
+  },
+  {
+    "file": "users.js",
+    "method": "GET",
+    "path": "/profile",
+    "roles": "authenticated",
+    "line": 67
+  },
+  {
+    "file": "users.js",
+    "method": "PUT",
+    "path": "/profile",
+    "roles": "authenticated",
+    "line": 68
+  },
+  {
+    "file": "users.js",
+    "method": "POST",
+    "path": "/avatar",
+    "roles": "authenticated",
+    "line": 82
+  },
+  {
+    "file": "users.js",
+    "method": "GET",
+    "path": "/settings",
+    "roles": "authenticated",
+    "line": 98
+  },
+  {
+    "file": "users.js",
+    "method": "PUT",
+    "path": "/settings",
+    "roles": "authenticated",
+    "line": 99
+  },
+  {
+    "file": "users.js",
+    "method": "GET",
+    "path": "/",
+    "roles": "websiteAdmin, superadmin",
+    "line": 114
+  },
+  {
+    "file": "users.js",
+    "method": "GET",
+    "path": "/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 135
+  },
+  {
+    "file": "users.js",
+    "method": "PUT",
+    "path": "/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 136
+  },
+  {
+    "file": "users.js",
+    "method": "DELETE",
+    "path": "/:id",
+    "roles": "websiteAdmin, superadmin",
+    "line": 137
+  },
+  {
+    "file": "video.js",
+    "method": "GET",
+    "path": "/token",
+    "roles": "authenticated",
+    "line": 10
+  },
+  {
+    "file": "video.js",
+    "method": "POST",
+    "path": "/rooms",
+    "roles": "authenticated",
+    "line": 32
+  },
+  {
+    "file": "votes.js",
+    "method": "POST",
+    "path": "/",
+    "roles": "authenticated",
+    "line": 7
+  },
+  {
+    "file": "votes.js",
+    "method": "GET",
+    "path": "/user/:targetType/:targetId",
+    "roles": "authenticated",
+    "line": 8
+  },
+  {
+    "file": "votes.js",
+    "method": "GET",
+    "path": "/counts/:targetType/:targetId",
+    "roles": "public",
+    "line": 9
+  },
+  {
+    "file": "votes.js",
+    "method": "GET",
+    "path": "/history",
+    "roles": "authenticated",
+    "line": 10
+  },
+  {
+    "file": "votes.js",
+    "method": "GET",
+    "path": "/history/:targetType",
+    "roles": "authenticated",
+    "line": 11
+  },
+  {
+    "file": "votes.js",
+    "method": "GET",
+    "path": "/stats",
+    "roles": "public",
+    "line": 12
+  }
+]

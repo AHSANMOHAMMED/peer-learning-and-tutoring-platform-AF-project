@@ -52,14 +52,7 @@ export const adminGamesApi = {
   delete: (id) => api.delete(`/admin/games/${id}`).then((res) => res.data)
 };
 
-export const notificationApi = {
-  getNotifications: (params) => api.get('/notifications', { params }).then((res) => res.data),
-  markAsRead: (id) => api.put(`/notifications/${id}/read`).then((res) => res.data),
-  markAllAsRead: () => api.put('/notifications/read-all').then((res) => res.data),
-  deleteNotification: (id) => api.delete(`/notifications/${id}`).then((res) => res.data),
-  getUnreadCount: () => api.get('/notifications/unread-count').then((res) => res.data),
-  broadcast: (data) => api.post('/notifications/broadcast', data).then((res) => res.data)
-};
+
 
 export const userManagementApi = {
   getAllUsers: (params) => api.get('/admin/users', { params }).then((res) => res.data),
@@ -126,6 +119,8 @@ export const aiApi = {
   matchTutor: (data) => api.post('/peer/match', data).then((res) => res.data),
   getSessionInsights: (sessionId) => api.get(`/ai/session-insights/${sessionId}`).then((res) => res.data),
   homeworkHelp: (data) => api.post('/ai-homework/help', data).then((res) => res.data),
+  homeworkStart: (data) => api.post('/ai-homework/start', data).then((res) => res.data),
+  homeworkMessage: (sessionId, data) => api.post(`/ai-homework/${sessionId}/message`, data).then((res) => res.data),
   homeworkHistory: () => api.get('/ai-homework/sessions/history').then((res) => res.data),
   homeworkImageUpload: (formData) => api.post('/ai-homework/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
@@ -250,6 +245,16 @@ export const adminApi = {
   getPendingMaterials: (params) => api.get('/admin/materials/pending', { params }).then((res) => res.data),
   broadcastNotification: (data) => api.post('/admin/broadcast', data).then((res) => res.data),
   rotateAccessKeys: () => api.post('/admin/rotate-keys').then((res) => res.data)
+};
+ 
+export const notificationApi = {
+  getAll: (params) => api.get('/notifications', { params }).then((res) => res.data),
+  getNotifications: (params) => api.get('/notifications', { params }).then((res) => res.data),
+  getUnreadCount: () => api.get('/notifications/unread-count').then((res) => res.data),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`).then((res) => res.data),
+  markAllAsRead: () => api.put('/notifications/read-all').then((res) => res.data),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`).then((res) => res.data),
+  broadcast: (data) => api.post('/notifications/broadcast', data).then((res) => res.data)
 };
 
 export const paymentsApi = {

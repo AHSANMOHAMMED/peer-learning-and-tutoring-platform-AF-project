@@ -16,6 +16,7 @@ import Layout from '../components/Layout';
 import { toast } from 'react-hot-toast';
 import { userManagementApi } from '../services/api';
 import { cn } from '../utils/cn';
+import { useAuth } from '../controllers/useAuth';
 
 const ProfileView = () => {
   const { user, refreshUser } = useAuth();
@@ -81,7 +82,7 @@ const ProfileView = () => {
   };
 
   return (
-    <Layout userRole={targetRole}>
+    <Layout userRole={user?.role}>
       <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans">
         <div className="max-w-5xl mx-auto space-y-8">
           

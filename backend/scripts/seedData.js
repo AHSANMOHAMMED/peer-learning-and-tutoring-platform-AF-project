@@ -79,7 +79,7 @@ const seedUsers = [
     username: 'admin_user',
     email: 'adminuser@peerlearn.lk',
     password: 'admin123',
-    role: 'admin',
+    role: 'websiteAdmin',
     profile: { firstName: 'Admin', lastName: 'User', bio: 'Platform administrator with full management access.' }
   },
   {

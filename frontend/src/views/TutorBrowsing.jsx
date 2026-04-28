@@ -81,7 +81,7 @@ const TutorBrowsing = () => {
   };
 
   return (
-    <Layout>
+    <Layout userRole={user?.role}>
       <div className="max-w-[1400px] mx-auto w-full font-sans">
         
         {/* Header */}

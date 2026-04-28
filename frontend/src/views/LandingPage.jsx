@@ -15,21 +15,21 @@ const slides = [
   {
     image: '/hero1.png',
     title: 'Future of Education in Sri Lanka',
-    subtitle: 'Connecting A/L & O/L students with top-percentile mentors for unparalleled success.',
+    subtitle: 'Aura is the island\'s most advanced peer learning network. We connect A/L & O/L students with top-percentile university mentors for unparalleled academic success.',
     badge: '10,000+ Students Joined',
     color: '#00a8cc'
   },
   {
     image: '/hero2.png',
     title: 'Expert 1-on-1 Guidance',
-    subtitle: 'Learn from university undergrads and expert teachers who have mastered your syllabus.',
+    subtitle: 'Learn directly from university undergrads and expert teachers who have mastered the Sri Lankan & London syllabus. Get personalized attention that traditional classrooms can\'t provide.',
     badge: '500+ Verified Tutors',
     color: '#6366f1'
   },
   {
     image: '/hero3.png',
     title: 'AI-Powered Learning Support',
-    subtitle: '24/7 AI Homework Assistant & Virtual Classroom with collaborative whiteboards.',
+    subtitle: 'Aura\'s integrated AI Assistant provides 24/7 homework help, step-by-step problem solving, and smart revision plans tailored to your specific learning pace.',
     badge: 'State-of-the-Art Tech',
     color: '#10b981'
   }
@@ -85,48 +85,127 @@ const LandingPage = () => {
       <div className="w-full font-sans overflow-x-hidden">
         
         {/* Hero Slider Section */}
-        <section className="relative h-[85vh] md:h-[90vh] overflow-hidden rounded-[3rem] mx-4 my-4 shadow-premium">
+        <section className="relative h-[90vh] overflow-hidden rounded-[3.5rem] mx-4 my-4 shadow-2xl border border-slate-100">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2 }}
               className="absolute inset-0"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/40 to-transparent z-10" />
-              <img 
+              {/* Overlay Gradient for Text Readability */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent z-10" />
+              <motion.img 
+                key={`${currentSlide}-img`}
+                initial={{ scale: 1.15 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 8, ease: "linear" }}
                 src={slides[currentSlide].image} 
                 className="w-full h-full object-cover" 
-                alt="Education" 
+                alt={slides[currentSlide].title} 
               />
             </motion.div>
           </AnimatePresence>
-
-          <div className="relative z-20 h-full flex flex-col justify-center px-8 md:px-20 max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-wrap gap-4"
-            >
-              <button onClick={() => navigate('/register')} className="bg-[#00a8cc] hover:bg-[#008ba8] text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#00a8cc]/40 transition-all flex items-center gap-3 group">
-                Join Now Free <ArrowRight className="group-hover:translate-x-2 transition-transform" size={18} />
-              </button>
-              <button onClick={() => navigate('/tutors')} className="bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
-                Explore Mentors
-              </button>
-            </motion.div>
+ 
+          <div className="relative z-20 h-full flex flex-col justify-center px-10 md:px-24 max-w-5xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${currentSlide}-content`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="space-y-8"
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full text-white"
+                >
+                  <span className="w-2 h-2 bg-[#00a8cc] rounded-full animate-pulse" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">{slides[currentSlide].badge}</span>
+                </motion.div>
+ 
+                <div className="space-y-4">
+                  <motion.h1 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-5xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter"
+                  >
+                    {slides[currentSlide].title.split(' ').map((word, i) => (
+                      <span key={i} className={cn(i === 2 ? "text-[#00a8cc]" : "")}>
+                        {word}{' '}
+                      </span>
+                    ))}
+                  </motion.h1>
+                  <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-lg md:text-xl text-slate-300 font-medium max-w-2xl leading-relaxed"
+                  >
+                    {slides[currentSlide].subtitle}
+                  </motion.p>
+                </div>
+ 
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex flex-wrap gap-5 pt-4"
+                >
+                  <button onClick={() => navigate('/register')} className="bg-[#00a8cc] hover:bg-[#008ba8] text-white px-12 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-[#00a8cc]/40 transition-all flex items-center gap-3 group">
+                    Join Now Free <ArrowRight className="group-hover:translate-x-2 transition-transform" size={18} />
+                  </button>
+                  <button onClick={() => navigate('/tutors')} className="bg-white/5 hover:bg-white/15 backdrop-blur-3xl border border-white/10 text-white px-12 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest transition-all">
+                    Explore Mentors
+                  </button>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
           </div>
-
-          {/* Dots Indicator */}
-          <div className="absolute bottom-12 right-12 z-20 flex gap-3">
+ 
+          {/* Slider Progress Bar */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 z-30 flex">
+             {slides.map((_, i) => (
+                <div key={i} className="flex-1 h-full bg-white/10 overflow-hidden">
+                   {i === currentSlide && (
+                      <motion.div 
+                         initial={{ x: '-100%' }}
+                         animate={{ x: '0%' }}
+                         transition={{ duration: 6, ease: "linear" }}
+                         className="h-full bg-[#00a8cc]"
+                      />
+                   )}
+                   {i < currentSlide && <div className="h-full bg-[#00a8cc]/40" />}
+                </div>
+             ))}
+          </div>
+ 
+          {/* Navigation Dots */}
+          <div className="absolute bottom-12 right-12 z-30 flex flex-col gap-4">
              {slides.map((_, i) => (
                <button 
                  key={i} 
                  onClick={() => setCurrentSlide(i)}
-                 className={cn("h-2 rounded-full transition-all duration-500", i === currentSlide ? "w-12 bg-[#00a8cc]" : "w-2 bg-white/30")}
-               />
+                 className={cn(
+                   "group relative flex items-center justify-end gap-4 transition-all duration-300",
+                   i === currentSlide ? "opacity-100" : "opacity-30 hover:opacity-60"
+                 )}
+               >
+                 <span className={cn(
+                   "text-[10px] font-black text-white uppercase tracking-widest transition-all duration-300",
+                   i === currentSlide ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                 )}>Slide {i + 1}</span>
+                 <div className={cn(
+                   "h-2 rounded-full transition-all duration-500", 
+                   i === currentSlide ? "w-12 bg-[#00a8cc]" : "w-3 bg-white"
+                 )} />
+               </button>
              ))}
           </div>
         </section>

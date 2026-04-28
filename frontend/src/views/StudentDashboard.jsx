@@ -839,7 +839,7 @@ const StudentDashboard = () => {
                 </div>
               </div>
               <button 
-                onClick={() => navigate('/groups')} 
+                onClick={() => navigate('/social')} 
                 className="group px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2"
               >
                 Find Circles <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -897,7 +897,7 @@ const StudentDashboard = () => {
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate('/groups')} 
+                    onClick={() => navigate('/social')} 
                     className="mt-8 px-10 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-[0.2em] rounded-[1.5rem] shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all"
                   >
                     Browse available circles

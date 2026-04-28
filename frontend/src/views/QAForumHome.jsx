@@ -8,6 +8,7 @@ import { useAuth } from '../controllers/useAuth';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
+import { questionApi, answerApi } from '../services/api';
 
 const QAForumHome = () => {
   const { user } = useAuth();
@@ -31,38 +32,33 @@ const QAForumHome = () => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
-        const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+        const userGrade = user?.profile?.grade?.toString().match(/\d+/)?.[0] || '10';
         
-        // In 'Feed' mode, fetch all questions for the student's grade
-        // In 'MyQuestions' mode, fetch only user's questions
-        const url = viewMode === 'Feed' 
-          ? `${API_URL}/api/questions?grade=${user?.profile?.grade?.match(/\d+/)?.[0] || '10'}`
-          : `${API_URL}/api/questions/user/my`;
-
-        const response = await fetch(url, {
-           headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const formatted = (data.questions || []).map(q => ({
-             id: q._id,
-             student: q.author?.username || q.author || 'Me',
-             grade: q.grade || 10,
-             subject: q.subject || 'General',
-             title: q.title || 'Untitled Inquiry',
-             body: q.body || q.content || 'No content provided.',
-             status: q.answers?.length > 0 ? 'Resolved' : 'Pending',
-             askedOn: new Date(q.createdAt).toLocaleDateString(),
-             tutorAnswer: q.answers?.[0]?.body || q.correctAnswer || '',
-             marks: q.points || q.marks || null,
-             authorId: q.author?._id || q.author,
-             answers: q.answers || []
-          }));
-          setQuestions(formatted);
-          if (formatted.length > 0 && !selectedId) setSelectedId(formatted[0].id);
+        let data;
+        if (viewMode === 'Feed') {
+          data = await questionApi.getAll({ grade: userGrade });
+        } else {
+          // Assuming there's a way to get my questions, or just filter locally
+          const allQuestions = await questionApi.getAll();
+          data = { questions: allQuestions.questions.filter(q => q.author?._id === user?._id || q.author === user?._id) };
         }
+
+        const formatted = (data.questions || []).map(q => ({
+           id: q._id,
+           student: q.author?.username || q.author || 'Me',
+           grade: q.grade || 10,
+           subject: q.subject || 'General',
+           title: q.title || 'Untitled Inquiry',
+           body: q.body || q.content || 'No content provided.',
+           status: q.answers?.length > 0 ? 'Resolved' : 'Pending',
+           askedOn: new Date(q.createdAt).toLocaleDateString(),
+           tutorAnswer: q.answers?.[0]?.content || '',
+           marks: q.marks || null,
+           authorId: q.author?._id || q.author,
+           answers: q.answers || []
+        }));
+        setQuestions(formatted);
+        if (formatted.length > 0 && !selectedId) setSelectedId(formatted[0].id);
       } catch (error) {
         toast.error("Could not load forum questions.");
       } finally {
@@ -87,14 +83,9 @@ const QAForumHome = () => {
     
     const token = localStorage.getItem('token');
     try {
-       const response = await fetch('/api/questions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ title: newTitle, content: newBody, subject: newSubject, grade: 10, tags: [] })
-       });
+       const data = await questionApi.create({ title: newTitle, content: newBody, subject: newSubject, grade: 10, tags: [] });
 
-       if (response.ok) {
-          const data = await response.json();
+       if (data) {
           const newQ = {
              id: data._id || Date.now().toString(),
              student: 'Me',
@@ -139,13 +130,9 @@ const QAForumHome = () => {
     setIsAnswering(true);
     const token = localStorage.getItem('token');
     try {
-       const response = await fetch(`/api/answers/question/${selectedId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ questionId: selectedId, body: answerBody })
-       });
+       const data = await answerApi.create({ body: answerBody, questionId: selectedId });
 
-       if (response.ok) {
+       if (data) {
           toast.success("Answer submitted successfully!");
           setAnswerBody('');
           // Re-fetch or update local state
@@ -161,7 +148,7 @@ const QAForumHome = () => {
   };
 
   return (
-    <Layout userRole={user?.role || 'student'}>
+    <Layout userRole={user?.role}>
       <div className="max-w-[1400px] mx-auto w-full font-sans flex flex-col h-[calc(100vh-100px)]">
         
         {/* Header */}

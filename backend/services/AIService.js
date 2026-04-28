@@ -54,37 +54,52 @@ class AIService {
    * Chat using Google Gemini
    */
   async chatWithGoogle(message, history, options) {
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.googleAIKey}`;
-    
-    const contents = history.map(h => ({
-      role: h.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: h.content }]
-    }));
+    const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+    let lastError;
 
-    contents.push({
-      role: 'user',
-      parts: [{ text: message }]
-    });
+    for (const model of geminiModels) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.googleAIKey}`;
+        
+        const contents = history.map(h => ({
+          role: h.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: h.content }]
+        }));
 
-    const systemInstruction = `You are an expert educational mentor for Sri Lankan students. 
-    Subject: ${options.subject || 'General'}
-    Grade: ${options.grade || 'N/A'}`;
+        contents.push({
+          role: 'user',
+          parts: [{ text: message }]
+        });
 
-    const response = await axios.post(geminiUrl, {
-      contents,
-      system_instruction: {
-        parts: [{ text: systemInstruction }]
-      },
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1000
+        const systemInstruction = `You are an expert educational mentor for Sri Lankan students. 
+        Subject: ${options.subject || 'General'}
+        Grade: ${options.grade || 'N/A'}`;
+
+        const response = await axios.post(geminiUrl, {
+          contents,
+          system_instruction: {
+            parts: [{ text: systemInstruction }]
+          },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000
+          }
+        }, { timeout: 15000 });
+
+        return {
+          content: response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '',
+          role: 'assistant'
+        };
+      } catch (error) {
+        lastError = error;
+        console.warn(`Gemini [${model}] failed: ${error.message}`);
+        if (error.response?.status === 404) continue;
+        if (error.response?.status === 429) continue;
+        break; // Other errors might be terminal
       }
-    });
+    }
 
-    return {
-      content: response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '',
-      role: 'assistant'
-    };
+    throw lastError;
   }
 
   /**
@@ -394,7 +409,7 @@ class AIService {
       'key-points': `Extract the 10 most important learning points from this session transcript:\n\n${transcript}`
     };
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.googleAIKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.googleAIKey}`;
     
     const response = await axios.post(geminiUrl, {
       contents: [{
@@ -549,7 +564,7 @@ Provide:
 
 Format the output clearly.`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.googleAIKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.googleAIKey}`;
     
     const response = await axios.post(geminiUrl, {
       contents: [{
@@ -696,7 +711,7 @@ D: [Option 4]
 Correct: [A/B/C/D]
 Explanation: [Why this is correct]`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.googleAIKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.googleAIKey}`;
     
     const response = await axios.post(geminiUrl, {
       contents: [{

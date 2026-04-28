@@ -376,11 +376,14 @@ class AIHomeworkAssistant {
   async callAI(systemPrompt, messages) {
     if (this.geminiKey) {
       // Recommended: gemini-1.5-flash (fast/free), gemini-1.5-pro (complex)
-      const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro', 'gemini-1.0-pro'];
+      const geminiModels = ['gemini-2.0-flash-exp', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
       
       for (const model of geminiModels) {
+        console.log(`[AI] Attempting Gemini model: ${model}...`);
         try {
-          return await this.callGemini(systemPrompt, messages, model);
+          const response = await this.callGemini(systemPrompt, messages, model);
+          console.log(`[AI] Success with Gemini model: ${model}`);
+          return response;
         } catch (error) {
           const status = error.response?.status;
           const errorMsg = error.response?.data?.error?.message || error.message;

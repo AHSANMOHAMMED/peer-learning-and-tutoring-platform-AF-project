@@ -498,11 +498,17 @@ Format as JSON with these sections.`;
   }
 
   async callGemini(prompt) {
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.geminiKey}`;
-    const response = await axios.post(geminiUrl, {
-      contents: [{ role: 'user', parts: [{ text: prompt }] }]
-    });
-    return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const model = 'gemini-flash-latest';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiKey}`;
+    try {
+      const response = await axios.post(geminiUrl, {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+      return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (error) {
+      console.warn(`[Personalization] Gemini failed: ${error.message}`);
+      throw error;
+    }
   }
 
   async callOpenAI(prompt) {

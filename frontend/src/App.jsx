@@ -48,19 +48,18 @@ import NationalMerit from './views/NationalMerit';
 import ForumPage from './views/ForumPage';
 import ForumThreadPage from './views/ForumThreadPage';
 import { useAuth } from './controllers/useAuth';
+import { getDefaultRouteForUser } from './utils/roleRouting';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
 const DashboardRedirect = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
-  switch (user.role) {
-    case 'tutor': return <TutorDashboard />;
-    case 'parent': return <ParentDashboard />;
-    case 'admin': return <AdminDashboard />;
-    case 'superadmin': return <SuperAdminDashboard />;
-    default: return <StudentDashboard />;
+  const defaultRoute = getDefaultRouteForUser(user);
+  if (defaultRoute !== '/dashboard') {
+    return <Navigate to={defaultRoute} replace />;
   }
+  return <StudentDashboard />;
 };
 
 const VirtualClassroomWrapper = () => {
@@ -102,9 +101,9 @@ function App() {
           <Route path="/school-dashboard" element={<ProtectedRoute allowedRoles={['schoolAdmin', 'superadmin']}><SchoolManagement /></ProtectedRoute>} />
           <Route path="/admin/schools" element={<ProtectedRoute allowedRoles={['superadmin']}><SchoolManagement /></ProtectedRoute>} />
           
-          <Route path="/tutor-dashboard" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorDashboard /></ProtectedRoute>} />
-          <Route path="/tutor-workspace" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorWorkspace /></ProtectedRoute>} />
-          <Route path="/tutor/qa" element={<ProtectedRoute allowedRoles={['tutor', 'superadmin']}><TutorQAForumPage /></ProtectedRoute>} />
+          <Route path="/tutor-dashboard" element={<ProtectedRoute allowedRoles={['tutor', 'mentor', 'schoolMentor', 'superadmin']}><TutorDashboard /></ProtectedRoute>} />
+          <Route path="/tutor-workspace" element={<ProtectedRoute allowedRoles={['tutor', 'mentor', 'schoolMentor', 'superadmin']}><TutorWorkspace /></ProtectedRoute>} />
+          <Route path="/tutor/qa" element={<ProtectedRoute allowedRoles={['tutor', 'mentor', 'schoolMentor', 'superadmin']}><TutorQAForumPage /></ProtectedRoute>} />
           
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><UserManagement /></ProtectedRoute>} />
@@ -112,7 +111,7 @@ function App() {
           <Route path="/admin/games" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminGameManagement /></ProtectedRoute>} />
           <Route path="/admin/parent-links" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><ParentLinkManager /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminSettings /></ProtectedRoute>} />
-          <Route path="/moderation" element={<ProtectedRoute allowedRoles={['admin', 'moderator', 'superadmin']}><ModerationHub /></ProtectedRoute>} />
+          <Route path="/moderation" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'moderator', 'superadmin']}><ModerationHub /></ProtectedRoute>} />
           <Route path="/super-admin" element={<ProtectedRoute allowedRoles={['superadmin']}><SuperAdminDashboard /></ProtectedRoute>} />
           
           <Route path="/bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />

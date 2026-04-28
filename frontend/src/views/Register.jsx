@@ -7,6 +7,7 @@ import { UserPlus, Mail, Lock, User, AlertCircle, Loader2, ArrowRight, ShieldChe
 import { cn } from '../utils/cn';
 import debounce from 'lodash/debounce';
 import AuraLogo from '../components/AuraLogo';
+import { getDefaultRouteForUser } from '../utils/roleRouting';
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -28,7 +29,7 @@ const Register = () => {
   const [verifiedSchool, setVerifiedSchool] = useState(null);
   const [verifying, setVerifying] = useState(false);
   
-  const { register, verifyOTP, loading, error } = useAuth();
+  const { register, verifyOTP, refreshUser, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const verifySchool = useCallback(
@@ -93,7 +94,8 @@ const Register = () => {
     e.preventDefault();
     try {
       await verifyOTP(formData.email, otp, 'verify');
-      navigate('/dashboard');
+      const latestUser = await refreshUser();
+      navigate(getDefaultRouteForUser(latestUser), { replace: true });
     } catch (err) {}
   };
 

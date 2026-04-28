@@ -24,9 +24,11 @@ import {
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { useSchools } from '../controllers/useSchools';
+import { useAuth } from '../controllers/useAuth';
 import { toast } from 'react-hot-toast';
 
 const SchoolManagement = () => {
+  const { user } = useAuth();
   const { 
     schools, fetchSchools, createSchool, updateSchool, deleteSchool, loading 
   } = useSchools();
@@ -94,7 +96,7 @@ const SchoolManagement = () => {
   };
 
   return (
-    <Layout userRole="superadmin">
+    <Layout userRole={user?.role || 'schoolAdmin'}>
       <div className="min-h-screen bg-[#fafafc] p-6 md:p-8 font-sans">
         
         <motion.div 

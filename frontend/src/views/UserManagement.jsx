@@ -12,7 +12,7 @@ import { schoolApi } from '../services/api';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
 
-const ROLES = ['student', 'tutor', 'parent', 'admin', 'superadmin', 'moderator', 'schoolAdmin'];
+const ROLES = ['student', 'tutor', 'mentor', 'schoolMentor', 'parent', 'admin', 'websiteAdmin', 'superadmin', 'moderator', 'schoolAdmin'];
 const PROTECTED_ROLES = ['admin', 'superadmin', 'websiteAdmin'];
 const DISTRICTS = ['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee', 'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle'];
 const STREAMS = ['Combined Mathematics', 'Biological Sciences', 'Commercial Stream', 'Physical Sciences', 'Arts Stream', 'Technology Stream', 'O/L General'];
@@ -166,8 +166,11 @@ const UserManagement = () => {
   const getRoleColor = (role) => {
     switch(role) {
       case 'admin':
+      case 'websiteAdmin':
       case 'superadmin': return 'bg-rose-50 text-rose-600 border-rose-200';
       case 'tutor': return 'bg-indigo-50 text-indigo-600 border-indigo-200';
+      case 'mentor':
+      case 'schoolMentor': return 'bg-violet-50 text-violet-600 border-violet-200';
       case 'student': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
       case 'moderator': return 'bg-amber-50 text-amber-600 border-amber-200';
       default: return 'bg-slate-50 text-slate-600 border-slate-200';
@@ -220,7 +223,7 @@ const UserManagement = () => {
            </div>
            
            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 xl:pb-0">
-             {['all', 'student', 'tutor', 'parent', 'admin', 'moderator', 'schoolAdmin'].map((role) => (
+             {['all', 'student', 'tutor', 'mentor', 'schoolMentor', 'parent', 'admin', 'websiteAdmin', 'moderator', 'schoolAdmin'].map((role) => (
                 <button
                    key={role}
                    onClick={() => setActiveTab(role)}

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../controllers/useAuth';
+import { getDefaultRouteForUser } from '../utils/roleRouting';
 import { LogIn, Mail, Lock, AlertCircle, Loader2, Key, Globe2, Signal, ArrowRight } from 'lucide-react';
 import { cn } from '../utils/cn';
 
@@ -14,15 +15,15 @@ const Login = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   
-  const { login, sendOTP, verifyOTP, loading, error } = useAuth();
+  const { login, sendOTP, verifyOTP, refreshUser, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleStandardLogin = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      redirectUser();
+      const loginResult = await login(email, password);
+      await redirectUser(loginResult?.user || loginResult);
     } catch (err) {
       // If the error suggests using OTP, auto-switch to OTP mode
       const msg = err.message || '';
@@ -43,14 +44,17 @@ const Login = () => {
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     try {
-      await verifyOTP(email, otp);
-      redirectUser();
+      const verifyResult = await verifyOTP(email, otp);
+      await redirectUser(verifyResult?.user || verifyResult);
     } catch (err) {}
   };
 
-  const redirectUser = () => {
+  const redirectUser = async (authUser) => {
     const from = location.state?.from?.pathname || '/dashboard';
-    navigate(from, { replace: true });
+    const latestUser = authUser || await refreshUser();
+    const defaultRoute = getDefaultRouteForUser(latestUser);
+    const target = from === '/dashboard' ? defaultRoute : from;
+    navigate(target, { replace: true });
   };
 
   const handleGoogleLogin = () => {

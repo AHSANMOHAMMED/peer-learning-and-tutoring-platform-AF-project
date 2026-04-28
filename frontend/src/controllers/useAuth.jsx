@@ -29,8 +29,9 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const { data } = await api.get('/auth/profile');
-      setUser(data);
-      return data;
+      const normalizedUser = data?.user || data?.data || data;
+      setUser(normalizedUser);
+      return normalizedUser;
     } catch (err) {
       localStorage.removeItem('token');
       return null;
@@ -49,8 +50,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', data.token);
-      setUser(data);
-      return data;
+      const normalizedUser = data?.user || data?.data || data;
+      setUser(normalizedUser);
+      return { ...data, user: normalizedUser };
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed';
       setError(msg);
@@ -66,8 +68,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/register', userData);
       localStorage.setItem('token', data.token);
-      setUser(data);
-      return data;
+      const normalizedUser = data?.user || data?.data || data;
+      setUser(normalizedUser);
+      return { ...data, user: normalizedUser };
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
       setError(msg);
@@ -87,8 +90,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const { data } = await api.put('/auth/profile', profileData);
-      setUser(data);
-      return data;
+      const normalizedUser = data?.user || data?.data || data;
+      setUser(normalizedUser);
+      return { ...data, user: normalizedUser };
     } catch (err) {
       const msg = err.response?.data?.message || 'Profile update failed';
       setError(msg);

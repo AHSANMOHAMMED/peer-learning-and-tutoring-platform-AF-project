@@ -36,8 +36,8 @@ const { authenticate, authorize } = require('../middleware/auth');
  *       200:
  *         description: List of available tutors
  */
-router.post('/', authenticate, authorize(['tutor', 'mentor']), registerTutor);
-router.post('/profile', authenticate, authorize(['tutor', 'mentor']), registerTutor);
+router.post('/', authenticate, authorize(['tutor', 'mentor', 'schoolMentor']), registerTutor);
+router.post('/profile', authenticate, authorize(['tutor', 'mentor', 'schoolMentor']), registerTutor);
 router.get('/', getTutors);
 
 /**
@@ -68,7 +68,7 @@ router.get('/all', authenticate, authorize('admin', 'websiteAdmin', 'superadmin'
  *         description: Tutor details retrieved
  */
 router.get('/:id', getTutorProfile);
-router.put('/:id', authenticate, authorize(['tutor', 'mentor', 'admin']), updateTutorProfile);
+router.put('/:id', authenticate, authorize(['tutor', 'mentor', 'schoolMentor', 'admin', 'websiteAdmin', 'superadmin']), updateTutorProfile);
 router.get('/user/:userId', getTutorByUserId);
 
 /**

@@ -15,6 +15,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../controllers/useAuth';
 import { cn } from '../utils/cn';
+import { getDefaultRouteForUser } from '../utils/roleRouting';
 
 const ProfileSetup = () => {
   const { user, refreshUser, updateProfile } = useAuth();
@@ -53,7 +54,7 @@ const ProfileSetup = () => {
   // Check if profile is already complete
   useEffect(() => {
     if (user && user.grade && user.district) {
-      navigate('/dashboard');
+      navigate(getDefaultRouteForUser(user), { replace: true });
     }
   }, [user, navigate]);
 
@@ -73,8 +74,8 @@ const ProfileSetup = () => {
       };
       await updateProfile(profileData);
       toast.success('Profile setup complete!');
-      await refreshUser();
-      navigate('/dashboard');
+      const latestUser = await refreshUser();
+      navigate(getDefaultRouteForUser(latestUser), { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Setup failed');
     } finally {

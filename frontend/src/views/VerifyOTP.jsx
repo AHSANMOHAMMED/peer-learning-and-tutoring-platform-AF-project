@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../controllers/useAuth';
 import { Key, ShieldCheck, Loader2, ArrowRight, Mail, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { getDefaultRouteForUser } from '../utils/roleRouting';
 
 const VerifyOTP = () => {
   const [otp, setOtp] = useState('');
-  const { user, verifyOTP, sendOTP, loading, error } = useAuth();
+  const { user, verifyOTP, sendOTP, refreshUser, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,7 +16,7 @@ const VerifyOTP = () => {
     if (!user) {
       navigate('/login');
     } else if (user.isVerified) {
-      navigate('/dashboard');
+      navigate(getDefaultRouteForUser(user), { replace: true });
     }
   }, [user, navigate]);
 
@@ -24,7 +25,8 @@ const VerifyOTP = () => {
     try {
       await verifyOTP(user.email, otp, 'verify');
       toast.success('Account verified successfully!');
-      navigate('/dashboard');
+      const latestUser = await refreshUser();
+      navigate(getDefaultRouteForUser(latestUser), { replace: true });
     } catch (err) {
       toast.error(err.message || 'Verification failed');
     }

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../controllers/useAuth';
 import { Loader2 } from 'lucide-react';
+import { getDefaultRouteForUser } from '../utils/roleRouting';
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -16,19 +17,7 @@ const AuthCallback = () => {
       // Refresh user profile in context and then redirect
       refreshUser()
         .then((userData) => {
-          if (userData && userData.role === 'student' && !userData.grade) {
-            navigate('/profile-setup');
-          } else if (userData && userData.role === 'tutor') {
-            if (userData.verificationStatus === 'not_created') {
-              navigate('/tutor-onboarding');
-            } else if (userData.verificationStatus === 'approved') {
-              navigate('/dashboard');
-            } else {
-              navigate('/tutor-pending');
-            }
-          } else {
-            navigate('/dashboard');
-          }
+          navigate(getDefaultRouteForUser(userData), { replace: true });
         })
         .catch(() => {
           navigate('/login?error=auth_failed');

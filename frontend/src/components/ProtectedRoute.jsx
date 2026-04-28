@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../controllers/useAuth';
+import { getDefaultRouteForUser } from '../utils/roleRouting';
 
 
 
@@ -30,7 +31,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   // New: Tutor Verification & Onboarding Redirects
-  if (user.role === 'tutor') {
+  if (user.role === 'tutor' || user.role === 'mentor' || user.role === 'schoolMentor') {
     if (user.verificationStatus === 'not_created' && location.pathname !== '/tutor-onboarding') {
       return <Navigate to="/tutor-onboarding" replace />;
     }
@@ -43,18 +44,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If user role is not allowed, redirect to their default dashboard
-    const defaultDashboards = {
-      student: '/dashboard',
-      tutor: '/tutor-dashboard',
-      parent: '/dashboard',
-      admin: '/admin',
-      websiteAdmin: '/admin',
-      superadmin: '/super-admin',
-      moderator: '/moderation',
-      schoolAdmin: '/school-dashboard'
-    };
-    return <Navigate to={defaultDashboards[user.role] || '/dashboard'} replace />;
+    return <Navigate to={getDefaultRouteForUser(user)} replace />;
   }
 
   return <>{children}</>;

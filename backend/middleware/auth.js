@@ -46,7 +46,7 @@ const admin = (req, res, next) => {
 };
 
 const mentor = (req, res, next) => {
-  if (req.user && (req.user.role === 'mentor' || req.user.role === 'tutor')) {
+  if (req.user && (req.user.role === 'mentor' || req.user.role === 'schoolMentor' || req.user.role === 'tutor')) {
     next();
   } else {
     res.status(403).json({ message: 'Not authorized as a mentor' });

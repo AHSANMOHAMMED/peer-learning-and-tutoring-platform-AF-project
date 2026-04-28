@@ -53,7 +53,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *       200:
  *         description: List of approved mentors
  */
-router.post('/', authenticate, authorize(['mentor']), registerMentor);
+router.post('/', authenticate, authorize(['mentor', 'schoolMentor']), registerMentor);
 router.get('/', getMentors);
 
 /**
@@ -73,7 +73,7 @@ router.get('/', getMentors);
  *         description: Mentor profile
  */
 router.get('/:id', getMentorProfile);
-router.put('/:id', authenticate, authorize(['mentor']), updateMentorProfile);
+router.put('/:id', authenticate, authorize(['mentor', 'schoolMentor']), updateMentorProfile);
 
 /**
  * @swagger

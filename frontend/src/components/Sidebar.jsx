@@ -67,6 +67,8 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
           settings: settingsNav
         };
       case 'tutor':
+      case 'mentor':
+      case 'schoolMentor':
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/tutor-dashboard' },
@@ -112,7 +114,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
           main: [
             ...defaultNav,
             { title: 'Knowledge Challenges', icon: Zap, path: '/qa' },
-            { title: 'Study Circle', icon: Users, path: '/groups' },
+            { title: 'Study Circle', icon: Users, path: '/social' },
             { title: 'AI Assistant', icon: Briefcase, path: '/ai-homework' },
             { title: 'My Sessions', icon: Video, path: '/bookings' },
             { title: 'Browse Tutors', icon: FileText, path: '/tutors' },

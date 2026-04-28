@@ -307,6 +307,7 @@ export const questionApi = {
   update: (id, data) => api.put(`/questions/${id}`, data).then((res) => res.data),
   delete: (id) => api.delete(`/questions/${id}`).then((res) => res.data),
   search: (params) => api.get('/questions/search', { params }).then((res) => res.data),
+  getMy: () => api.get('/questions/user/my').then((res) => res.data),
   getTutorChallenges: () => api.get('/questions/tutor/my-challenges').then((res) => res.data)
 };
 

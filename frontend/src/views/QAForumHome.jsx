@@ -38,9 +38,7 @@ const QAForumHome = () => {
         if (viewMode === 'Feed') {
           data = await questionApi.getAll({ grade: userGrade });
         } else {
-          // Assuming there's a way to get my questions, or just filter locally
-          const allQuestions = await questionApi.getAll();
-          data = { questions: allQuestions.questions.filter(q => q.author?._id === user?._id || q.author === user?._id) };
+          data = await questionApi.getMy();
         }
 
         const formatted = (data.questions || []).map(q => ({

@@ -125,6 +125,10 @@ export const aiApi = {
   matchTutor: (data) => api.post('/peer/match', data).then((res) => res.data),
   getSessionInsights: (sessionId) => api.get(`/ai/session-insights/${sessionId}`).then((res) => res.data),
   homeworkHelp: (data) => api.post('/ai-homework/help', data).then((res) => res.data),
+  homeworkHistory: () => api.get('/ai-homework/history').then((res) => res.data),
+  homeworkImageUpload: (formData) => api.post('/ai-homework/upload-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then((res) => res.data),
   getRecommendations: (params) => api.get('/recommendations', { params }).then((res) => res.data)
 };
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const moderationController = require('../controllers/moderationController');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
@@ -26,6 +26,7 @@ router.post(
 router.get(
   '/reports',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     query('status').optional().isIn(['pending', 'under_review', 'resolved', 'dismissed']).withMessage('Invalid status'),
     query('assignedTo').optional().isMongoId().withMessage('Invalid assignedTo ID'),
@@ -40,6 +41,7 @@ router.get(
 router.get(
   '/reports/:id',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid report ID')
   ],
@@ -51,6 +53,7 @@ router.get(
 router.put(
   '/reports/:id/assign',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('moderatorId').isMongoId().withMessage('Invalid moderator ID')
@@ -63,6 +66,7 @@ router.put(
 router.put(
   '/reports/:id/resolve',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('action').isIn(['no_action', 'warning', 'content_removed', 'user_suspended', 'user_banned', 'content_flagged']).withMessage('Invalid action'),
@@ -76,6 +80,7 @@ router.put(
 router.put(
   '/reports/:id/dismiss',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('notes').trim().isLength({ min: 1, max: 2000 }).withMessage('Notes must be 1-2000 characters')
@@ -88,6 +93,7 @@ router.put(
 router.put(
   '/reports/:id/escalate',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid report ID'),
     body('reason').trim().isLength({ min: 1, max: 1000 }).withMessage('Reason must be 1-1000 characters')
@@ -100,6 +106,7 @@ router.put(
 router.get(
   '/actions',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
@@ -112,6 +119,7 @@ router.get(
 router.get(
   '/appeals/pending',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
@@ -124,6 +132,7 @@ router.get(
 router.put(
   '/appeals/:id/review',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid appeal ID'),
     body('decision').isIn(['approve', 'deny']).withMessage('Decision must be approve or deny'),
@@ -137,8 +146,10 @@ router.put(
 router.get(
   '/stats',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   moderationController.getModerationStats
 );
+
 router.put(
   '/reports/:id/assign',
   authenticate,
@@ -232,6 +243,7 @@ router.put(
 router.get(
   '/statistics',
   authenticate,
+  authorize('moderator', 'admin', 'websiteAdmin', 'superadmin'),
   [
     query('timeframe').optional().isIn(['7d', '30d', '90d']).withMessage('Invalid timeframe')
   ],

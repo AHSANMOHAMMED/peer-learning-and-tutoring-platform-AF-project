@@ -119,7 +119,7 @@ exports.getReports = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -154,7 +154,7 @@ exports.getReportById = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -213,7 +213,7 @@ exports.assignReport = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -254,7 +254,7 @@ exports.resolveReport = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -330,7 +330,7 @@ exports.dismissReport = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -388,7 +388,7 @@ exports.escalateReport = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -438,7 +438,7 @@ exports.getModeratorActions = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -477,7 +477,7 @@ exports.getPendingAppeals = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -512,7 +512,7 @@ exports.reviewAppeal = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -567,7 +567,7 @@ exports.getModerationStats = async (req, res) => {
 
     // Check if user is moderator or admin
     const user = await User.findById(userId);
-    if (!['moderator', 'admin'].includes(user.role)) {
+    if (!['moderator', 'admin', 'websiteAdmin', 'superadmin'].includes(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'

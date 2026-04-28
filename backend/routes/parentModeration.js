@@ -260,10 +260,10 @@ router.post('/parent/link-student', [
  */
 router.get('/parent/admin/link-requests', authenticate, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['admin', 'superadmin', 'websiteAdmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'Only admin can access parent link requests'
+        message: 'Only admins can access parent link requests'
       });
     }
 
@@ -297,10 +297,10 @@ router.post('/parent/admin/review-link/:linkId', [
   body('permissions').optional().isObject()
 ], async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
+    if (!['admin', 'superadmin', 'websiteAdmin'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'Only admin can review parent link requests'
+        message: 'Only admins can review parent link requests'
       });
     }
 

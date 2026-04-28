@@ -111,7 +111,7 @@ router.put('/settings', authenticate, updateSettings);
  *       200:
  *         description: List of all users
  */
-router.get('/', authenticate, authorize('admin'), getAllUsers);
+router.get('/', authenticate, authorize('admin', 'superadmin', 'websiteAdmin'), getAllUsers);
 
 /**
  * @swagger
@@ -132,8 +132,8 @@ router.get('/', authenticate, authorize('admin'), getAllUsers);
  *     security:
  *       - bearerAuth: []
  */
-router.get('/:id', authenticate, authorize('admin'), getUserById);
-router.put('/:id', authenticate, authorize('admin'), updateUser);
-router.delete('/:id', authenticate, authorize('admin'), deleteUser);
+router.get('/:id', authenticate, authorize('admin', 'superadmin', 'websiteAdmin'), getUserById);
+router.put('/:id', authenticate, authorize('admin', 'superadmin', 'websiteAdmin'), updateUser);
+router.delete('/:id', authenticate, authorize('admin', 'superadmin', 'websiteAdmin'), deleteUser);
 
 module.exports = router;

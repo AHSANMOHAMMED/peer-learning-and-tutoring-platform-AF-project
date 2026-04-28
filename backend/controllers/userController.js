@@ -314,6 +314,14 @@ const deleteUser = async (req, res) => {
       });
     }
     
+    const PROTECTED_ROLES = ['admin', 'superadmin', 'websiteAdmin'];
+    if (PROTECTED_ROLES.includes(user.role) && req.user.role !== 'superadmin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions to delete an administrative account'
+      });
+    }
+
     await User.findByIdAndDelete(id);
     
     res.json({

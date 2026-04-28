@@ -3,16 +3,18 @@ const Notification = require('../models/Notification');
 // Emit notification via Socket.io
 const emitNotification = async (recipient, notificationData) => {
   try {
-    const { type, data } = notificationData;
+    const { type, data = {}, title, message, actionUrl, priority } = notificationData;
     
     // Create notification record
     const notification = new Notification({
-      recipientId: typeof recipient === 'string' ? recipient : recipient._id,
+      userId: typeof recipient === 'string' ? recipient : recipient._id,
       type,
-      title: getNotificationTitle(type, data),
-      message: getNotificationMessage(type, data),
+      title: title || data.title || getNotificationTitle(type, data),
+      message: message || data.message || getNotificationMessage(type, data),
       data,
-      isRead: false
+      isRead: false,
+      actionUrl: actionUrl || data.actionUrl,
+      priority: priority || data.priority || 'normal'
     });
 
     await notification.save();
@@ -134,7 +136,7 @@ const getUserNotifications = async (userId, options = {}) => {
   try {
     const { page = 1, limit = 20, unreadOnly = false } = options;
     
-    const query = { recipientId: userId };
+    const query = { $or: [{ userId }, { recipientId: userId }] };
     if (unreadOnly) {
       query.isRead = false;
     }
@@ -169,7 +171,7 @@ const getUserNotifications = async (userId, options = {}) => {
 const markNotificationAsRead = async (notificationId, userId) => {
   try {
     const notification = await Notification.findOneAndUpdate(
-      { _id: notificationId, recipientId: userId },
+      { _id: notificationId, $or: [{ userId }, { recipientId: userId }] },
       { isRead: true, readAt: new Date() },
       { returnDocument: 'after' }
     );
@@ -189,7 +191,7 @@ const markNotificationAsRead = async (notificationId, userId) => {
 const markAllNotificationsAsRead = async (userId) => {
   try {
     const result = await Notification.updateMany(
-      { recipientId: userId, isRead: false },
+      { $or: [{ userId }, { recipientId: userId }], isRead: false },
       { isRead: true, readAt: new Date() }
     );
 
@@ -205,7 +207,7 @@ const deleteNotification = async (notificationId, userId) => {
   try {
     const notification = await Notification.findOneAndDelete({
       _id: notificationId,
-      recipientId: userId
+      $or: [{ userId }, { recipientId: userId }]
     });
 
     if (!notification) {
@@ -223,7 +225,7 @@ const deleteNotification = async (notificationId, userId) => {
 const getUnreadNotificationCount = async (userId) => {
   try {
     const count = await Notification.countDocuments({
-      recipientId: userId,
+      $or: [{ userId }, { recipientId: userId }],
       isRead: false
     });
 
@@ -238,7 +240,7 @@ const getUnreadNotificationCount = async (userId) => {
 const scheduleNotification = async (recipient, notificationData, scheduledFor) => {
   try {
     const notification = new Notification({
-      recipientId: typeof recipient === 'string' ? recipient : recipient._id,
+      userId: typeof recipient === 'string' ? recipient : recipient._id,
       type: notificationData.type,
       title: getNotificationTitle(notificationData.type, notificationData.data),
       message: getNotificationMessage(notificationData.type, notificationData.data),
@@ -271,7 +273,7 @@ const processScheduledNotifications = async () => {
     });
 
     for (const notification of scheduledNotifications) {
-      await emitNotification(notification.recipientId, {
+      await emitNotification(notification.userId, {
         type: notification.type,
         data: notification.data
       });
@@ -292,10 +294,21 @@ const processScheduledNotifications = async () => {
 // Broadcast notification to specific role or grade
 const broadcastToRoleOrGrade = async (target, notificationData) => {
   try {
-    const { role, grade } = target;
-    const query = {};
+    const { role, grade, excludeUserId } = target;
+    const query = { isActive: { $ne: false } };
     if (role) query.role = role;
-    if (grade) query.grade = grade;
+    if (grade) {
+      const normalizedGrade = String(grade).replace(/^Grade\s*/i, '').trim();
+      query.$or = [
+        { grade: normalizedGrade },
+        { grade: `Grade ${normalizedGrade}` },
+        { 'profile.grade': normalizedGrade },
+        { 'profile.grade': `Grade ${normalizedGrade}` }
+      ];
+    }
+    if (excludeUserId) {
+      query._id = { $ne: excludeUserId };
+    }
 
     const User = require('../models/User');
     const users = await User.find(query).select('_id');

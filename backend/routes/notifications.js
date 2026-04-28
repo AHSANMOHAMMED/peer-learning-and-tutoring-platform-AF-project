@@ -16,7 +16,7 @@ const router = express.Router();
 // Validation rules
 const notificationValidation = [
   body('userId').notEmpty().withMessage('User ID is required'),
-  body('type').isIn(['booking', 'message', 'system', 'reminder', 'payment', 'review', 'session', 'promotion']).withMessage('Invalid notification type'),
+  body('type').isIn(['booking', 'message', 'system', 'reminder', 'payment', 'review', 'session', 'promotion', 'social', 'success', 'alert', 'info']).withMessage('Invalid notification type'),
   body('title').notEmpty().withMessage('Title is required'),
   body('message').notEmpty().withMessage('Message is required'),
   body('priority').optional().isIn(['low', 'normal', 'high', 'urgent']).withMessage('Invalid priority')

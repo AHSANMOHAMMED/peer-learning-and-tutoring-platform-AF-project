@@ -12,9 +12,17 @@ import MetricCard from '../components/ui/MetricCard';
 import { useAuth } from '../controllers/useAuth';
 import { useBookings } from '../controllers/useBookings';
 import { useTutors } from '../controllers/useTutors';
-import { homeworkApi, questionApi, tutorApi, materialApi, bookingApi } from '../services/api';
+import { homeworkApi, questionApi, qaApi, tutorApi, materialApi, bookingApi, notificationApi } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { cn } from '../utils/cn';
+
+const toArray = (response, key) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.[key])) return response[key];
+  if (Array.isArray(response?.data?.[key])) return response.data[key];
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
 
 const TutorDashboard = () => {
   const { user } = useAuth();
@@ -45,11 +53,13 @@ const TutorDashboard = () => {
   const [editingMaterialId, setEditingMaterialId] = useState(null);
   
   const [showChallengeModal, setShowChallengeModal] = useState(false);
-  const [challengeData, setChallengeData] = useState({ title: '', content: '', subject: 'Mathematics', grade: '10' });
+  const emptyChallenge = { title: '', content: '', subject: 'Mathematics', grade: '10', type: 'structured', difficulty: 'Easy', points: 5, correctAnswer: '', explanation: '' };
+  const [challengeData, setChallengeData] = useState(emptyChallenge);
   const [editingChallengeId, setEditingChallengeId] = useState(null);
   
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [broadcastData, setBroadcastData] = useState({ title: '', message: '', targetRole: 'student', targetGrade: '10' });
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   // Initial Data Fetching
   useEffect(() => {
@@ -94,30 +104,62 @@ const TutorDashboard = () => {
     try {
       setLoadingMaterials(true);
       const res = await materialApi.getMyMaterials();
-      setMyMaterials(res.data || res || []);
+      setMyMaterials(toArray(res, 'materials'));
     } catch (err) { console.error(err); } finally { setLoadingMaterials(false); }
   };
 
   const fetchMyChallenges = async () => {
     try {
       setLoadingChallenges(true);
-      const res = await questionApi.getTutorChallenges();
-      setMyChallenges(res.data || res || []);
+      const res = await qaApi.getAll({ mine: true, limit: 100 });
+      setMyChallenges(toArray(res, 'questions'));
     } catch (err) { console.error(err); } finally { setLoadingChallenges(false); }
   };
 
   const fetchPendingHomework = async () => {
     try {
       const res = await homeworkApi.getTutorPending();
-      if (res.success) setPendingHomework(res.data || []);
+      setPendingHomework(toArray(res, 'homework'));
     } catch (err) { console.error(err); }
+  };
+
+  const handleBroadcast = async () => {
+    if (!broadcastData.title.trim() || !broadcastData.message.trim()) {
+      toast.error('Headline and message are required');
+      return;
+    }
+
+    try {
+      setIsBroadcasting(true);
+      const response = await notificationApi.broadcast({
+        title: broadcastData.title,
+        message: broadcastData.message,
+        targetRole: broadcastData.targetRole,
+        targetGrade: broadcastData.targetGrade,
+        type: 'info',
+        priority: 'normal',
+        data: {
+          senderId: user?._id,
+          senderRole: user?.role,
+          source: 'tutor-dashboard'
+        }
+      });
+
+      toast.success(response?.message || 'Broadcast sent');
+      setBroadcastData({ title: '', message: '', targetRole: 'student', targetGrade: '10' });
+      setShowBroadcastModal(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send broadcast');
+    } finally {
+      setIsBroadcasting(false);
+    }
   };
 
   const fetchUnansweredQuestions = async () => {
     try {
       setLoadingQA(true);
       const res = await questionApi.getAll({ unanswered: true, limit: 3 });
-      setUnansweredQuestions(res.data || res || []);
+      setUnansweredQuestions(toArray(res, 'questions'));
     } catch (err) { console.error(err); } finally { setLoadingQA(false); }
   };
 
@@ -214,15 +256,19 @@ const TutorDashboard = () => {
   const handleSaveChallenge = async () => {
     try {
       if (editingChallengeId) {
-        await questionApi.update(editingChallengeId, challengeData);
+        await qaApi.update(editingChallengeId, challengeData);
         toast.success('Challenge updated!');
       } else {
-        await questionApi.create(challengeData);
+        await qaApi.create(challengeData);
         toast.success('Challenge posted!');
       }
+      setChallengeData(emptyChallenge);
+      setEditingChallengeId(null);
       setShowChallengeModal(false);
       fetchMyChallenges();
-    } catch (err) { toast.error('Save failed'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Save failed');
+    }
   };
 
   // Stats
@@ -413,19 +459,19 @@ const TutorDashboard = () => {
              <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-soft">
                 <div className="flex justify-between items-center mb-10">
                    <h2 className="text-2xl font-black text-slate-800">Knowledge Challenges</h2>
-                   <button onClick={() => { setEditingChallengeId(null); setChallengeData({ title: '', content: '', subject: 'Mathematics', grade: '10' }); setShowChallengeModal(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Plus size={16} /> New Challenge</button>
+                   <button onClick={() => { setEditingChallengeId(null); setChallengeData(emptyChallenge); setShowChallengeModal(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2"><Plus size={16} /> New Challenge</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    {myChallenges.map(q => (
                      <div key={q._id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-indigo-600 transition-all">
                         <Zap className="text-indigo-600 mb-4" size={32} />
                         <h4 className="text-lg font-black text-slate-800 mb-1">{q.title}</h4>
-                        <p className="text-xs font-medium text-slate-500 line-clamp-2 mb-4">{q.content}</p>
+                        <p className="text-xs font-medium text-slate-500 line-clamp-2 mb-4">{q.content || q.body}</p>
                         <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{q.subject} &bull; Grade {q.grade}</span>
                            <div className="flex gap-2">
-                              <button onClick={() => { setEditingChallengeId(q._id); setChallengeData(q); setShowChallengeModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600"><Edit2 size={16}/></button>
-                              <button onClick={async () => { if(window.confirm('Delete?')) { await questionApi.delete(q._id); fetchMyChallenges(); } }} className="p-2 text-slate-400 hover:text-rose-500"><Trash2 size={16}/></button>
+                              <button onClick={() => { setEditingChallengeId(q._id); setChallengeData({ ...emptyChallenge, ...q, content: q.content || q.body || '' }); setShowChallengeModal(true); }} className="p-2 text-slate-400 hover:text-indigo-600"><Edit2 size={16}/></button>
+                              <button onClick={async () => { if(window.confirm('Delete?')) { await qaApi.delete(q._id); fetchMyChallenges(); } }} className="p-2 text-slate-400 hover:text-rose-500"><Trash2 size={16}/></button>
                            </div>
                         </div>
                      </div>
@@ -487,7 +533,20 @@ const TutorDashboard = () => {
                             {['10', '11', '12', '13'].map(g => <option key={g} value={g}>Grade {g}</option>)}
                          </select>
                       </div>
-                      <button onClick={handleSaveChallenge} className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20">Post Challenge</button>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                         <select value={challengeData.type} onChange={e => setChallengeData({...challengeData, type: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-bold">
+                            <option value="structured">Structured</option>
+                            <option value="mcq">MCQ</option>
+                            <option value="essay">Essay</option>
+                         </select>
+                         <select value={challengeData.difficulty} onChange={e => setChallengeData({...challengeData, difficulty: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-bold">
+                            {['Easy', 'Medium', 'Hard'].map(d => <option key={d} value={d}>{d}</option>)}
+                         </select>
+                         <input type="number" min="0" placeholder="Points" value={challengeData.points} onChange={e => setChallengeData({...challengeData, points: Number(e.target.value)})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-bold" />
+                      </div>
+                      <textarea placeholder="Correct answer / marking guide" rows={3} value={challengeData.correctAnswer} onChange={e => setChallengeData({...challengeData, correctAnswer: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-medium" />
+                      <textarea placeholder="Explanation for students" rows={3} value={challengeData.explanation} onChange={e => setChallengeData({...challengeData, explanation: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 font-medium" />
+                      <button onClick={handleSaveChallenge} className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20">{editingChallengeId ? 'Update Challenge' : 'Post Challenge'}</button>
                    </div>
                 </motion.div>
              </div>
@@ -502,7 +561,19 @@ const TutorDashboard = () => {
                    <div className="space-y-6">
                       <input type="text" placeholder="Headline" value={broadcastData.title} onChange={e => setBroadcastData({...broadcastData, title: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-slate-800 font-bold" />
                       <textarea placeholder="Your message..." rows={4} value={broadcastData.message} onChange={e => setBroadcastData({...broadcastData, message: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-slate-800 font-medium" />
-                      <button onClick={async () => { toast.loading('Sending...'); setTimeout(() => { toast.success('Broadcast Sent!'); setShowBroadcastModal(false); }, 1500); }} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl">Send Now</button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <select value={broadcastData.targetRole} onChange={e => setBroadcastData({...broadcastData, targetRole: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-slate-800 font-bold">
+                            <option value="student">Students</option>
+                            <option value="tutor">Tutors</option>
+                            <option value="mentor">Mentors</option>
+                         </select>
+                         <select value={broadcastData.targetGrade} onChange={e => setBroadcastData({...broadcastData, targetGrade: e.target.value})} className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-slate-800 font-bold">
+                            {['6', '7', '8', '9', '10', '11', '12', '13'].map(g => <option key={g} value={g}>Grade {g}</option>)}
+                         </select>
+                      </div>
+                      <button onClick={handleBroadcast} disabled={isBroadcasting} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl disabled:opacity-60">
+                        {isBroadcasting ? 'Sending...' : 'Send Now'}
+                      </button>
                    </div>
                 </motion.div>
              </div>

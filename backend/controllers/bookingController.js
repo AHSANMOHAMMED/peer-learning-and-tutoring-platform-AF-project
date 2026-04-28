@@ -40,20 +40,20 @@ exports.getBookings = async (req, res) => {
     let query = {};
     if (req.user.role === 'student') {
       query = { studentId: req.user._id };
-    } else if (req.user.role === 'tutor') {
-      // Find the tutor profile to get the ID if needed, 
-      // but Booking model stores tutorId as the User ID in some implementations or Tutor ID in others.
-      // Looking at createBooking, it uses tutorId from body (Tutor model ID).
-      // Wait, let's check the Booking model.
-      query = { tutorId: req.user._id }; 
-    } else if (req.user.role === 'websiteAdmin' || req.user.role === 'superadmin') {
+    } else if (['tutor', 'mentor', 'schoolMentor'].includes(req.user.role)) {
+      const tutor = await Tutor.findOne({ userId: req.user._id }).select('_id');
+      query = tutor ? { tutorId: tutor._id } : { tutorId: null };
+    } else if (['admin', 'websiteAdmin', 'superadmin'].includes(req.user.role)) {
       query = {}; // All bookings
     } else {
       query = { studentId: req.user._id }; // Default
     }
     
     const bookings = await Booking.find(query)
-      .populate('tutorId')
+      .populate({
+        path: 'tutorId',
+        populate: { path: 'userId', select: 'username email profile.firstName profile.lastName profile.avatar' }
+      })
       .populate('studentId', 'username email profile.firstName profile.lastName profile.avatar');
     
     res.json(bookings);
@@ -73,9 +73,11 @@ exports.updateBookingStatus = async (req, res) => {
 
     if (booking) {
       // Validate that only relevant users can update
-      if (booking.tutorId.toString() !== req.user._id.toString() && 
+      const tutor = await Tutor.findOne({ userId: req.user._id }).select('_id');
+      const isTutorOwner = tutor && booking.tutorId.toString() === tutor._id.toString();
+      if (!isTutorOwner &&
           booking.studentId.toString() !== req.user._id.toString() && 
-          req.user.role !== 'websiteAdmin' && req.user.role !== 'superadmin') {
+          !['admin', 'websiteAdmin', 'superadmin'].includes(req.user.role)) {
         return res.status(401).json({ message: 'User not authorized' });
       }
 

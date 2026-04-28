@@ -55,8 +55,8 @@ const QAForumHome = () => {
              body: q.body || q.content || 'No content provided.',
              status: q.answers?.length > 0 ? 'Resolved' : 'Pending',
              askedOn: new Date(q.createdAt).toLocaleDateString(),
-             tutorAnswer: q.answers?.[0]?.content || '',
-             marks: q.marks || null,
+             tutorAnswer: q.answers?.[0]?.body || q.correctAnswer || '',
+             marks: q.points || q.marks || null,
              authorId: q.author?._id || q.author,
              answers: q.answers || []
           }));
@@ -139,10 +139,10 @@ const QAForumHome = () => {
     setIsAnswering(true);
     const token = localStorage.getItem('token');
     try {
-       const response = await fetch(`/api/answers/${selectedId}`, {
+       const response = await fetch(`/api/answers/question/${selectedId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ body: answerBody })
+          body: JSON.stringify({ questionId: selectedId, body: answerBody })
        });
 
        if (response.ok) {

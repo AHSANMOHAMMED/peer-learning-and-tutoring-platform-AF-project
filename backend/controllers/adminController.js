@@ -650,11 +650,11 @@ const broadcastNotification = async (req, res) => {
     }
 
     await notificationService.sendBulkNotifications(userIds, {
-      type: 'broadcast',
+      type: 'info',
+      title,
+      message,
+      priority: priority === 'medium' ? 'normal' : priority,
       data: {
-        title,
-        message,
-        priority,
         sender: req.user.username
       }
     });

@@ -1,6 +1,14 @@
 import { useState, useCallback } from 'react';
 import { materialApi } from '../services/api';
 
+const normalizeMaterials = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.materials)) return response.materials;
+  if (Array.isArray(response?.data?.materials)) return response.data.materials;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
 export const useMaterials = () => {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,11 +19,13 @@ export const useMaterials = () => {
     setError(null);
     try {
       const data = await materialApi.getAll();
-      setMaterials(data || []);
-      return data;
+      const normalized = normalizeMaterials(data);
+      setMaterials(normalized);
+      return normalized;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch materials');
-      throw err;
+      setMaterials([]);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -26,7 +36,8 @@ export const useMaterials = () => {
     setError(null);
     try {
       const data = await materialApi.upload(materialData);
-      setMaterials((prev) => [...prev, data]);
+      const created = data?.data || data;
+      setMaterials((prev) => [...prev, created]);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to upload material');

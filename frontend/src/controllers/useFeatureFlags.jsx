@@ -1,6 +1,13 @@
 import { useState, useCallback } from 'react';
 import { featureFlagApi } from '../services/api';
 
+const normalizeFlags = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.flags)) return response.flags;
+  if (Array.isArray(response?.data?.flags)) return response.data.flags;
+  return [];
+};
+
 export const useFeatureFlags = () => {
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,11 +18,7 @@ export const useFeatureFlags = () => {
     setError(null);
     try {
       const data = await featureFlagApi.getAll();
-      if (data.success) {
-        setFlags(data.data.flags || []);
-      } else {
-        setFlags(data || []);
-      }
+      setFlags(normalizeFlags(data));
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch feature flags');
@@ -31,7 +34,8 @@ export const useFeatureFlags = () => {
     try {
       const data = await featureFlagApi.toggle(id);
       if (data.success) {
-        setFlags((prev) => prev.map((f) => f._id === id ? { ...f, enabled: !f.enabled } : f));
+        const updatedFlag = data.data?.flag || data.flag;
+        setFlags((prev) => prev.map((f) => f._id === id ? (updatedFlag || { ...f, enabled: !f.enabled }) : f));
       }
       return data;
     } catch (err) {
@@ -48,7 +52,10 @@ export const useFeatureFlags = () => {
     try {
       const data = await featureFlagApi.create(flagData);
       if (data.success) {
-        setFlags((prev) => [...prev, data.data.flag]);
+        const createdFlag = data.data?.flag || data.flag;
+        if (createdFlag) {
+          setFlags((prev) => [createdFlag, ...prev.filter((f) => f._id !== createdFlag._id)]);
+        }
       }
       return data;
     } catch (err) {

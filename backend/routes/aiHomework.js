@@ -20,8 +20,17 @@ router.post('/help', authenticate, async (req, res) => {
       if (!sessionId) {
         return res.status(400).json({ success: false, message: 'Session ID is required for sendMessage action.' });
       }
+      if (!message && !image && !finalVoice) {
+        return res.status(400).json({ success: false, message: 'Please enter a question, image, or voice note.' });
+      }
       const response = await AIHomeworkAssistant.processMessage(sessionId, message, image, finalVoice);
       return res.json({ success: true, data: response });
+    } else if (action === 'endSession') {
+      if (!sessionId) {
+        return res.status(400).json({ success: false, message: 'Session ID is required for endSession action.' });
+      }
+      const result = await AIHomeworkAssistant.endSession(sessionId);
+      return res.json({ success: true, data: result });
     } else {
       // Default action is 'start' or no action
       const session = await AIHomeworkAssistant.startSession(req.user._id, { 
@@ -213,6 +222,27 @@ router.get('/sessions/history', authenticate, async (req, res) => {
       data: { sessions }
     });
 
+  } catch (error) {
+    console.error('Error getting session history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get history',
+      error: error.message
+    });
+  }
+});
+
+// Backward-compatible alias for older frontend builds.
+router.get('/history', authenticate, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const sessions = await AIHomeworkAssistant.getUserSessionHistory(req.user._id, limit);
+
+    res.json({
+      success: true,
+      message: 'Session history retrieved',
+      data: { sessions }
+    });
   } catch (error) {
     console.error('Error getting session history:', error);
     res.status(500).json({

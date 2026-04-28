@@ -10,6 +10,7 @@ const {
   approveQuestion, 
   rejectQuestion, 
   getQuestionStats,
+  getMyQuestions,
   getTutorChallenges
 } = require('../controllers/questionController');
 const { protect, authorize } = require('../middleware/auth');
@@ -23,6 +24,7 @@ router.get('/subjects', (req, res) => {
 
 // Tutor specific
 router.get('/tutor/my-challenges', protect, authorize('tutor', 'mentor', 'superadmin', 'websiteAdmin'), getTutorChallenges);
+router.get('/user/my', protect, getMyQuestions);
 
 // Question detail
 router.get('/:id', getQuestionById);

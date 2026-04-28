@@ -45,8 +45,8 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-            { title: 'Student Management', icon: Users, path: '/admin/users' },
-            { title: 'Tutor Management', icon: Briefcase, path: '/admin/approvals' },
+            { title: 'Student Management', icon: Users, path: '/admin/students' },
+            { title: 'Tutor Management', icon: Briefcase, path: '/admin/tutors' },
             { title: 'Session Management', icon: Video, path: '/bookings' },
             { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
             { title: 'Admin Settings', icon: Settings, path: '/admin/settings' },
@@ -58,7 +58,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/super-admin' },
             { title: 'User Management', icon: Users, path: '/admin/users' },
-            { title: 'Tutor Approvals', icon: Briefcase, path: '/admin/approvals' },
+            { title: 'Tutor Management', icon: Briefcase, path: '/admin/tutors' },
             { title: 'All Sessions', icon: Video, path: '/bookings' },
             { title: 'Game Management', icon: Gamepad2, path: '/admin/games' },
             { title: 'Moderation', icon: FileText, path: '/moderation' },
@@ -154,6 +154,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
                 <NavLink
                   key={item.title}
                   to={item.path}
+                  end={['/admin', '/dashboard', '/super-admin', '/school-dashboard'].includes(item.path)}
                   onClick={() => window.innerWidth < 768 && onClose()}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors font-medium text-[15px]",
@@ -176,6 +177,7 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
                   <NavLink
                     key={item.title}
                     to={item.path}
+                    end={['/admin', '/dashboard', '/super-admin', '/school-dashboard'].includes(item.path)}
                     className={({ isActive }) => cn(
                       "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors font-medium text-[15px]",
                       isActive 

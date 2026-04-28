@@ -19,7 +19,7 @@ const STREAMS = ['Combined Mathematics', 'Biological Sciences', 'Commercial Stre
 
 const isProtectedRole = (role) => PROTECTED_ROLES.includes(role);
 
-const UserManagement = () => {
+const UserManagement = ({ defaultRole = 'all', title = 'User Management', description = 'Manage platform users, configure roles, and monitor accounts.' }) => {
   const { user: currentUser } = useAuth();
   const { 
     fetchUsers, toggleUserStatus, createUser, updateUser, deleteUser, getUserById, 
@@ -27,7 +27,7 @@ const UserManagement = () => {
   } = useUsers();
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState(defaultRole);
   const [schools, setSchools] = useState([]);
   
   // Modals
@@ -48,12 +48,13 @@ const UserManagement = () => {
   const [detailedUser, setDetailedUser] = useState(null);
 
   useEffect(() => {
-    fetchUsers({ limit: 100 });
+    setActiveTab(defaultRole);
+    fetchUsers({ limit: 100, ...(defaultRole !== 'all' ? { role: defaultRole } : {}) });
     // Fetch schools for selection
     schoolApi.getAll({ limit: 100 }).then(res => {
       if (res.success) setSchools(res.data.schools);
     });
-  }, [fetchUsers]);
+  }, [fetchUsers, defaultRole]);
 
   const handleToggleStatus = async (user) => {
     if (isProtectedRole(user.role)) {
@@ -189,13 +190,13 @@ const UserManagement = () => {
            <div className="relative z-10">
               <div className="flex items-center gap-3 mb-2">
                  <ShieldCheck className="text-indigo-400" size={32} />
-                 <h1 className="text-2xl font-bold text-slate-800 tracking-tight">User Management</h1>
+              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{title}</h1>
               </div>
-              <p className="text-slate-500 font-medium text-sm">Manage platform users, configure roles, and monitor accounts.</p>
+              <p className="text-slate-500 font-medium text-sm">{description}</p>
            </div>
            
            <div className="flex gap-4 relative z-10 w-full md:w-auto">
-              <button onClick={() => fetchUsers({limit: 100})} className="flex-1 md:flex-none justify-center bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center gap-2">
+              <button onClick={() => fetchUsers({limit: 100, ...(defaultRole !== 'all' ? { role: defaultRole } : {})})} className="flex-1 md:flex-none justify-center bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center gap-2">
                  <RefreshCw size={16} className={loading && !isViewModalOpen ? "animate-spin" : ""} /> Refresh
               </button>
               <button onClick={() => {
@@ -224,7 +225,7 @@ const UserManagement = () => {
            </div>
            
            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 xl:pb-0">
-             {['all', 'student', 'tutor', 'mentor', 'schoolMentor', 'parent', 'admin', 'websiteAdmin', 'moderator', 'schoolAdmin', 'demo'].map((role) => (
+             {(defaultRole === 'all' ? ['all', 'student', 'tutor', 'mentor', 'schoolMentor', 'parent', 'admin', 'websiteAdmin', 'moderator', 'schoolAdmin', 'demo'] : [defaultRole]).map((role) => (
                 <button
                    key={role}
                    onClick={() => setActiveTab(role)}

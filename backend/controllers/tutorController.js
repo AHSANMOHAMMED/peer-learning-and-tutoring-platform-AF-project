@@ -2,6 +2,7 @@ const Tutor = require('../models/Tutor');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const EmailService = require('../services/emailService');
+const mongoose = require('mongoose');
 
 // @desc    Become a tutor
 // @route   POST /api/tutors
@@ -25,9 +26,26 @@ exports.registerTutor = async (req, res) => {
       tutor.experience = experience || tutor.experience;
       tutor.hourlyRate = hourlyRate || tutor.hourlyRate;
       tutor.availability = availability || tutor.availability;
+      tutor.alStream = alStream || tutor.alStream;
+      tutor.expertise = req.body.expertise || tutor.expertise;
+      if (tutor.verificationStatus === 'not_created' || tutor.verificationStatus === 'rejected') {
+        tutor.verificationStatus = 'pending';
+        tutor.rejectionReason = undefined;
+        tutor.verificationNotes = undefined;
+      }
       
       const updatedTutor = await tutor.save();
-      return res.status(200).json(updatedTutor);
+      const publicUser = user.toPublicJSON ? user.toPublicJSON() : user.toObject();
+      publicUser.isPendingApproval = true;
+      publicUser.verificationStatus = updatedTutor.verificationStatus;
+
+      return res.status(200).json({
+        success: true,
+        message: 'Tutor application updated and submitted for review',
+        data: updatedTutor,
+        tutor: updatedTutor,
+        user: publicUser
+      });
     }
 
     // Create new tutor profile
@@ -44,7 +62,17 @@ exports.registerTutor = async (req, res) => {
       verificationStatus: 'pending'
     });
 
-    res.status(201).json(tutor);
+    const publicUser = user.toPublicJSON ? user.toPublicJSON() : user.toObject();
+    publicUser.isPendingApproval = true;
+    publicUser.verificationStatus = tutor.verificationStatus;
+
+    res.status(201).json({
+      success: true,
+      message: 'Tutor application submitted for review',
+      data: tutor,
+      tutor,
+      user: publicUser
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -68,6 +96,10 @@ exports.getTutors = async (req, res) => {
 // @access  Public
 exports.getTutorProfile = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Tutor not found' });
+    }
+
     const tutor = await Tutor.findById(req.params.id)
       .populate('userId', 'username email profile.firstName profile.lastName profile.avatar');
 
@@ -86,6 +118,10 @@ exports.getTutorProfile = async (req, res) => {
 // @access  Public
 exports.getTutorByUserId = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+      return res.status(404).json({ message: 'Tutor profile not found for this user' });
+    }
+
     const tutor = await Tutor.findOne({ userId: req.params.userId })
       .populate('userId', 'username email profile.firstName profile.lastName profile.avatar');
 
@@ -117,9 +153,14 @@ exports.getAllTutors = async (req, res) => {
 // @route   PUT /api/tutors/:id/moderate
 // @access  Private (Admin)
 exports.moderateTutor = async (req, res) => {
-  const { status, reason, notes } = req.body; // 'approved' or 'rejected'
+  const { verificationStatus, reason, notes } = req.body;
+  const status = req.body.status || verificationStatus; // 'approved' or 'rejected'
 
   try {
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'A valid moderation status is required' });
+    }
+
     const tutor = await Tutor.findById(req.params.id).populate('userId');
 
     if (!tutor) {

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true }, // Google OAuth ID
   role: {
     type: String,
-    enum: ['student', 'tutor', 'mentor', 'schoolMentor', 'parent', 'websiteAdmin', 'superadmin', 'moderator', 'schoolAdmin', 'demo'],
+    enum: ['student', 'tutor', 'mentor', 'schoolMentor', 'parent', 'admin', 'websiteAdmin', 'superadmin', 'moderator', 'schoolAdmin', 'demo'],
     default: 'student'
   },
   district: { 

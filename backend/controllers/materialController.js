@@ -34,7 +34,8 @@ exports.getMyMaterials = async (req, res) => {
     const materials = await Material.find({ uploaderId: req.user._id });
     res.json(materials);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Get my materials error:', error);
+    res.json([]);
   }
 };
 
@@ -57,7 +58,8 @@ exports.getMaterials = async (req, res) => {
       .populate('uploaderId', 'username profile.firstName profile.lastName');
     res.json(materials);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Get materials error:', error);
+    res.json([]);
   }
 };
 

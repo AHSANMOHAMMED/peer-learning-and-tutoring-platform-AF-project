@@ -21,7 +21,7 @@ import api from '../services/api';
 import { cn } from '../utils/cn';
 
 const TutorOnboarding = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, applyUser } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -57,11 +57,19 @@ const TutorOnboarding = () => {
     setLoading(true);
     try {
       const { data } = await api.post('/tutors/profile', form);
-      if (data.success) {
-        toast.success('Application submitted successfully!');
-        await refreshUser();
-        navigate('/tutor-pending');
+      const submittedTutor = data?.tutor || data?.data || data;
+
+      if (data?.user) {
+        applyUser(data.user);
+      } else {
+        const refreshedUser = await refreshUser();
+        if (refreshedUser?.verificationStatus !== 'pending' && submittedTutor?.verificationStatus === 'pending') {
+          applyUser({ ...refreshedUser, verificationStatus: 'pending', isPendingApproval: true });
+        }
       }
+
+      toast.success(data?.message || 'Application submitted successfully!');
+      navigate('/tutor-pending', { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Submission failed');
     } finally {

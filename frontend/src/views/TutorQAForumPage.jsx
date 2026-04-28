@@ -4,13 +4,21 @@ import { Link } from 'react-router-dom';
 import { 
   MessageSquare, Filter, BookOpen, Clock, 
   CheckCircle2, Send, Star, AlertCircle,
-  Activity, Zap, ArrowRight, Info, Search
+  Activity, Zap, ArrowRight, Info, Search, Edit2, Trash2
 } from 'lucide-react';
 import { useAuth } from '../controllers/useAuth';
 import Layout from '../components/Layout';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
-import { questionApi, answerApi } from '../services/api';
+import { qaApi, answerApi } from '../services/api';
+
+const getQuestionsFromResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.questions)) return response.questions;
+  if (Array.isArray(response?.data?.questions)) return response.data.questions;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
 
 const TutorQAForumPage = () => {
   const { user } = useAuth();
@@ -24,14 +32,23 @@ const TutorQAForumPage = () => {
   const [marksDraft, setMarksDraft] = useState('');
   const [feedbackDraft, setFeedbackDraft] = useState('');
 
-  // Fetch real questions from the backend API
-  useEffect(() => {
-    const fetchQuestions = async () => {
+  const getTutorAnswer = (question) => {
+    const answers = question.answers || [];
+    return answers.find((answer) => {
+      const authorId = answer.author?._id || answer.author;
+      return authorId?.toString?.() === user?._id;
+    });
+  };
+
+  const fetchQuestions = async () => {
       try {
         setLoading(true);
-        const res = await questionApi.getAll();        const questionArray = res.data.questions || res.data || [];
+        const res = await qaApi.getAll({ limit: 100 });
+        const questionArray = getQuestionsFromResponse(res);
         // Normalize backend data to match UI expectations
-        const formatted = questionArray.map(q => ({
+        const formatted = questionArray.map(q => {
+          const existingTutorAnswer = getTutorAnswer(q);
+          return {
            id: q._id,
            student: q.author?.username || (typeof q.author === 'string' ? q.author : 'Unknown Student'),
            grade: q.grade || 'General',
@@ -40,11 +57,14 @@ const TutorQAForumPage = () => {
            body: q.body || q.content || 'No content provided.',
            status: q.answerCount > 0 || q.hasAcceptedAnswer ? 'Answered' : 'Unanswered',
            askedOn: new Date(q.createdAt).toLocaleDateString(),
-           tutorAnswer: q.correctAnswer || '',
+           tutorAnswer: existingTutorAnswer?.body || q.correctAnswer || '',
+           answerId: existingTutorAnswer?._id,
+           answers: q.answers || [],
            marks: q.points || null,
-           feedback: q.explanation || '',
+           feedback: existingTutorAnswer?.tutorComment || q.explanation || '',
            urgency: q.difficulty === 'Hard' ? 'High' : 'Normal'
-        }));
+          };
+        });
         setQuestions(formatted);
         if (formatted.length > 0) setSelectedId(formatted[0].id);
       } catch (error) {
@@ -54,8 +74,11 @@ const TutorQAForumPage = () => {
         setLoading(false);
       }
     };
+
+  // Fetch real questions from the backend API
+  useEffect(() => {
     fetchQuestions();
-  }, []);
+  }, [user?._id]);
 
   const selectedQuestion = useMemo(
     () => questions.find((q) => q.id === selectedId) || questions[0],
@@ -87,25 +110,63 @@ const TutorQAForumPage = () => {
     if (!answerDraft.trim() || !selectedId) return;
     try {
       setLoading(true);
-      const res = await answerApi.create({ body: answerDraft, questionId: selectedId });
+      const markValue = marksDraft === '' ? null : Number(marksDraft);
+      const hasMark = Number.isFinite(markValue);
+      const reviewStatus = hasMark ? (markValue >= 5 ? 'correct' : 'needs_improvement') : 'pending';
+      const payload = {
+        body: answerDraft,
+        status: reviewStatus,
+        tutorComment: feedbackDraft,
+        marks: hasMark ? markValue : undefined
+      };
+      const res = selectedQuestion.answerId
+        ? await answerApi.update(selectedQuestion.answerId, payload)
+        : await answerApi.create({ ...payload, questionId: selectedId });
 
-      if (res.data) {
+      if (res) {
         // Update local state to show the answer immediately
         setQuestions(prev => prev.map(q => q.id === selectedId ? {
           ...q,
           tutorAnswer: answerDraft,
           feedback: feedbackDraft,
-          marks: Number(marksDraft),
+          marks: hasMark ? markValue : null,
+          reviewStatus,
+          answerId: res?._id || q.answerId,
           status: 'Answered'
         } : q));
-        toast.success('Your response has been published to the student.');
-        setAnswerDraft('');
-        setMarksDraft('');
-        setFeedbackDraft('');
+        toast.success(selectedQuestion.answerId ? 'Your response has been updated.' : 'Your response has been published to the student.');
       }
     } catch (e) {
       console.error('Answer submission error:', e);
       toast.error(e.response?.data?.error || 'Failed to post answer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAnswer = async () => {
+    if (!selectedQuestion?.answerId) return;
+    if (!window.confirm('Delete this answer?')) return;
+
+    try {
+      setLoading(true);
+      await answerApi.delete(selectedQuestion.answerId);
+      setQuestions(prev => prev.map(q => q.id === selectedId ? {
+        ...q,
+        tutorAnswer: '',
+        feedback: '',
+        marks: null,
+        reviewStatus: undefined,
+        answerId: undefined,
+        status: 'Unanswered'
+      } : q));
+      setAnswerDraft('');
+      setMarksDraft('');
+      setFeedbackDraft('');
+      toast.success('Answer deleted.');
+    } catch (e) {
+      console.error('Answer delete error:', e);
+      toast.error(e.response?.data?.error || 'Failed to delete answer.');
     } finally {
       setLoading(false);
     }
@@ -234,6 +295,24 @@ const TutorQAForumPage = () => {
                                 <div className="flex items-end gap-2 mb-1">
                                    <span className="text-[10px] text-slate-400">Just Now</span>
                                    <span className="text-sm font-bold text-slate-700">You (Tutor)</span>
+                                   <button
+                                     onClick={() => {
+                                       setAnswerDraft(selectedQuestion.tutorAnswer || '');
+                                       setMarksDraft(selectedQuestion.marks?.toString() ?? '');
+                                       setFeedbackDraft(selectedQuestion.feedback || '');
+                                     }}
+                                     className="p-1 text-slate-400 hover:text-[#00a8cc] transition-colors"
+                                     title="Edit answer"
+                                   >
+                                     <Edit2 size={14} />
+                                   </button>
+                                   <button
+                                     onClick={handleDeleteAnswer}
+                                     className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                                     title="Delete answer"
+                                   >
+                                     <Trash2 size={14} />
+                                   </button>
                                 </div>
                                 <div className="bg-[#e8f6fa] border border-[#bcecf9] p-4 rounded-b-xl rounded-tl-xl text-slate-800 text-sm leading-relaxed shadow-sm">
                                    {selectedQuestion.tutorAnswer}
@@ -278,7 +357,7 @@ const TutorQAForumPage = () => {
                             disabled={!answerDraft.trim()}
                             className="bg-[#00a8cc] hover:bg-[#008ba8] text-white font-bold py-2.5 px-6 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                           >
-                             Send Response <Send size={16} />
+                             {selectedQuestion.answerId ? 'Update Response' : 'Send Response'} <Send size={16} />
                           </button>
                        </div>
                     </div>

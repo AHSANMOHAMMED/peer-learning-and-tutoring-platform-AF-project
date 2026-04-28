@@ -29,6 +29,16 @@ const AIHomeworkChat = () => {
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const messagesEndRef = useRef(null);
 
+  const unwrapPayload = (response) => response?.data || response || {};
+  const getSessionIdentifier = (payload) => {
+    const data = payload?.data || payload;
+    return data?.sessionId || data?._id || data?.id;
+  };
+  const getAssistantContent = (payload) => {
+    const data = payload?.data || payload;
+    return data?.content || data?.message || data?.answer || 'I am ready. Ask me your question.';
+  };
+
   // Dynamic subjects based on grade
   const getSubjectsByGrade = (g) => {
     const isPrimary = parseInt(g) <= 9;
@@ -66,8 +76,10 @@ const AIHomeworkChat = () => {
 
   const fetchSessionHistory = async () => {
     try {
-      const response = await aiApi.homeworkHistory();      if (response.data.success) {
-        setSessionHistory(response.data.data.sessions);
+      const response = await aiApi.homeworkHistory();
+      const payload = response?.data || response;
+      if (payload?.success) {
+        setSessionHistory(payload.data?.sessions || []);
       }
     } catch (error) {
       console.error('Error fetching history:', error);
@@ -78,16 +90,20 @@ const AIHomeworkChat = () => {
     try {
       setIsLoading(true);
        const response = await aiApi.homeworkHelp({ subject, grade, topic: '' });
+      const payload = unwrapPayload(response);
+      const newSessionId = getSessionIdentifier(payload);
 
-      if (response.data.success) {
-        setSessionId(response.data.data.sessionId);
+      if (payload?.success && newSessionId) {
+        setSessionId(newSessionId);
         setMessages([
-          { role: 'assistant', content: response.data.data.welcomeMessage, timestamp: new Date() }
+          { role: 'assistant', content: payload.data?.welcomeMessage || getAssistantContent(payload), timestamp: new Date() }
         ]);
         setShowSetup(false);
+      } else {
+        toast.error(payload?.message || 'Failed to start session');
       }
     } catch (error) {
-      toast.error('Failed to start session');
+      toast.error(error.response?.data?.message || 'Failed to start session');
     } finally {
       setIsLoading(false);
     }
@@ -119,16 +135,19 @@ const AIHomeworkChat = () => {
         message: userMessage, 
         image: currentImage 
       });
-      if (response.data.success) {
+      const payload = unwrapPayload(response);
+      if (payload?.success) {
         setMessages((prev) => [...prev, {
           role: 'assistant',
-          content: response.data.data.content,
+          content: getAssistantContent(payload),
           timestamp: new Date(),
-          metadata: response.data.data
+          metadata: payload.data || payload
         }]);
+      } else {
+        toast.error(payload?.message || 'AI could not answer right now');
       }
     } catch (error) {
-      toast.error('Failed to get response');
+      toast.error(error.response?.data?.message || 'Failed to get response');
     } finally {
       setIsLoading(false);
     }
@@ -148,10 +167,11 @@ const AIHomeworkChat = () => {
        const formData = new FormData();
        formData.append('image', file);
        const res = await aiApi.homeworkImageUpload(formData);
-       if (res.data.success) {
+       const payload = unwrapPayload(res);
+       if (payload?.success) {
          setSelectedImage({
-           mimeType: res.data.data.mimeType,
-           data: res.data.data.base64
+           mimeType: payload.data.mimeType,
+           data: payload.data.base64
          });
          toast.success('Image processed for AI Vision');
        }
@@ -434,9 +454,10 @@ const AIHomeworkChat = () => {
                         message: '🎤 Voice message attached',
                         audio: base64Audio
                       });
-                      if (res.data.success) {
+                      const payload = unwrapPayload(res);
+                      if (payload?.success) {
                         setMessages(prev => [...prev, {
-                          role: 'assistant', content: res.data.data.content, timestamp: new Date(), metadata: res.data.data
+                          role: 'assistant', content: getAssistantContent(payload), timestamp: new Date(), metadata: payload.data || payload
                         }]);
                       }
                       setIsLoading(false);
@@ -478,7 +499,7 @@ const AIHomeworkChat = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Ask a question, share a photo, or use voice..."
               className="flex-1 bg-transparent border-none px-2 py-2 text-[15px] font-medium text-slate-800 placeholder:text-slate-400 outline-none"
             />

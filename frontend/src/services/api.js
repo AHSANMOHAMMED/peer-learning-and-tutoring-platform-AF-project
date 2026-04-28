@@ -57,7 +57,8 @@ export const notificationApi = {
   markAsRead: (id) => api.put(`/notifications/${id}/read`).then((res) => res.data),
   markAllAsRead: () => api.put('/notifications/read-all').then((res) => res.data),
   deleteNotification: (id) => api.delete(`/notifications/${id}`).then((res) => res.data),
-  getUnreadCount: () => api.get('/notifications/unread-count').then((res) => res.data)
+  getUnreadCount: () => api.get('/notifications/unread-count').then((res) => res.data),
+  broadcast: (data) => api.post('/notifications/broadcast', data).then((res) => res.data)
 };
 
 export const userManagementApi = {
@@ -125,7 +126,7 @@ export const aiApi = {
   matchTutor: (data) => api.post('/peer/match', data).then((res) => res.data),
   getSessionInsights: (sessionId) => api.get(`/ai/session-insights/${sessionId}`).then((res) => res.data),
   homeworkHelp: (data) => api.post('/ai-homework/help', data).then((res) => res.data),
-  homeworkHistory: () => api.get('/ai-homework/history').then((res) => res.data),
+  homeworkHistory: () => api.get('/ai-homework/sessions/history').then((res) => res.data),
   homeworkImageUpload: (formData) => api.post('/ai-homework/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }).then((res) => res.data),
@@ -305,9 +306,11 @@ export const questionApi = {
 };
 
 export const answerApi = {
-  getAll: (params) => api.get('/answers', { params }).then((res) => res.data),
+  getAll: (params) => params?.questionId
+    ? api.get(`/answers/question/${params.questionId}`, { params }).then((res) => res.data)
+    : api.get('/answers', { params }).then((res) => res.data),
   getById: (id) => api.get(`/answers/${id}`).then((res) => res.data),
-  create: (data) => api.post('/answers', data).then((res) => res.data),
+  create: ({ questionId, ...data }) => api.post(`/answers/question/${questionId}`, data).then((res) => res.data),
   update: (id, data) => api.put(`/answers/${id}`, data).then((res) => res.data),
   updateStatus: (id, data) => api.put(`/answers/${id}/status`, data).then((res) => res.data),
   delete: (id) => api.delete(`/answers/${id}`).then((res) => res.data),

@@ -26,38 +26,39 @@ const {
 } = require('../controllers/breakTimeGameController');
 
 const router = express.Router();
+const ADMIN_ROLES = ['admin', 'websiteAdmin', 'superadmin'];
 
 // Admin dashboard statistics
-router.get('/statistics', authenticate, authorize('websiteAdmin', 'superadmin'), getDashboardStatistics);
+router.get('/statistics', authenticate, authorize(ADMIN_ROLES), getDashboardStatistics);
 
 // Break Time Games management
-router.get('/games', authenticate, authorize('websiteAdmin', 'superadmin'), getAdminGames);
-router.get('/games/:id', authenticate, authorize('websiteAdmin', 'superadmin'), getAdminGameById);
-router.put('/games/:id/timer', authenticate, authorize('websiteAdmin', 'superadmin'), updateGameTimer);
-router.put('/games/:id/status', authenticate, authorize('websiteAdmin', 'superadmin'), updateGameStatus);
-router.delete('/games/:id', authenticate, authorize('websiteAdmin', 'superadmin'), deleteGame);
+router.get('/games', authenticate, authorize(ADMIN_ROLES), getAdminGames);
+router.get('/games/:id', authenticate, authorize(ADMIN_ROLES), getAdminGameById);
+router.put('/games/:id/timer', authenticate, authorize(ADMIN_ROLES), updateGameTimer);
+router.put('/games/:id/status', authenticate, authorize(ADMIN_ROLES), updateGameStatus);
+router.delete('/games/:id', authenticate, authorize(ADMIN_ROLES), deleteGame);
 
 // User management
-router.get('/users', authenticate, authorize('websiteAdmin', 'superadmin'), getAllUsersAdmin);
-router.post('/users', authenticate, authorize('websiteAdmin', 'superadmin'), createUser);
-router.get('/users/:id', authenticate, authorize('websiteAdmin', 'superadmin'), getUserById);
-router.put('/users/:id', authenticate, authorize('websiteAdmin', 'superadmin'), updateUser);
-router.delete('/users/:id', authenticate, authorize('websiteAdmin', 'superadmin'), deleteUser);
-router.put('/users/:id/status', authenticate, authorize('websiteAdmin', 'superadmin'), toggleUserStatus);
-router.put('/users/:id/role', authenticate, authorize('websiteAdmin', 'superadmin'), changeUserRole);
-router.post('/users/bulk', authenticate, authorize('websiteAdmin', 'superadmin'), bulkUserOperations);
+router.get('/users', authenticate, authorize(ADMIN_ROLES), getAllUsersAdmin);
+router.post('/users', authenticate, authorize(ADMIN_ROLES), createUser);
+router.get('/users/:id', authenticate, authorize(ADMIN_ROLES), getUserById);
+router.put('/users/:id', authenticate, authorize(ADMIN_ROLES), updateUser);
+router.delete('/users/:id', authenticate, authorize(ADMIN_ROLES), deleteUser);
+router.put('/users/:id/status', authenticate, authorize(ADMIN_ROLES), toggleUserStatus);
+router.put('/users/:id/role', authenticate, authorize(ADMIN_ROLES), changeUserRole);
+router.post('/users/bulk', authenticate, authorize(ADMIN_ROLES), bulkUserOperations);
 
 // Tutor management
-router.get('/tutors/pending', authenticate, authorize('websiteAdmin', 'superadmin'), getPendingTutors);
-router.put('/tutors/:id/approve', authenticate, authorize('websiteAdmin', 'superadmin'), approveTutor);
-router.put('/tutors/:id/reject', authenticate, authorize('websiteAdmin', 'superadmin'), rejectTutor);
+router.get('/tutors/pending', authenticate, authorize(ADMIN_ROLES), getPendingTutors);
+router.put('/tutors/:id/approve', authenticate, authorize(ADMIN_ROLES), approveTutor);
+router.put('/tutors/:id/reject', authenticate, authorize(ADMIN_ROLES), rejectTutor);
 
 // Material management
-router.get('/materials/pending', authenticate, authorize('websiteAdmin', 'superadmin'), getPendingMaterials);
+router.get('/materials/pending', authenticate, authorize(ADMIN_ROLES), getPendingMaterials);
 
 // System operations
-router.post('/broadcast', authenticate, authorize('websiteAdmin', 'superadmin'), broadcastNotification);
-router.post('/rotate-keys', authenticate, authorize('websiteAdmin', 'superadmin'), rotateAccessKeys);
+router.post('/broadcast', authenticate, authorize(ADMIN_ROLES), broadcastNotification);
+router.post('/rotate-keys', authenticate, authorize(ADMIN_ROLES), rotateAccessKeys);
 
 module.exports = router;
 

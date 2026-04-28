@@ -80,11 +80,11 @@ export const useTutors = () => {
     }
   }, []);
 
-  const moderateTutor = useCallback(async (id, status) => {
+  const moderateTutor = useCallback(async (id, status, reason = '') => {
     setLoading(true);
     setError(null);
     try {
-      const data = await tutorApi.moderate(id, { verificationStatus: status });
+      const data = await tutorApi.moderate(id, { status, verificationStatus: status, reason });
       setTutors((prev) => prev.map((t) => t._id === id ? data : t));
       return data;
     } catch (err) {

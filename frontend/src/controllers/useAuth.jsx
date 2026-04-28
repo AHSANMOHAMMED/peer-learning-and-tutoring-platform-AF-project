@@ -102,6 +102,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const applyUser = useCallback((userData) => {
+    if (!userData) return null;
+    const normalizedUser = userData?.user || userData?.data || userData;
+    setUser(normalizedUser);
+    return normalizedUser;
+  }, []);
+
   const changePassword = async (currentPassword, newPassword) => {
     setLoading(true);
     try {
@@ -162,7 +169,8 @@ export const AuthProvider = ({ children }) => {
       changePassword,
       sendOTP, 
       verifyOTP, 
-      refreshUser: fetchProfile 
+      refreshUser: fetchProfile,
+      applyUser
     }}>
       {children}
     </AuthContext.Provider>);

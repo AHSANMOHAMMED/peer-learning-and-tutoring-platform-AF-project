@@ -108,6 +108,8 @@ function App() {
           
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><UserManagement /></ProtectedRoute>} />
+          <Route path="/admin/students" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><UserManagement defaultRole="student" title="Student Management" description="View and manage registered student accounts." /></ProtectedRoute>} />
+          <Route path="/admin/tutors" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminApprovals showAll /></ProtectedRoute>} />
           <Route path="/admin/approvals" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminApprovals /></ProtectedRoute>} />
           <Route path="/admin/games" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><AdminGameManagement /></ProtectedRoute>} />
           <Route path="/admin/parent-links" element={<ProtectedRoute allowedRoles={['admin', 'websiteAdmin', 'superadmin']}><ParentLinkManager /></ProtectedRoute>} />

@@ -33,7 +33,7 @@ import { cn } from '../utils/cn';
 import { useAuth } from '../controllers/useAuth';
 import { useFeatureFlags } from '../controllers/useFeatureFlags';
 import { toast } from 'react-hot-toast';
-import { featureFlagApi, systemApi, adminApi } from '../services/api';
+import { systemApi, adminApi } from '../services/api';
 
 const AdminSettings = () => {
   const { user: currentUser } = useAuth();
@@ -138,8 +138,9 @@ const AdminSettings = () => {
     }
     setFetching(true);
     try {
-      const { data } = await adminApi.broadcastNotification(broadcastData);      addLog(`Global broadcast dispatched: ${broadcastData.targetRole}`, 'NOTIF');
-      toast.success(data.message);
+      const response = await adminApi.broadcastNotification(broadcastData);
+      addLog(`Global broadcast dispatched: ${broadcastData.targetRole}`, 'NOTIF');
+      toast.success(response.message || 'Broadcast dispatched');
       setBroadcastData({ ...broadcastData, message: '', title: '' });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to dispatch broadcast');
@@ -152,8 +153,8 @@ const AdminSettings = () => {
     if (!window.confirm('WARNING: Rotating access keys may cause temporary API disruptions. Proceed?')) return;
     setFetching(true);
     try {
-      const { data } =       await adminApi.rotateAccessKeys();
-      addLog(`Security credentials rotated: ID ${data.data.keyPairId}`, 'SECURE');
+      const response = await adminApi.rotateAccessKeys();
+      addLog(`Security credentials rotated: ID ${response.data?.keyPairId || 'ROTATED'}`, 'SECURE');
       toast.success('Platform access keys rotated and distributed');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to rotate security credentials');
@@ -164,11 +165,23 @@ const AdminSettings = () => {
 
   const seedDefaultFlags = async () => {
     try {
-      await createFlag({ key: 'main_maintenance', name: 'Maintenance Mode', description: 'Suspend all public platform operations', enabled: false });
-      await createFlag({ key: 'beta_features', name: 'Beta Features', description: 'Enable experimental modules for selected users', enabled: false });
-      await createFlag({ key: '2fa_enforce', name: 'Enforce MFA', description: 'Mandatory two-factor authentication for all staff', enabled: true });
-      await createFlag({ key: 'registration_gate', name: 'Registration Lock', description: 'Halt all new user account creation', enabled: false });
-      fetchFlags();
+      const defaults = [
+        { key: 'main_maintenance', name: 'Maintenance Mode', description: 'Suspend all public platform operations', enabled: false },
+        { key: 'beta_features', name: 'Beta Features', description: 'Enable experimental modules for selected users', enabled: false },
+        { key: '2fa_enforce', name: 'Enforce MFA', description: 'Mandatory two-factor authentication for all staff', enabled: true },
+        { key: 'registration_gate', name: 'Registration Lock', description: 'Halt all new user account creation', enabled: false }
+      ];
+
+      for (const flag of defaults) {
+        try {
+          await createFlag(flag);
+        } catch (err) {
+          if (err.response?.status !== 409 && !err.response?.data?.message?.toLowerCase().includes('duplicate')) {
+            throw err;
+          }
+        }
+      }
+      await fetchFlags();
       addLog('Default infrastructure flags provisioned', 'SYSTEM');
       toast.success('Core configurations deployed');
     } catch (err) {

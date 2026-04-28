@@ -4,7 +4,7 @@ const materialSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   description: { type: String, required: true },
   fileUrl: { type: String, required: true },
-  fileType: { type: String, enum: ['pdf', 'docx', 'ppt', 'txt'], required: true },
+  fileType: { type: String, enum: ['pdf', 'docx', 'ppt', 'txt', 'image', 'jpg', 'jpeg', 'png', 'application/pdf', 'image/jpeg', 'image/png'], required: true },
   uploaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   subject: { 
     type: String, 
@@ -17,6 +17,10 @@ const materialSchema = new mongoose.Schema({
       'Arts Stream', 
       'Technology Stream', 
       'O/L General',
+      'Mathematics',
+      'Science',
+      'ICT',
+      'Accounting',
       'Other'
     ]
   },

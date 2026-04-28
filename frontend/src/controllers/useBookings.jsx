@@ -1,6 +1,14 @@
 import { useState, useCallback } from 'react';
 import { bookingApi } from '../services/api';
 
+const normalizeBookings = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.bookings)) return response.bookings;
+  if (Array.isArray(response?.data?.bookings)) return response.data.bookings;
+  if (Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
 export const useBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,11 +19,13 @@ export const useBookings = () => {
     setError(null);
     try {
       const data = await bookingApi.getAll();
-      setBookings(data || []);
-      return data;
+      const normalized = normalizeBookings(data);
+      setBookings(normalized);
+      return normalized;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch bookings');
-      throw err;
+      setBookings([]);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -26,7 +36,8 @@ export const useBookings = () => {
     setError(null);
     try {
       const data = await bookingApi.create(bookingData);
-      setBookings((prev) => [...prev, data]);
+      const created = data?.data || data;
+      setBookings((prev) => [...prev, created]);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create booking');
@@ -41,7 +52,8 @@ export const useBookings = () => {
     setError(null);
     try {
       const data = await bookingApi.updateStatus(id, { status });
-      setBookings((prev) => prev.map((b) => b._id === id ? data : b));
+      const updated = data?.data || data;
+      setBookings((prev) => prev.map((b) => b._id === id ? updated : b));
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update booking status');

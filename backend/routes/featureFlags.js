@@ -3,6 +3,8 @@ const router = express.Router();
 const FeatureFlagService = require('../services/FeatureFlagService');
 const { authenticate } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
+const ADMIN_ROLES = ['admin', 'websiteAdmin', 'superadmin'];
+const CONFIG_ROLES = [...ADMIN_ROLES, 'moderator'];
 
 /**
  * @route   GET /api/feature-flags
@@ -11,7 +13,7 @@ const { body, validationResult } = require('express-validator');
  */
 router.get('/', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
+    if (!CONFIG_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -68,7 +70,7 @@ router.get('/my-flags', authenticate, async (req, res) => {
  */
 router.get('/:key', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
+    if (!CONFIG_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -115,7 +117,7 @@ router.post('/', [
   body('targeting').optional().isObject()
 ], async (req, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user.role)) {
+    if (!ADMIN_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -141,6 +143,12 @@ router.post('/', [
 
   } catch (error) {
     console.error('Error creating feature flag:', error);
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'Feature flag key already exists'
+      });
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to create feature flag',
@@ -156,7 +164,7 @@ router.post('/', [
  */
 router.put('/:id', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user.role)) {
+    if (!ADMIN_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -189,7 +197,7 @@ router.put('/:id', authenticate, async (req, res) => {
  */
 router.post('/:id/toggle', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
+    if (!CONFIG_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -222,7 +230,7 @@ router.post('/:id/toggle', authenticate, async (req, res) => {
  */
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user.role)) {
+    if (!ADMIN_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -254,7 +262,7 @@ router.delete('/:id', authenticate, async (req, res) => {
  */
 router.get('/:id/analytics', authenticate, async (req, res) => {
   try {
-    if (!['admin', 'superadmin', 'moderator'].includes(req.user.role)) {
+    if (!CONFIG_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'

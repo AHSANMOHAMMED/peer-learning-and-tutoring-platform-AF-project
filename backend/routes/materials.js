@@ -20,16 +20,6 @@ router.use(protect);
 // Material Browse
 router.get('/', getMaterials);
 router.get('/my', getMyMaterials);
-router.get('/:id', getMaterialById);
-
-// Material Actions
-router.post('/', uploadMaterial);
-router.put('/:id', updateMaterial);
-router.delete('/:id', deleteMaterial);
-router.post('/:id/purchase', purchaseMaterial);
-
-// Admin/Moderator
-router.put('/:id/moderate', authorize('admin', 'moderator', 'superadmin'), moderateMaterial);
 
 // Dedicated Upload for Material Files
 router.post('/upload', upload.array('files', 1), async (req, res) => {
@@ -53,5 +43,15 @@ router.post('/upload', upload.array('files', 1), async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// Material Actions
+router.post('/', uploadMaterial);
+router.get('/:id', getMaterialById);
+router.put('/:id', updateMaterial);
+router.delete('/:id', deleteMaterial);
+router.post('/:id/purchase', purchaseMaterial);
+
+// Admin/Moderator
+router.put('/:id/moderate', authorize('admin', 'moderator', 'superadmin'), moderateMaterial);
 
 module.exports = router;

@@ -22,7 +22,7 @@ router.get('/verify/:code', getSchoolByCode);
  * @desc    Get all schools
  * @access  Private (Admin/SuperAdmin)
  */
-router.get('/', authenticate, authorize(['superadmin', 'websiteAdmin']), getAllSchools);
+router.get('/', authenticate, authorize(['admin', 'superadmin', 'websiteAdmin']), getAllSchools);
 
 /**
  * @route   GET /api/schools/:id

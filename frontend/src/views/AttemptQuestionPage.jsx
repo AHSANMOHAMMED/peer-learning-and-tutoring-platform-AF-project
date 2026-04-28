@@ -41,8 +41,9 @@ const AttemptQuestionPage = () => {
   const fetchQuestion = async () => {
     try {
       const res = await qaApi.getById(id);
-      if (res.data.success) {
-        setQuestion(res.data.data);
+      const payload = res?.data || res;
+      if (payload?.success) {
+        setQuestion(payload.data);
       }
     } catch (error) {
       console.error('Error fetching question:', error);
@@ -68,15 +69,15 @@ const AttemptQuestionPage = () => {
          subject: question.subject,
          grade: question.grade,
          type: question.type,
+         body: finalAnswer,
          answer: finalAnswer,
          points: question.points
        });
 
-      if (res.data.success) {
-        setResult(res.data.data);
-        setIsSubmitted(true);
-        toast.success('Response Submitted');
-      }
+      const payload = res?.data || res;
+      setResult(payload?.data || payload);
+      setIsSubmitted(true);
+      toast.success('Response Submitted');
     } catch (error) {
       console.error('Error submitting answer:', error);
       toast.error('Failed to submit answer');

@@ -50,6 +50,7 @@ router.get('/', getTutors);
  *       - bearerAuth: []
  */
 router.get('/all', authenticate, authorize('admin', 'websiteAdmin', 'superadmin'), getAllTutors);
+router.get('/user/:userId', getTutorByUserId);
 
 /**
  * @swagger
@@ -69,7 +70,6 @@ router.get('/all', authenticate, authorize('admin', 'websiteAdmin', 'superadmin'
  */
 router.get('/:id', getTutorProfile);
 router.put('/:id', authenticate, authorize(['tutor', 'mentor', 'schoolMentor', 'admin', 'websiteAdmin', 'superadmin']), updateTutorProfile);
-router.get('/user/:userId', getTutorByUserId);
 
 /**
  * @swagger

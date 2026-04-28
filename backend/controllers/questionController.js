@@ -13,6 +13,32 @@ const SRI_LANKAN_SUBJECTS = {
   elective: ['ICT', 'Business & Accounting Studies', 'Agriculture', 'Aesthetic Studies']
 };
 
+const attachAnswers = async (questions) => {
+  const questionIds = questions.map((question) => question._id);
+  const answers = await Answer.find({ question: { $in: questionIds } })
+    .sort({ createdAt: 1 })
+    .populate('author', 'username profile.firstName profile.lastName profile.avatar');
+
+  const answersByQuestion = answers.reduce((acc, answer) => {
+    const key = answer.question.toString();
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(answer);
+    return acc;
+  }, {});
+
+  return questions.map((question) => {
+    const plainQuestion = question.toObject ? question.toObject() : question;
+    const questionAnswers = answersByQuestion[plainQuestion._id.toString()] || [];
+
+    return {
+      ...plainQuestion,
+      answers: questionAnswers,
+      answerCount: questionAnswers.length || plainQuestion.answerCount || 0,
+      hasAcceptedAnswer: questionAnswers.some((answer) => answer.isAccepted) || plainQuestion.hasAcceptedAnswer
+    };
+  });
+};
+
 // Get all questions with pagination and filtering by grade and subject
 const getQuestions = async (req, res) => {
   try {
@@ -24,7 +50,8 @@ const getQuestions = async (req, res) => {
       tags = '',
       sortBy = 'newest',
       search = '',
-      category = 'all'
+      category = 'all',
+      unanswered
     } = req.query;
 
     const options = {
@@ -32,6 +59,14 @@ const getQuestions = async (req, res) => {
       limit: parseInt(limit),
       sortBy
     };
+
+    const baseQuery = { isClosed: false };
+    if (unanswered === 'true') {
+      baseQuery.answerCount = 0;
+    }
+    if (category !== 'all') {
+      baseQuery.category = category;
+    }
 
     let questions;
 
@@ -45,22 +80,19 @@ const getQuestions = async (req, res) => {
       });
     } else if (subject === 'all' && grade === 'all') {
       // Get all questions
-      questions = await Question.find({ isClosed: false })
+      questions = await Question.find(baseQuery)
         .sort({ createdAt: -1 })
         .skip((parseInt(page) - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     } else {
       // Filter by grade and/or subject
-      const query = { isClosed: false };
+      const query = { ...baseQuery };
       if (subject !== 'all') {
         query.subject = subject;
       }
       if (grade !== 'all') {
         query.grade = parseInt(grade);
-      }
-      if (req.query.unanswered === 'true') {
-        query.answerCount = 0;
       }
       if (tags) {
         const tagArray = tags.split(',').map(tag => tag.trim());
@@ -92,12 +124,11 @@ const getQuestions = async (req, res) => {
         .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
     }
 
-    const total = await Question.countDocuments(
-      search ? {} : { isClosed: false, ...(category !== 'all' && { category }) }
-    );
+    const total = await Question.countDocuments(search ? {} : baseQuery);
+    const enrichedQuestions = await attachAnswers(questions);
 
     res.json({
-      questions,
+      questions: enrichedQuestions,
       pagination: {
         current: parseInt(page),
         total: Math.ceil(total / parseInt(limit)),
@@ -109,6 +140,25 @@ const getQuestions = async (req, res) => {
   } catch (error) {
     console.error('Error in getQuestions:', error);
     res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+};
+
+// Get questions asked by the logged-in student with tutor answers attached
+const getMyQuestions = async (req, res) => {
+  try {
+    const questions = await Question.find({ author: req.user._id, isClosed: false })
+      .sort({ createdAt: -1 })
+      .populate('author', 'username profile.firstName profile.lastName profile.avatar reputation');
+
+    const enrichedQuestions = await attachAnswers(questions);
+
+    res.json({
+      questions: enrichedQuestions,
+      data: enrichedQuestions
+    });
+  } catch (error) {
+    console.error('Error in getMyQuestions:', error);
+    res.status(500).json({ error: 'Failed to fetch your questions' });
   }
 };
 
@@ -510,6 +560,7 @@ const getTutorChallenges = async (req, res) => {
 
 module.exports = {
   getQuestions,
+  getMyQuestions,
   getQuestionById,
   createQuestion,
   getSubjectsByGrade,

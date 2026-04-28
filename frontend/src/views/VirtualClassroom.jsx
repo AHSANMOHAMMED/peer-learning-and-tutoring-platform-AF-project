@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
@@ -12,12 +12,11 @@ import {
 import { cn } from '../utils/cn';
 import { aiApi } from '../services/api';
 import { useAuth } from '../controllers/useAuth';
-import DailyIframe from '@daily-co/daily-js';
 import { Excalidraw } from "@excalidraw/excalidraw";
+import JitsiContainer from '../components/JitsiMeeting';
 
 const VirtualClassroom = ({
   roomId = 'Session-01',
-  roomUrl = 'https://aura-learning.daily.co/demo-room', // Placeholder, should be dynamic
   participants = [
     { id: '1', name: 'Kasun P.', color: '#6366f1' },
     { id: '2', name: 'Tharushi S.', color: '#10b981' }
@@ -27,52 +26,22 @@ const VirtualClassroom = ({
 }) => {
   const { user } = useAuth();
   const containerRef = useRef(null);
-  const videoContainerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('video'); // 'video', 'whiteboard', '3d'
-  const [callFrame, setCallFrame] = useState(null);
   const [isCapturingAI, setIsCapturingAI] = useState(false);
   const [aiExplanation, setAiExplanation] = useState(null);
   const [showAIResult, setShowAIResult] = useState(false);
-  const [excalidrawAPI, setExcalidrawAPI] = useState(null);
+  const jitsiRoomName = useMemo(() => {
+    const normalizedRoomId = String(roomId || 'session-default')
+      .trim()
+      .replace(/[^a-zA-Z0-9-_]/g, '-');
+    return `Aura-${normalizedRoomId}`;
+  }, [roomId]);
+  const displayName = user?.profile?.firstName || user?.username || 'Guest';
   
   // 3D Refs
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const controlsRef = useRef(null);
-
-  // Initialize Daily.co
-  useEffect(() => {
-    if (activeTab === 'video' && videoContainerRef.current && !callFrame) {
-      const frame = DailyIframe.createFrame(videoContainerRef.current, {
-        iframeStyle: {
-          width: '100%',
-          height: '100%',
-          border: '0',
-          borderRadius: '1.5rem',
-        },
-        showLeaveButton: true,
-        showFullscreenButton: true,
-        userName: user?.profile?.firstName || user?.username || 'Guest',
-      });
-      
-      frame.join({ url: roomUrl });
-      setCallFrame(frame);
-
-      // Setup App Message Listener for Whiteboard Sync
-      frame.on('app-message', (evt) => {
-        if (evt.data.type === 'whiteboard-sync' && excalidrawAPI) {
-          excalidrawAPI.updateScene({ elements: evt.data.elements });
-        }
-      });
-    }
-    
-    return () => {
-      if (callFrame) {
-        callFrame.destroy();
-        setCallFrame(null);
-      }
-    };
-  }, [activeTab, roomUrl, user, excalidrawAPI]);
 
   // Initialize 3D Scene (Only if tab is 3D)
   useEffect(() => {
@@ -132,7 +101,7 @@ const VirtualClassroom = ({
   const captureAndExplain = async () => {
     setIsCapturingAI(true);
     try {
-      // Mock logic for now as canvas capture from Daily/Excalidraw needs specialized handling
+      // Mock logic for now as canvas capture from Jitsi/Excalidraw needs specialized handling
       const response = await aiApi.homeworkHelp({ 
         subject: 'General', 
         grade: '10', 
@@ -209,7 +178,11 @@ const VirtualClassroom = ({
         {/* Video View */}
         {activeTab === 'video' && (
           <div className="absolute inset-0 p-4">
-            <div ref={videoContainerRef} className="w-full h-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-800" />
+            <JitsiContainer
+              roomName={jitsiRoomName}
+              displayName={displayName}
+              className="min-h-0 rounded-2xl border border-slate-800"
+            />
           </div>
         )}
 
@@ -218,15 +191,9 @@ const VirtualClassroom = ({
           <div className="absolute inset-0 p-4">
             <div className="w-full h-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
                <Excalidraw 
-                 excalidrawAPI={(api) => setExcalidrawAPI(api)}
                  theme="light"
                  initialData={{
                     appState: { viewBackgroundColor: "#ffffff", currentItemFontFamily: 1 }
-                 }}
-                 onChange={(elements, appState) => {
-                   if (callFrame && elements.length > 0) {
-                     callFrame.sendAppMessage({ type: 'whiteboard-sync', elements }, '*');
-                   }
                  }}
                />
             </div>

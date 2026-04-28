@@ -23,7 +23,7 @@ import { useTutors } from '../controllers/useTutors';
 import { cn } from '../utils/cn';
 import { toast } from 'react-hot-toast';
 
-const AdminApprovals = () => {
+const AdminApprovals = ({ showAll = false }) => {
   const { user: currentUser } = useAuth();
   const { tutors, fetchAllTutors, moderateTutor } = useTutors();
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,8 +33,8 @@ const AdminApprovals = () => {
     fetchAllTutors();
   }, [fetchAllTutors]);
 
-  const pendingTutors = tutors.filter(t => 
-    t.verificationStatus === 'pending' || t.verificationStatus === 'rejected'
+  const visibleTutors = tutors.filter(t => 
+    showAll || t.verificationStatus === 'pending' || t.verificationStatus === 'rejected'
   ).filter(t => 
     t.userId?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -53,8 +53,13 @@ const AdminApprovals = () => {
   const calculateTrustScore = (tutor) => {
     let score = 70; 
     if (tutor.bio?.length > 100) score += 10;
-    if (tutor.education?.some(e => e.includes('University'))) score += 15;
-    if (tutor.experience?.length > 2) score += 5;
+    if (tutor.education?.some((entry) => {
+      if (typeof entry === 'string') return entry.includes('University');
+      return [entry?.institution, entry?.university, entry?.degree]
+        .filter(Boolean)
+        .some((value) => value.includes('University'));
+    })) score += 15;
+    if (Number(tutor.experience) > 2) score += 5;
     return Math.min(100, score);
   };
 
@@ -104,15 +109,15 @@ const AdminApprovals = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
             <div>
-              <h1 className="text-4xl font-black text-slate-800 tracking-tight">Tutor Applications</h1>
-              <p className="text-slate-500 font-medium mt-2">Review, trust-verify, and approve incoming tutor registration requests.</p>
+              <h1 className="text-4xl font-black text-slate-800 tracking-tight">{showAll ? 'Tutor Management' : 'Tutor Applications'}</h1>
+              <p className="text-slate-500 font-medium mt-2">{showAll ? 'View tutor profiles, verification status, and application details.' : 'Review, trust-verify, and approve incoming tutor registration requests.'}</p>
             </div>
             <div className="flex items-center gap-4">
                <div className="relative group">
                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                  <input
                    type="text"
-                   placeholder="Search applications..."
+                   placeholder={showAll ? 'Search tutors...' : 'Search applications...'}
                    value={searchTerm}
                    onChange={(e) => setSearchTerm(e.target.value)}
                    className="pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm w-64 md:w-80 transition-all font-medium text-slate-700"
@@ -128,15 +133,15 @@ const AdminApprovals = () => {
                <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm flex-1">
                   <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
                      <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-3">
-                       <ShieldCheck className="text-indigo-500" /> Pending Queue
+                       <ShieldCheck className="text-indigo-500" /> {showAll ? 'Tutor Directory' : 'Pending Queue'}
                      </h3>
                      <span className="px-4 py-1.5 bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-widest rounded-lg">
-                       {pendingTutors.length} Total
+                       {visibleTutors.length} Total
                      </span>
                   </div>
 
                   <AnimatePresence>
-                     {pendingTutors.map((tutor) => (
+                     {visibleTutors.map((tutor) => (
                        <motion.div 
                           key={tutor._id}
                           layout
@@ -159,7 +164,14 @@ const AdminApprovals = () => {
                                 <div>
                                    <div className="flex items-center gap-3 mb-1">
                                       <h4 className="text-lg font-bold text-slate-800">{tutor.userId?.username}</h4>
-                                      {tutor.verificationStatus === 'rejected' && <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-[10px] font-bold rounded-lg uppercase">Denied</span>}
+                                      <span className={cn(
+                                        "px-2 py-0.5 text-[10px] font-bold rounded-lg uppercase",
+                                        tutor.verificationStatus === 'approved' && "bg-emerald-100 text-emerald-600",
+                                        tutor.verificationStatus === 'pending' && "bg-amber-100 text-amber-600",
+                                        tutor.verificationStatus === 'rejected' && "bg-rose-100 text-rose-600"
+                                      )}>
+                                        {tutor.verificationStatus || 'not_created'}
+                                      </span>
                                    </div>
                                    <p className="text-sm text-slate-500 font-medium flex items-center gap-2">
                                       {tutor.userId?.email} • <MapPin size={12}/> {tutor.location || 'Local'}
@@ -179,12 +191,12 @@ const AdminApprovals = () => {
                      ))}
                   </AnimatePresence>
 
-                  {pendingTutors.length === 0 && (
+                  {visibleTutors.length === 0 && (
                      <div className="py-24 text-center">
                         <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                            <BadgeCheck size={32} className="text-slate-300" />
                         </div>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">No Pending Applications</p>
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">{showAll ? 'No Tutors Found' : 'No Pending Applications'}</p>
                      </div>
                   )}
                </div>
@@ -247,6 +259,7 @@ const AdminApprovals = () => {
                         </div>
 
                         {/* Action Buttons */}
+                        {selectedTutor.verificationStatus !== 'approved' && (
                         <div className="mt-8 flex gap-3">
                            <button 
                              onClick={() => handleAction(selectedTutor._id, 'rejected')}
@@ -261,6 +274,7 @@ const AdminApprovals = () => {
                               <CheckCircle2 size={16} /> Approve
                            </button>
                         </div>
+                        )}
                      </motion.div>
                   )}
                </div>

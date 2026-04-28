@@ -8,12 +8,12 @@ import { motion } from 'framer-motion';
 
 
 
-const JitsiContainer = ({ roomName, displayName, onReady }) => {
+const JitsiContainer = ({ roomName, displayName, onReady, className = '' }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="w-full h-full min-h-[600px] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative">
+      className={`w-full h-full min-h-[600px] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl relative ${className}`}>
       
       <JitsiMeeting
         domain="meet.jit.si"
@@ -35,6 +35,8 @@ const JitsiContainer = ({ roomName, displayName, onReady }) => {
           'raisehand',
           'recording',
           'select-background',
+          'settings',
+          'participants-pane',
           'tileview',
           'videoquality',
           'whiteboard']
@@ -42,12 +44,15 @@ const JitsiContainer = ({ roomName, displayName, onReady }) => {
         }}
         interfaceConfigOverwrite={{
           DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+          APP_NAME: 'Aura Classroom',
+          NATIVE_APP_NAME: 'Aura Classroom',
+          PROVIDER_NAME: 'Aura',
           SHOW_JITSI_WATERMARK: false,
           SHOW_WATERMARK_FOR_GUESTS: false
         }}
         userInfo={{
           displayName: displayName,
-          email: `${displayName.toLowerCase().replace(/\s+/g, '.')}@peerlearn.com`
+          email: `${(displayName || 'guest').toLowerCase().replace(/\s+/g, '.')}@peerlearn.com`
         }}
         onApiReady={(externalApi) => {
           onReady?.();

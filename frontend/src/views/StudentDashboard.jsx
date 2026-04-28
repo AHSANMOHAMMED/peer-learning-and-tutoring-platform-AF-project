@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Calendar, ChevronRight, CheckCircle2, Clock, Flame, Percent, Sparkles, BookOpen, Users, Zap, ArrowRight, ShieldCheck, Gamepad2, MessageSquare, Megaphone } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
-import Layout from '../components/Layout';
+import DashboardShell from '../components/ui/DashboardShell';
+import MetricCard from '../components/ui/MetricCard';
+import ActionPanel from '../components/ui/ActionPanel';
 import { useAuth } from '../controllers/useAuth';
 import { useTutors } from '../controllers/useTutors';
 import { useBookings } from '../controllers/useBookings';
@@ -245,60 +247,48 @@ const StudentDashboard = () => {
   ];
 
   return (
-    <Layout userRole="student">
-      <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 font-sans">
-        
-        {/* Header Region */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col xl:flex-row xl:items-end justify-between gap-8 mb-10"
-        >
-           <div className="flex-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider mb-3">
-                <Sparkles size={14} /> Student Dashboard
-              </div>
-              <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-3">
-                Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">{user?.profile?.firstName || user?.username || 'Learner'}</span>!
-              </h1>
-              <div className="flex items-center gap-4">
-                 <div className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-full text-[12px] font-bold uppercase tracking-widest shadow-xl shadow-indigo-200/50 transition-transform hover:scale-105 cursor-default">
-                    Level {stats.level}: {stats.levelTitle}
-                 </div>
-                 <p className="text-slate-500 text-[15px] font-medium border-l-2 border-slate-200 pl-4 py-1">
-                    Ready to achieve your goals?
-                 </p>
-                 <Link to="/profile" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors ml-2">
-                    View Profile
-                 </Link>
-              </div>
-           </div>
-           
-           <div className="flex flex-wrap items-center gap-5">
-              {[
-                { label: 'Current Streak', value: stats.streakDays, sub: 'Day Streak', icon: <Flame size={18} />, color: 'orange', border: 'border-orange-400' },
-                { label: 'Merit Points', value: stats.points.toLocaleString(), sub: 'Lifetime', icon: <Sparkles size={18} />, color: 'indigo', border: 'border-indigo-500' },
-                { label: 'Global Rank', value: `#${gamificationProfile?.ranking?.global || '--'}`, sub: 'Overall', icon: <Users size={18} />, color: 'emerald', border: 'border-emerald-500' }
-              ].map((stat, idx) => (
-                <motion.div 
-                  key={idx}
-                  whileHover={{ y: -5 }}
-                  className={`bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-2xl shadow-slate-200/50 min-w-[180px] border-b-4 ${stat.border} border-l border-t border-r border-slate-50 relative overflow-hidden`}
-                >
-                  <div className="flex justify-between items-center mb-3 relative z-10">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{stat.label}</p>
-                    <div className={`p-2 bg-${stat.color}-50 text-${stat.color}-500 rounded-xl`}>{stat.icon}</div>
-                  </div>
-                  <div className="flex items-baseline justify-between relative z-10">
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</h3>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{stat.sub}</span>
-                  </div>
-                  <div className={`absolute -right-2 -bottom-2 opacity-[0.03] text-slate-900`}>{stat.icon}</div>
-                </motion.div>
-              ))}
-           </div>
-        </motion.div>
-
+    <DashboardShell 
+      userRole="student"
+      title={`Welcome back, ${user?.profile?.firstName || user?.username || 'Learner'}!`}
+      subtitle={
+        <div className="flex items-center gap-4 mt-3">
+          <div className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-full text-[12px] font-bold uppercase tracking-widest shadow-xl shadow-indigo-200/50 transition-transform hover:scale-105 cursor-default">
+            Level {stats.level}: {stats.levelTitle}
+          </div>
+          <p className="text-slate-500 text-[15px] font-medium border-l-2 border-slate-200 pl-4 py-1">
+            Ready to achieve your goals?
+          </p>
+          <Link to="/profile" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors ml-2">
+            View Profile
+          </Link>
+        </div>
+      }
+      headerActions={
+        <>
+          <MetricCard 
+            label="Current Streak" 
+            value={stats.streakDays} 
+            subtext="Day Streak" 
+            icon={<Flame size={18} />} 
+            color="orange" 
+          />
+          <MetricCard 
+            label="Merit Points" 
+            value={stats.points.toLocaleString()} 
+            subtext="Lifetime" 
+            icon={<Sparkles size={18} />} 
+            color="indigo" 
+          />
+          <MetricCard 
+            label="Global Rank" 
+            value={`#${gamificationProfile?.ranking?.global || '--'}`} 
+            subtext="Overall" 
+            icon={<Users size={18} />} 
+            color="emerald" 
+          />
+        </>
+      }
+    >
          {/* Announcements Section */}
          <AnimatePresence>
            {announcements.length > 0 && (
@@ -598,18 +588,13 @@ const StudentDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
            
            {/* Upcoming Sessions */}
-           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200/30 border border-white"
+           <ActionPanel 
+            title="Schedule" 
+            actionLink="/bookings" 
+            actionText="View All"
+            delay={0.3}
+            className="h-full"
            >
-              <div className="flex justify-between items-center mb-8">
-                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Schedule</h2>
-                 <Link to="/bookings" className="group flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors bg-indigo-50 px-4 py-2 rounded-xl">
-                    View All <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                 </Link>
-              </div>
               <div className="space-y-4">
                  {upcomingBookings.length > 0 ? upcomingBookings.map((b, i) => (
                     <motion.div 
@@ -670,7 +655,7 @@ const StudentDashboard = () => {
                     </div>
                  )}
               </div>
-           </motion.div>
+           </ActionPanel>
 
             {/* Knowledge Challenges (Tutor Posted) */}
             <motion.div 
@@ -1043,8 +1028,7 @@ const StudentDashboard = () => {
               </motion.div>
            </div>
         )}
-      </div>
-    </Layout>
+    </DashboardShell>
   );
 };
 

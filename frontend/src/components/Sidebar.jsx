@@ -40,8 +40,8 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
     ];
 
     switch (role) {
-      case 'admin':
       case 'websiteAdmin':
+      case 'admin':
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
@@ -95,7 +95,6 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
             { title: 'Moderation Hub', icon: FileText, path: '/moderation' },
-            { title: 'User Management', icon: Users, path: '/admin/users' },
             { title: 'My Profile', icon: User, path: '/profile' },
           ],
           settings: settingsNav
@@ -104,11 +103,11 @@ const Sidebar = ({ role: defaultRole = 'student', isOpen, onClose }) => {
         return {
           main: [
             { title: 'Dashboard', icon: LayoutDashboard, path: '/school-dashboard' },
-            { title: 'Student Management', icon: Users, path: '/admin/users' },
             { title: 'My Profile', icon: User, path: '/profile' },
           ],
           settings: settingsNav
         };
+      case 'demo':
       default: // student
         return {
           main: [

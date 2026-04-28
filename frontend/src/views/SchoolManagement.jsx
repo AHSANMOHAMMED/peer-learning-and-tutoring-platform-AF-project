@@ -21,7 +21,8 @@ import {
   Trash2,
   RefreshCw
 } from 'lucide-react';
-import Layout from '../components/Layout';
+import DashboardShell from '../components/ui/DashboardShell';
+import MetricCard from '../components/ui/MetricCard';
 import { cn } from '../utils/cn';
 import { useSchools } from '../controllers/useSchools';
 import { useAuth } from '../controllers/useAuth';
@@ -96,64 +97,54 @@ const SchoolManagement = () => {
   };
 
   return (
-    <Layout userRole={user?.role || 'schoolAdmin'}>
-      <div className="min-h-screen bg-[#fafafc] p-6 md:p-8 font-sans">
-        
+    <DashboardShell 
+      userRole={user?.role || 'schoolAdmin'}
+      title="School Management"
+      subtitle="Manage and monitor all educational institutions across the platform."
+      headerActions={
+        <div className="flex flex-wrap items-center gap-4">
+           <div className="relative">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search institutions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 shadow-sm"
+              />
+           </div>
+           <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-5 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md border border-indigo-700 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+           >
+              <Plus size={18} /> Provision Institution
+           </button>
+        </div>
+      }
+    >
+      <div className="w-full font-sans pb-12">
         <motion.div 
-          className="max-w-[1400px] mx-auto space-y-8"
+          className="space-y-8"
           variants={containerVariants}
           initial="hidden" animate="visible"
         >
-           {/* Header Section */}
-           <motion.div variants={itemVariants} className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-              <div>
-                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase tracking-widest border border-indigo-100 mb-4">
-                    <Building2 size={14} /> Institutional Registry
-                 </div>
-                 <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight leading-none mb-2">
-                    School <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-blue-600">Management</span>
-                 </h1>
-                 <p className="text-slate-500 font-medium">Manage and monitor all educational institutions across the platform.</p>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-4">
-                 <div className="relative">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="Search institutions..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 shadow-sm"
-                    />
-                 </div>
-                 <button 
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="px-5 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md border border-indigo-700 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
-                 >
-                    <Plus size={18} /> Provision Institution
-                 </button>
-              </div>
-           </motion.div>
 
            {/* Metrics Grid */}
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: Users, label: 'Registered Institutions', val: schools.length, delta: 'Total active', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                { icon: ShieldCheck, label: 'System Health', val: 'Operational', delta: 'All clusters up', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { icon: Activity, label: 'Active Students', val: schools.reduce((acc, s) => acc + (s.stats?.totalStudents || 0), 0), delta: 'Cross-institutional', color: 'text-blue-600', bg: 'bg-blue-50' },
-                { icon: Layers, label: 'Platform Load', val: 'Low', delta: 'Optimized performance', color: 'text-rose-600', bg: 'bg-rose-50' }
+                { icon: Users, label: 'Registered Institutions', val: schools.length, delta: 'Total active', color: 'indigo' },
+                { icon: ShieldCheck, label: 'System Health', val: 'Operational', delta: 'All clusters up', color: 'emerald' },
+                { icon: Activity, label: 'Active Students', val: schools.reduce((acc, s) => acc + (s.stats?.totalStudents || 0), 0), delta: 'Cross-institutional', color: 'blue' },
+                { icon: Layers, label: 'Platform Load', val: 'Low', delta: 'Optimized performance', color: 'rose' }
               ].map((stat, i) => (
-                 <motion.div key={i} variants={itemVariants} className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                       <div className={cn("p-3 rounded-2xl", stat.bg, stat.color)}>
-                          <stat.icon size={24} />
-                       </div>
-                    </div>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-2">{stat.label}</p>
-                    <h4 className="text-3xl font-black text-slate-800 tracking-tight leading-none mb-3">{stat.val}</h4>
-                    <p className="text-xs font-bold text-slate-400">{stat.delta}</p>
-                 </motion.div>
+                 <MetricCard 
+                    key={i}
+                    label={stat.label}
+                    value={stat.val}
+                    subtext={stat.delta}
+                    icon={<stat.icon size={18} />}
+                    color={stat.color}
+                 />
               ))}
            </div>
 
@@ -349,7 +340,7 @@ const SchoolManagement = () => {
             )}
          </AnimatePresence>
       </div>
-    </Layout>
+    </DashboardShell>
   );
 };
 

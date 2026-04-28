@@ -22,14 +22,14 @@ router.get('/verify/:code', getSchoolByCode);
  * @desc    Get all schools
  * @access  Private (Admin/SuperAdmin)
  */
-router.get('/', authenticate, authorize(['admin', 'superadmin', 'websiteAdmin']), getAllSchools);
+router.get('/', authenticate, authorize(['superadmin', 'websiteAdmin']), getAllSchools);
 
 /**
  * @route   GET /api/schools/:id
  * @desc    Get school by ID
  * @access  Private (Admin/SuperAdmin/SchoolAdmin)
  */
-router.get('/:id', authenticate, authorize(['admin', 'superadmin', 'schoolAdmin']), getSchoolById);
+router.get('/:id', authenticate, authorize(['superadmin', 'websiteAdmin', 'schoolAdmin']), getSchoolById);
 
 /**
  * @route   POST /api/schools

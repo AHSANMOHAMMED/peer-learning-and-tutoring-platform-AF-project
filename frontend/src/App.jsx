@@ -55,6 +55,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 const DashboardRedirect = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
+  
   const defaultRoute = getDefaultRouteForUser(user);
   if (defaultRoute !== '/dashboard') {
     return <Navigate to={defaultRoute} replace />;

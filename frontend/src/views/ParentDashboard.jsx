@@ -11,7 +11,8 @@ import {
 } from 'recharts';
 import { toast } from 'react-hot-toast';
 
-import Layout from '../components/Layout';
+import DashboardShell from '../components/ui/DashboardShell';
+import MetricCard from '../components/ui/MetricCard';
 import { useAuth } from '../controllers/useAuth';
 import { parentApi } from '../services/api';
 import { cn } from '../utils/cn';
@@ -113,30 +114,24 @@ const ParentDashboard = () => {
   ];
 
   return (
-    <Layout userRole="parent">
-      <div className="max-w-[1400px] mx-auto w-full font-sans">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
-           <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold uppercase tracking-wider mb-3">
-                <Shield size={14} /> Parent Guardian Space
-              </div>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">
-                Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">{user?.profile?.firstName || user?.username}</span>
-              </h1>
-              <p className="text-slate-500 font-medium text-sm">Monitoring progress and achievements for your linked students.</p>
-           </div>
-           <div className="flex gap-3">
-              <button 
-                onClick={() => setLinkModalOpen(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
-              >
-                <UserPlus size={18} /> Link New Student
-              </button>
-           </div>
+    <DashboardShell 
+      userRole="parent"
+      title={
+        <>Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">{user?.profile?.firstName || user?.username}</span></>
+      }
+      subtitle="Monitoring progress and achievements for your linked students."
+      headerActions={
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setLinkModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+          >
+            <UserPlus size={18} /> Link New Student
+          </button>
         </div>
-
+      }
+    >
+      <div className="w-full font-sans">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
            
            {/* Left Sidebar - Children List */}
@@ -226,20 +221,30 @@ const ParentDashboard = () => {
                  >
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                       {[
-                          { label: 'Academic Streak', value: summary?.streak || '0 Days', icon: <Zap />, color: 'amber' },
-                          { label: 'Merit Points', value: summary?.points || '0', icon: <Award />, color: 'indigo' },
-                          { label: 'Sessions Done', value: summary?.sessionsCompleted || '0', icon: <CheckCircle />, color: 'emerald' },
-                          { label: 'Current Level', value: `Level ${summary?.level || '1'}`, icon: <TrendingUp />, color: 'violet' },
-                       ].map((stat, i) => (
-                          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-soft hover:scale-[1.02] transition-transform">
-                             <div className={cn("w-10 h-10 rounded-xl mb-4 flex items-center justify-center", `bg-${stat.color}-50 text-${stat.color}-600`)}>
-                                {stat.icon}
-                             </div>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{stat.label}</p>
-                             <h4 className="text-xl font-black text-slate-800 tracking-tight">{stat.value}</h4>
-                          </div>
-                       ))}
+                       <MetricCard 
+                          label="Academic Streak" 
+                          value={summary?.streak || '0 Days'} 
+                          icon={<Zap size={18} />} 
+                          color="amber" 
+                       />
+                       <MetricCard 
+                          label="Merit Points" 
+                          value={summary?.points || '0'} 
+                          icon={<Award size={18} />} 
+                          color="indigo" 
+                       />
+                       <MetricCard 
+                          label="Sessions Done" 
+                          value={summary?.sessionsCompleted || '0'} 
+                          icon={<CheckCircle size={18} />} 
+                          color="emerald" 
+                       />
+                       <MetricCard 
+                          label="Current Level" 
+                          value={`Level ${summary?.level || '1'}`} 
+                          icon={<TrendingUp size={18} />} 
+                          color="violet" 
+                       />
                     </div>
 
                     {/* Chart Section */}
@@ -388,7 +393,7 @@ const ParentDashboard = () => {
         </AnimatePresence>
 
       </div>
-    </Layout>
+    </DashboardShell>
   );
 };
 

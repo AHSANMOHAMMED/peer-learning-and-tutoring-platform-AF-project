@@ -411,16 +411,16 @@ const Register = () => {
 
                  <div className="max-w-sm mx-auto space-y-4 pt-4">
                     <button
-                      type="submit" disabled={loading}
-                      className="w-full py-4 bg-[#00a8cc] hover:bg-[#008ba8] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                       type="submit" disabled={loading}
+                       className="w-full py-4 bg-[#00a8cc] hover:bg-[#008ba8] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                      {loading ? <Loader2 className="animate-spin" size={20} /> : <>Verify & Complete <ShieldCheck size={18} /></>}
+                       {loading ? <Loader2 className="animate-spin" size={20} /> : <>Verify & Complete <ShieldCheck size={18} /></>}
                     </button>
                     <button
-                      type="button" onClick={() => setStep(1)}
-                      className="w-full py-3 text-slate-500 font-bold hover:text-slate-800 transition-colors text-sm"
+                       type="button" onClick={() => setStep(1)}
+                       className="w-full py-3 text-slate-500 font-bold hover:text-slate-800 transition-colors text-sm"
                     >
-                      Go back
+                       Go back
                     </button>
                  </div>
                </motion.form>
@@ -445,7 +445,7 @@ const Register = () => {
                     className="w-full py-4 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-bold transition-all flex items-center justify-center gap-3 shadow-soft group"
                  >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path fill="#EA4335" d="M12.48 10.92v3.28h7.84c-.24 1.84-.91 3.22-2 4.28-1.27 1.27-3.23 2.1-6.32 2.1-5.12 0-9.13-4.13-9.13-9.25s4.01-9.25 9.13-9.25c2.8 0 4.94.98 6.48 2.35l2.32-2.32C18.21 1.03 15.1 0 12.48 0 5.86 0 .3 5.39.3 12s5.56 12 12.18 12c3.58 0 6.28-1.18 8.39-3.4 2.14-2.14 2.82-5.15 2.82-7.58 0-.58-.05-1.13-.15-1.66h-11.06z"/>
+                       <path fill="#EA4335" d="M12.48 10.92v3.28h7.84c-.24 1.84-.91 3.22-2 4.28-1.27 1.27-3.23 2.1-6.32 2.1-5.12 0-9.13-4.13-9.13-9.25s4.01-9.25 9.13-9.25c2.8 0 4.94.98 6.48 2.35l2.32-2.32C18.21 1.03 15.1 0 12.48 0 5.86 0 .3 5.39.3 12s5.56 12 12.18 12c3.58 0 6.28-1.18 8.39-3.4 2.14-2.14 2.82-5.15 2.82-7.58 0-.58-.05-1.13-.15-1.66h-11.06z"/>
                     </svg>
                     Continue with Google
                  </button>

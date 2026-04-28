@@ -10,7 +10,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import Layout from '../components/Layout';
+import DashboardShell from '../components/ui/DashboardShell';
+import MetricCard from '../components/ui/MetricCard';
 import { useAnalytics } from '../controllers/useAnalytics';
 import { cn } from '../utils/cn';
 import { systemApi } from '../services/api';
@@ -37,55 +38,48 @@ const SuperAdminDashboard = () => {
   const isHealthy = healthStatus?.status === 'UP' || healthStatus?.status === 'OK';
 
   return (
-    <Layout userRole="superadmin">
-      <div className="min-h-screen bg-[#fafafc] text-slate-800 overflow-x-hidden relative text-left py-8 md:px-8 font-sans">
-        
+    <DashboardShell 
+      userRole="superadmin"
+      className="pb-8"
+      headerActions={
+        <div className="flex flex-wrap items-center gap-6 bg-white/80 backdrop-blur-xl rounded-2xl border border-slate-200 shadow-sm px-6 py-4 w-full lg:w-auto">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+               <div className={cn("w-2 h-2 rounded-full", isHealthy ? "bg-emerald-500 shadow-sm" : "bg-rose-500 animate-pulse shadow-sm")} />
+               <span className="text-xs font-bold uppercase tracking-widest text-slate-500">System Metrics</span>
+            </div>
+            <div className="hidden lg:flex items-center gap-3 text-slate-600">
+               <Signal size={14} className="text-indigo-500" />
+               <span className="text-xs font-bold uppercase tracking-widest tabular-nums">
+                 {isHealthy ? 'All Systems Operational' : 'Degraded Performance'}
+               </span>
+            </div>
+            {healthStatus?.mongo && (
+              <div className="hidden lg:flex items-center gap-3 text-slate-600">
+                <Database size={14} className="text-cyan-600" />
+                <span className="text-xs font-bold uppercase tracking-widest tabular-nums">DB: {healthStatus.mongo}</span>
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={() => { fetchAnalytics(); checkHealth(); }}
+            className="p-2 bg-slate-50 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm ml-auto lg:ml-0"
+          >
+             <RefreshCw size={16} className={cn(loading ? "animate-spin" : "")} />
+          </button>
+        </div>
+      }
+    >
+      <div className="w-full font-sans">
         {/* Dynamic Light Background */}
         <div className="fixed inset-0 pointer-events-none z-0">
            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-50 blur-[150px]" />
            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-50 blur-[150px]" />
         </div>
 
-        <motion.div 
-          className="relative z-10 max-w-[1440px] mx-auto space-y-10"
-          variants={containerVariants}
-          initial="hidden" animate="visible"
-        >
-          {/* Command Bar Header */}
-          <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-6 px-6 py-4 bg-white/80 backdrop-blur-xl rounded-2xl border border-slate-200 shadow-sm">
-             <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                   <div className={cn("w-2 h-2 rounded-full", isHealthy ? "bg-emerald-500 shadow-sm" : "bg-rose-500 animate-pulse shadow-sm")} />
-                   <span className="text-xs font-bold uppercase tracking-widest text-slate-500">System Metrics</span>
-                </div>
-                <div className="hidden lg:flex items-center gap-3 text-slate-600">
-                   <Signal size={14} className="text-indigo-500" />
-                   <span className="text-xs font-bold uppercase tracking-widest tabular-nums">
-                     {isHealthy ? 'All Systems Operational' : 'Degraded Performance'}
-                   </span>
-                </div>
-                {healthStatus?.mongo && (
-                  <div className="hidden lg:flex items-center gap-3 text-slate-600">
-                    <Database size={14} className="text-cyan-600" />
-                    <span className="text-xs font-bold uppercase tracking-widest tabular-nums">DB: {healthStatus.mongo}</span>
-                  </div>
-                )}
-             </div>
-             <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => { fetchAnalytics(); checkHealth(); }}
-                  className="p-2 bg-slate-50 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-slate-100 transition-all border border-slate-200 shadow-sm"
-                >
-                   <RefreshCw size={16} className={cn(loading ? "animate-spin" : "")} />
-                </button>
-             </div>
-          </motion.div>
-
+        <div className="relative z-10 space-y-10">
           {/* Hero Dashboard Access */}
-          <motion.div 
-            variants={itemVariants}
-            className="relative overflow-hidden rounded-3xl bg-white p-8 md:p-12 border border-slate-200 shadow-sm group"
-          >
+          <div className="relative overflow-hidden rounded-3xl bg-white p-8 md:p-12 border border-slate-200 shadow-sm group">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50 blur-[80px] rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
             
             <div className="relative z-10 flex flex-col xl:flex-row justify-between items-center gap-12">
@@ -157,30 +151,23 @@ const SuperAdminDashboard = () => {
                   </motion.button>
                </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Core Infrastructure Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { t: 'Active Identities', v: analytics?.summary?.totalUsers?.toLocaleString?.() || '12,442', i: Users, c: 'text-indigo-600 bg-indigo-50 border-indigo-100', bg: 'from-indigo-50' },
-              { t: 'Capital Flow', v: `LKR ${analytics?.summary?.totalRevenue?.toLocaleString?.() || '0'}`, i: DollarSign, c: 'text-emerald-600 bg-emerald-50 border-emerald-100', bg: 'from-emerald-50' },
-              { t: 'System Nodes', v: analytics?.summary?.totalMaterials?.toLocaleString?.() || '1,242', i: Database, c: 'text-cyan-600 bg-cyan-50 border-cyan-100', bg: 'from-cyan-50' },
-              { t: 'Concurrent Streams', v: analytics?.summary?.totalBookings?.toLocaleString?.() || '15,842', i: Activity, c: 'text-rose-600 bg-rose-50 border-rose-100', bg: 'from-rose-50' }
+              { t: 'Active Identities', v: analytics?.summary?.totalUsers?.toLocaleString?.() || '12,442', i: Users, c: 'indigo' },
+              { t: 'Capital Flow', v: `LKR ${analytics?.summary?.totalRevenue?.toLocaleString?.() || '0'}`, i: DollarSign, c: 'emerald' },
+              { t: 'System Nodes', v: analytics?.summary?.totalMaterials?.toLocaleString?.() || '1,242', i: Database, c: 'blue' },
+              { t: 'Concurrent Streams', v: analytics?.summary?.totalBookings?.toLocaleString?.() || '15,842', i: Activity, c: 'rose' }
             ].map((stat, i) => (
-              <motion.div 
+              <MetricCard 
                 key={i}
-                variants={itemVariants}
-                whileHover={{ y: -5 }}
-                className={`bg-white bg-gradient-to-br ${stat.bg} to-transparent border border-slate-200 rounded-3xl p-8 shadow-sm relative overflow-hidden`}
-              >
-                <div className="flex items-center gap-4 mb-6 relative z-10">
-                   <div className={cn("p-3 rounded-xl border flex items-center justify-center", stat.c)}>
-                      <stat.i size={20} />
-                   </div>
-                   <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{stat.t}</p>
-                </div>
-                <p className="text-4xl font-extrabold text-slate-800 tabular-nums tracking-tight relative z-10">{stat.v}</p>
-              </motion.div>
+                label={stat.t}
+                value={stat.v}
+                icon={<stat.i size={18} />}
+                color={stat.c}
+              />
             ))}
           </div>
 
@@ -276,9 +263,9 @@ const SuperAdminDashboard = () => {
                 </motion.div>
              </div>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </Layout>
+    </DashboardShell>
   );
 };
 

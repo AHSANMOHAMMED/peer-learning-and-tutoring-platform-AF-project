@@ -23,7 +23,7 @@ const VerifyOTP = () => {
   const handleVerify = async (e) => {
     e.preventDefault();
     try {
-      await verifyOTP(user.email, otp, 'verify');
+      const data = await verifyOTP(user.email, otp, 'verify');
       toast.success('Account verified successfully!');
       const latestUser = await refreshUser();
       navigate(getDefaultRouteForUser(latestUser), { replace: true });

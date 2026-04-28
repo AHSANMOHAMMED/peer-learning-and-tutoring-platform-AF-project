@@ -30,7 +30,7 @@ router.put('/read-all', authenticate, markAllAsRead);
 router.delete('/:id', authenticate, deleteNotification);
 
 // Admin/Tutor only routes
-router.post('/', authenticate, authorize('admin', 'superadmin', 'websiteAdmin'), notificationValidation, createNotification);
-router.post('/broadcast', authenticate, authorize('admin', 'superadmin', 'tutor', 'schoolAdmin', 'websiteAdmin'), broadcastNotification);
+router.post('/', authenticate, authorize('websiteAdmin', 'superadmin'), notificationValidation, createNotification);
+router.post('/broadcast', authenticate, authorize('websiteAdmin', 'superadmin', 'tutor', 'mentor', 'schoolAdmin'), broadcastNotification);
 
 module.exports = router;

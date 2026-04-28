@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-import Layout from '../components/Layout';
+import DashboardShell from '../components/ui/DashboardShell';
+import MetricCard from '../components/ui/MetricCard';
 import { useAuth } from '../controllers/useAuth';
 import { useTutors } from '../controllers/useTutors';
 import { useReports } from '../controllers/useReports';
@@ -123,49 +124,42 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <Layout userRole={currentUser?.role || 'admin'}>
-      <div className="min-h-screen bg-[#fafafc] pb-12 w-full font-sans">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-8">
-          
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
-            <div>
-              <h1 className="text-4xl font-black text-slate-800 tracking-tight">Management Overview</h1>
-              <p className="text-slate-500 font-medium mt-2">Monitor platform metrics, process applications, and ensure smooth operations.</p>
-            </div>
-            <div className="flex bg-white shadow-soft rounded-xl p-1 border border-slate-200">
-               <span className="px-4 py-2 bg-slate-800 text-white font-bold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2">
-                 <Activity size={14} className="text-emerald-400" /> Platform Healthy
-               </span>
-            </div>
-          </div>
-
+    <DashboardShell 
+      userRole={currentUser?.role || 'admin'}
+      title="Management Overview"
+      subtitle="Monitor platform metrics, process applications, and ensure smooth operations."
+      headerActions={
+        <span className="px-4 py-2 bg-slate-800 text-white font-bold text-xs uppercase tracking-widest rounded-lg flex items-center gap-2 shadow-soft border border-slate-700">
+          <Activity size={14} className="text-emerald-400" /> Platform Healthy
+        </span>
+      }
+    >
+      <div className="w-full font-sans pb-12">
           <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-10">
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {statCards.map((stat, i) => (
-                <motion.div 
-                  key={i} variants={itemVariants}
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  className={cn(
-                    "bg-white rounded-3xl p-6 shadow-sm border overflow-hidden relative group cursor-pointer transition-all",
-                    stat.border, `hover:shadow-md hover:border-transparent`
-                  )}
-                >
-                  <div className={cn("absolute inset-0 bg-gradient-to-br to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500", stat.gradient)} />
-                  <div className="relative z-10 flex items-start justify-between">
-                    <div>
-                      <p className="text-slate-500 font-bold uppercase tracking-widest text-[11px] mb-2">{stat.title}</p>
-                      <h3 className="text-3xl font-black text-slate-800 tabular-nums tracking-tight">{stat.value}</h3>
-                      {stat.subtext && <p className="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1"><TrendingUp size={12}/> {stat.subtext}</p>}
-                    </div>
-                    <div className={cn("p-4 rounded-2xl", stat.bg, stat.color)}>
-                      <stat.icon size={28} />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+              {statCards.map((stat, i) => {
+                // Map custom colors to the accepted color props
+                const colorMap = {
+                  'text-indigo-500': 'indigo',
+                  'text-teal-500': 'emerald',
+                  'text-blue-500': 'blue',
+                  'text-amber-500': 'amber',
+                  'text-rose-500': 'rose',
+                  'text-emerald-500': 'emerald',
+                };
+                return (
+                  <MetricCard 
+                    key={i}
+                    label={stat.title}
+                    value={stat.value}
+                    subtext={stat.subtext}
+                    icon={<stat.icon size={18} />}
+                    color={colorMap[stat.color] || 'indigo'}
+                  />
+                );
+              })}
             </div>
 
             {/* Operations Center & Quick Actions */}
@@ -345,98 +339,8 @@ const AdminDashboard = () => {
             </div>
 
           </motion.div>
-        </div>
       </div>
-
-      {/* Broadcast Modal */}
-      {isBroadcastModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-           <motion.div 
-             initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
-             onClick={() => setIsBroadcastModalOpen(false)}
-             className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" 
-           />
-           <motion.div 
-             initial={{ opacity: 0, scale: 0.9, y: 20 }}
-             animate={{ opacity: 1, scale: 1, y: 0 }}
-             className="relative bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-4xl border border-slate-100"
-           >
-              <div className="p-8 bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex justify-between items-center">
-                 <div>
-                    <h2 className="text-2xl font-black tracking-tight">Broadcast Center</h2>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Persistent System Announcement</p>
-                 </div>
-                 <button onClick={() => setIsBroadcastModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ShieldCheck size={20}/></button>
-              </div>
-              
-              <form onSubmit={handleBroadcastSubmit} className="p-8 space-y-6">
-                 <div className="space-y-2">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Message Title</label>
-                    <input 
-                      required
-                      value={broadcastForm.title}
-                      onChange={(e) => setBroadcastForm({...broadcastForm, title: e.target.value})}
-                      placeholder="Important: Scholastic Update"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-800"
-                    />
-                 </div>
-
-                 <div className="space-y-2">
-                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Content Body</label>
-                    <textarea 
-                      required
-                      rows={4}
-                      value={broadcastForm.content}
-                      onChange={(e) => setBroadcastForm({...broadcastForm, content: e.target.value})}
-                      placeholder="Type your message here..."
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-600 resize-none"
-                    />
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                       <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Priority</label>
-                       <select 
-                         value={broadcastForm.priority}
-                         onChange={(e) => setBroadcastForm({...broadcastForm, priority: e.target.value})}
-                         className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700"
-                       >
-                          <option value="normal">Normal</option>
-                          <option value="high">High</option>
-                          <option value="urgent">Urgent</option>
-                       </select>
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 px-1">Target Audience</label>
-                       <select 
-                         value={broadcastForm.targetRoles[0]}
-                         onChange={(e) => setBroadcastForm({...broadcastForm, targetRoles: [e.target.value]})}
-                         className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold text-slate-700"
-                       >
-                          <option value="all">All Users</option>
-                          <option value="student">Students Only</option>
-                          <option value="tutor">Tutors Only</option>
-                          <option value="parent">Parents Only</option>
-                       </select>
-                    </div>
-                 </div>
-
-                 <button 
-                   type="submit"
-                   disabled={isBroadcasting}
-                   className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
-                 >
-                    {isBroadcasting ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <><Send size={18} /> Dispatch Broadcast</>
-                    )}
-                 </button>
-              </form>
-           </motion.div>
-        </div>
-      )}
-    </Layout>
+    </DashboardShell>
   );
 };
 

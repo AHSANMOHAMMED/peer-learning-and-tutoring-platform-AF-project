@@ -46,7 +46,7 @@ exports.getBookings = async (req, res) => {
       // Looking at createBooking, it uses tutorId from body (Tutor model ID).
       // Wait, let's check the Booking model.
       query = { tutorId: req.user._id }; 
-    } else if (req.user.role === 'admin' || req.user.role === 'superadmin') {
+    } else if (req.user.role === 'websiteAdmin' || req.user.role === 'superadmin') {
       query = {}; // All bookings
     } else {
       query = { studentId: req.user._id }; // Default
@@ -75,7 +75,7 @@ exports.updateBookingStatus = async (req, res) => {
       // Validate that only relevant users can update
       if (booking.tutorId.toString() !== req.user._id.toString() && 
           booking.studentId.toString() !== req.user._id.toString() && 
-          req.user.role !== 'admin') {
+          req.user.role !== 'websiteAdmin' && req.user.role !== 'superadmin') {
         return res.status(401).json({ message: 'User not authorized' });
       }
 

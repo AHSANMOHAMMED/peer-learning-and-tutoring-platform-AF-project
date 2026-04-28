@@ -7,7 +7,8 @@ import {
   Edit2, Trash2, Zap, BarChart3, RefreshCw, ShoppingBag, Brain, Layout as LayoutIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
-import Layout from '../components/Layout';
+import DashboardShell from '../components/ui/DashboardShell';
+import MetricCard from '../components/ui/MetricCard';
 import { useAuth } from '../controllers/useAuth';
 import { useBookings } from '../controllers/useBookings';
 import { useTutors } from '../controllers/useTutors';
@@ -228,11 +229,11 @@ const TutorDashboard = () => {
   const activeSessions = bookings.filter(b => b.status === 'scheduled').length;
   const totalEarnings = bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + (b.price || 0), 0);
 
-  if (tutorLoading) return <Layout userRole="tutor"><div className="flex items-center justify-center min-h-[60vh]"><RefreshCw className="animate-spin text-[#00a8cc]" size={40} /></div></Layout>;
+  if (tutorLoading) return <DashboardShell userRole="tutor"><div className="flex items-center justify-center min-h-[60vh]"><RefreshCw className="animate-spin text-[#00a8cc]" size={40} /></div></DashboardShell>;
 
   if (!tutorProfile || tutorProfile.verificationStatus !== 'approved') {
     return (
-      <Layout userRole="tutor">
+      <DashboardShell userRole="tutor">
         <div className="max-w-4xl mx-auto py-20 px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100 text-center">
             <div className="w-24 h-24 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
@@ -245,41 +246,51 @@ const TutorDashboard = () => {
             {!tutorProfile && <button onClick={() => navigate('/settings')} className="bg-[#00a8cc] text-white px-12 py-4 rounded-2xl font-black transition-all shadow-xl">Complete Setup</button>}
           </motion.div>
         </div>
-      </Layout>
+      </DashboardShell>
     );
   }
 
   const tabs = ['Calendar', 'Upcoming', 'Students', 'Challenges', 'Materials', 'Homework', 'Availability'];
 
   return (
-    <Layout userRole="tutor">
-      <div className="max-w-[1400px] mx-auto w-full font-sans pb-20">
-        
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-           <div>
-              <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">Hello, {user?.profile?.firstName || user?.username}</h1>
-              <p className="text-slate-500 font-medium">Here's what's happening in your classroom today.</p>
-           </div>
-           <button onClick={() => setShowBroadcastModal(true)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
-              <Send size={16} /> Broadcast Update
-           </button>
-        </div>
+    <DashboardShell 
+      userRole="tutor"
+      title={`Hello, ${user?.profile?.firstName || user?.username}`}
+      subtitle="Here's what's happening in your classroom today."
+      headerActions={
+        <button onClick={() => setShowBroadcastModal(true)} className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
+           <Send size={16} /> Broadcast Update
+        </button>
+      }
+    >
+      <div className="w-full pb-20">
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-           {[
-             { label: 'Active Sessions', val: activeSessions, bg: '#fadcf1', icon: Video },
-             { label: 'Total Earnings', val: `LKR ${totalEarnings}`, bg: '#cbf2fc', icon: DollarSign },
-             { label: 'New Questions', val: unansweredQuestions.length, bg: '#d4cffc', icon: MessageCircle },
-             { label: 'Pending Grades', val: pendingHomework.length, bg: '#ffccf9', icon: FileText }
-           ].map((s, i) => (
-             <div key={i} className="p-8 rounded-[2rem] shadow-sm border border-black/5" style={{ backgroundColor: s.bg }}>
-                <h3 className="text-4xl font-black text-slate-800 mb-1">{s.val}</h3>
-                <p className="text-[10px] font-black text-slate-700/50 uppercase tracking-widest">{s.label}</p>
-                <s.icon className="mt-4 text-slate-800/20" size={24} />
-             </div>
-           ))}
+           <MetricCard 
+              label="Active Sessions" 
+              value={activeSessions} 
+              icon={<Video size={18} />} 
+              color="indigo" 
+            />
+            <MetricCard 
+              label="Total Earnings" 
+              value={`LKR ${totalEarnings}`} 
+              icon={<DollarSign size={18} />} 
+              color="emerald" 
+            />
+            <MetricCard 
+              label="New Questions" 
+              value={unansweredQuestions.length} 
+              icon={<MessageCircle size={18} />} 
+              color="amber" 
+            />
+            <MetricCard 
+              label="Pending Grades" 
+              value={pendingHomework.length} 
+              icon={<FileText size={18} />} 
+              color="rose" 
+            />
         </div>
 
         {/* Tabs */}
@@ -499,7 +510,7 @@ const TutorDashboard = () => {
         </AnimatePresence>
 
       </div>
-    </Layout>
+    </DashboardShell>
   );
 };
 
